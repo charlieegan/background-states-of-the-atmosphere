@@ -1,0 +1,21 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "pybind11>=2.10.0",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+exclude = ["test*"]
+namespaces = false
+
+[project]
+name = "atmosphere_bgs"
+description = "TODO"
+authors = [{"name" = "Charles Peter Egan"}, {"name" = "Thilo Stier"}]
+license = {"file" = "LICENSE"}
+version = "0.0.1"
+dependencies = ["numpy",]
+requires-python = ">=3.7"
