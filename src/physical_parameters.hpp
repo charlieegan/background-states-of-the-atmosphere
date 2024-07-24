@@ -1,0 +1,69 @@
+#ifndef PHYSICAL_PARAMETERS_HPP
+#define PHYSICAL_PARAMETERS_HPP
+
+#include <string>
+#include <sstream>
+#include <cmath>
+
+#include <Eigen/Dense>
+
+struct physical_parameters
+{
+  double a, Omega, p00, kappa, cp;
+  double ikappa, tc0p, tc1p;
+
+  physical_parameters(double a = 6371000.,
+                      double Omega = 7.2921e-05,
+                      double p00 = 101325.,
+                      double kappa = 2. / 7.,
+                      double cp = 1003.5) :
+    a(a), Omega(Omega), p00(p00), kappa(kappa), cp(cp),
+    ikappa(1. / kappa), tc0p(1. / (a * a)), tc1p(kappa * cp * std::pow(p00, -kappa)) {}
+
+  Eigen::Vector2d itf(const Eigen::Ref<const Eigen::Vector2d> &zeta) const {
+    return Eigen::Vector2d(std::sqrt(std::max(0., 1. - 1. / zeta(0))),
+                           p00 * std::pow(std::max(0., zeta(1)), ikappa));
+  }
+
+  Eigen::Vector2d ditf(const Eigen::Ref<const Eigen::Vector2d> &zeta) const {
+    return Eigen::Vector2d(0.5 / (std::sqrt(std::max(0., 1. - 1. / zeta(0))) * zeta(0) * zeta(0)),
+                           p00 * ikappa * std::pow(std::max(0., zeta(1)), ikappa - 1));
+  }
+
+  Eigen::Vector2d tf(const Eigen::Ref<const Eigen::Vector2d> &x) const {
+    return Eigen::Vector2d(1. / (1. - x[0] * x[0]),
+                           std::pow(x[1] / p00, kappa));
+  }
+
+  Eigen::Vector2d dtf(const Eigen::Ref<const Eigen::Vector2d> &x) const {
+    return Eigen::Vector2d(2. * x[0] / ((1. - x[0] * x[0]) * (1. - x[0] * x[0])),
+                           kappa / std::pow(p00, kappa) * std::pow(x[1], kappa - 1));
+  }
+
+  std::string repr() const {
+    std::stringstream ss;
+    ss << "a = " << a
+       << ", Omega = " << Omega
+       << ", p00 = " << p00
+       << ", kappa = " << kappa
+       << ", cp = " << cp;
+    return ss.str();
+  }
+};
+
+#define BIND_PHYSICAL_PARAMETERS(m) \
+  py::class_<physical_parameters>(m, "PhysicalParameters") \
+  .def(py::init<double, double, double, double, double>(), \
+       py::arg("a") = 6371000., py::arg("Omega") = 7.2921e-05, \
+       py::arg("p00") = 101325., py::arg("kappa") = 2. / 7., py::arg("cp") = 1003.5) \
+  .def("__repr__", &physical_parameters::repr) \
+  .def("itf", &physical_parameters::itf, py::arg("zeta")) \
+  .def("tf", &physical_parameters::tf, py::arg("x")) \
+  .def_readonly("a", &physical_parameters::a) \
+  .def_readonly("Omega", &physical_parameters::Omega) \
+  .def_readonly("p00", &physical_parameters::p00) \
+  .def_readonly("kappa", &physical_parameters::kappa) \
+  .def_readonly("cp", &physical_parameters::cp);
+  
+
+#endif

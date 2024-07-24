@@ -9,7 +9,7 @@ ext_modules = [
     Pybind11Extension(
         "_atmosphere_bgs",
         ["src/main.cpp"],
-        include_dirs = ["extern/pybind11/include"],
+        include_dirs = ["extern/eigen", "extern/pybind11/include", "extern/fmt/include"],
         cxx_std = 20,
         extra_compile_args = extra_compile_args,
     ),

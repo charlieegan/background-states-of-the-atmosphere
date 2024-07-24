@@ -1,0 +1,311 @@
+#ifndef LAGUERRE_DIAGRAM_HPP
+#define LAGUERRE_DIAGRAM_HPP
+
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
+
+#include "physical_parameters.hpp"
+#include "simulation_parameters.hpp"
+#include "discretized_line_segment.hpp"
+#include "halfspace_intersection.hpp"
+
+#include <Eigen/Dense>
+#include <string>
+#include <sstream>
+#include <cmath>
+#include <map>
+#include <list>
+#include <algorithm>
+#include <numeric>
+
+
+class laguerre_diagram
+{
+  static inline double sqr(const double &x) { return x * x; }
+  
+public:
+  typedef Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>> seeds_t;
+
+  struct diagram_edge {
+    int pi, pj;
+    int di, dj;
+
+    discretized_line_segment ls;
+
+    // (approx) differential of area of pi (and negative area of pj) w.r.t. phi_pi - phi_pj
+    double dif;
+
+    std::string repr() const {
+      std::stringstream ss;
+      ss << "diagram_edge("
+         << "pi = " << pi
+         << ", pj = " << pj
+         << ", di = " << di
+         << ", dj = " << dj
+         << ")";
+      return ss.str();
+    }
+  };
+  
+  // input parameters
+  int n;
+  Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> ys;
+  Eigen::VectorXd duals;
+  physical_parameters phys;
+  simulation_parameters sim;
+
+  // halfspace intersection
+  halfspace_intersection hs;
+
+  // diagram:
+  // vertices
+  Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> verts;
+  // edges
+  std::vector<diagram_edge> edglist;
+  // faces (list of edges per face)
+  std::vector<std::vector<int>> faces;
+  // face areas
+  Eigen::VectorXd areas, areaerrs;
+  
+  laguerre_diagram(const seeds_t &ys,
+                   const Eigen::Ref<const Eigen::VectorXd> &duals,
+                   const physical_parameters &phys,
+                   const simulation_parameters &sim) :
+    n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim) {
+
+    if ((int)duals.size() != n + 1)
+      throw std::runtime_error("the size of the dual vector must be one larger than the first dimension of seed positions (the last entry of duals corresponds to the boundary cell)");
+
+    do_hs_intersect();
+
+    extract_diagram();
+  }
+
+  void do_hs_intersect() {
+    // perform the halfspace intersection
+
+    Eigen::Vector3d zeta_min, zeta_max;
+    zeta_min << phys.tf(sim.spmin), -1e100;
+    zeta_max << phys.tf(sim.spmax), 1e100;
+    hs = halfspace_intersection(zeta_min, zeta_max);
+
+    // add seed halfspaces
+    for (int i = 0; i < n; i++) {
+      Eigen::Vector4d H(-0.5 * sqr(ys(i, 0) / phys.a),
+                        -phys.cp * ys(i, 1),
+                        1.0,
+                        phys.Omega * ys(i, 0) + duals(i));
+
+      hs.add_halfspace(H);
+    }
+
+    // add boundary halfspaces
+    for (int i = 0; i < sim.boundary_res; i++) {
+      double s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / (sim.boundary_res - 1);
+      double z0 = 1. / (1 - s * s);
+
+      Eigen::Vector4d H(-0.5 * sqr(phys.Omega * phys.a / z0),
+                        0.0,
+                        1.0,
+                        duals(n) + sqr(phys.Omega * phys.a) / z0);
+
+      hs.add_halfspace(H);
+    }
+    
+  }
+
+  
+  void extract_diagram() {
+    // extract vertices
+    verts.resize(hs.mesh.dvert.capacity(), 2);
+    for (int i = 0; i < (int)verts.rows(); i++)
+      verts.row(i) = hs.mesh.dvert[i].head<2>() / hs.mesh.dvert[i](3);
+
+    // extract edges and faces
+    faces.resize(hs.mesh.pcnt());
+    for (int i = 0; i < n; i++)
+      for (const auto &e : hs.mesh.pneigh(i + 6))
+        if (e.pj < 6 || e.pi < e.pj) {
+            edglist.push_back({e.pi, e.pj, e.di, e.dj,
+                discretized_line_segment(verts.row(e.di), verts.row(e.dj), phys, 1.0)});
+            
+            faces[e.pi].push_back(edglist.size() - 1);
+            faces[e.pj].push_back(edglist.size() - 1);
+          }
+
+    // calculate face areas
+    areas.resize(n);
+    areaerrs.resize(n);
+    areas.array() = 0;
+    areaerrs.array() = 0;
+
+    for (int i = 0; i < n; i++) {
+
+      // calculate initial area and error
+      for (auto &ei : faces[i + 6]) {
+        auto &e = edglist[ei];
+        areas(i) += (e.pi == i + 6 ? e.ls.area : -e.ls.area);
+        areaerrs(i) += e.ls.errb;
+      }
+      
+      if (areas(i) == 0 || areaerrs(i) / areas(i) < sim.tol) {
+        // py::print(i, "- error already in tol:", areaerrs(i) / areas(i));
+        continue;
+      }
+      
+      std::multimap<double, int> errmap;
+      
+      for (auto &ei : faces[i + 6]) {
+        auto &e = edglist[ei];
+        errmap.insert({-e.ls.errb, ei});
+      }
+
+      for (int j = 0; errmap.size() > 0 && j < sim.max_refine_steps && areaerrs(i) / areas(i) >= sim.tol; j++) {
+        auto [err, ei] = *errmap.begin();
+        errmap.erase(errmap.begin());
+
+        auto &e = edglist[ei];
+
+        areas(i) -= (e.pi == i + 6 ? e.ls.area : -e.ls.area);
+        areaerrs(i) -= e.ls.errb;
+        
+        e.ls.refine();
+        
+        areas(i) += (e.pi == i + 6 ? e.ls.area : -e.ls.area);
+        areaerrs(i) += e.ls.errb;
+
+        // py::print(i, "- refining edge", ei, "with errb ", e.ls.errb, "to:", areaerrs(i) / areas(i));
+        
+        errmap.insert({-e.ls.errb, ei});
+      }
+
+      // py::print(i, "- error after refining:", areaerrs(i) / areas(i));
+    }
+    
+    // calculate line integrals
+    for (auto &e : edglist) {
+      
+      e.dif = 0;
+
+      // points and tangents along path
+      std::vector<Eigen::Vector2d> x; //, t;
+      x.reserve(e.ls.points.size());
+      //t.reserve(e.ls.points.size());
+      
+      for (const auto &tp : e.ls.points) {
+        x.push_back(tp.x);
+        // t.push_back(tp.t);
+      }
+
+      auto yi = ys.row(e.pi-6);
+        
+      if (e.pj >= 6 && e.pj - 6 < n) {
+        // inner edges
+        auto yj = ys.row(e.pj-6);
+        
+        double pw = 0;
+        for (int k = 0; k < (int)x.size(); ++k) {
+          double nw = (k != (int)x.size() - 1 ? (x[k+1] - x[k]).norm() : 0);
+          
+          // d_x (c(x,yi) - c(x,yj))
+          Eigen::Vector2d dc((sqr(yi(0)) - sqr(yj(0))) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))),
+                             phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
+          e.dif += (pw + nw) / dc.norm(); // * t[k].norm() / t[k].cross(dc);
+          
+          pw = nw;
+        }
+      } else if (e.pj - 6 >= n) {
+        // (soft) boundary edges
+
+        double pw = 0;
+        for (int k = 0; k < (int)x.size(); ++k) {
+          double nw = (k != (int)x.size() - 1 ? (x[k+1] - x[k]).norm() : 0);
+          
+          // d_x (c(x,yi) - c(x,yj))
+          Eigen::Vector2d dc(sqr(yi(0)) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))) - sqr(phys.Omega * phys.a) * x[k](0),
+                             phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
+          e.dif += (pw + nw) / dc.norm(); //* t[k].norm() / t[k].cross(dc);
+          
+          pw = nw;
+        }
+        
+      }
+    }
+  }
+
+  std::map<std::pair<int,int>, double> jac() {
+    // get jacobian (derivative of masses w.r.t. dual)
+
+    std::map<std::pair<int,int>, double> res;
+    for (auto &e : edglist) {
+      if (e.pj >= 6) {
+        int i = e.pi-6;
+        int j = std::min(e.pj-6,n);
+
+        res[{i, i}] += e.dif;
+        res[{i, j}] -= e.dif;
+        
+        res[{j, j}] += e.dif;
+        res[{j, i}] -= e.dif;
+      }
+    }
+    return res;
+  }
+
+  std::pair<Eigen::VectorXd, std::pair<Eigen::VectorXi, Eigen::VectorXi>> jac_coo() {
+    auto J = jac();
+    
+    Eigen::VectorXd data(J.size());
+    Eigen::VectorXi i(J.size()), j(J.size());
+
+    int k = 0;
+    for (auto &v : J) {
+      data[k] = v.second;
+      i[k] = v.first.first;
+      j[k++] = v.first.second;
+    }
+
+    return {data, {i, j}};
+  }
+  
+};
+
+#define BIND_DIAGRAM_EDGE(m)                                            \
+  py::class_<laguerre_diagram::diagram_edge>(m, "DiagramEdge")          \
+  .def("__repr__", &laguerre_diagram::diagram_edge::repr)               \
+  .def_readonly("pi", &laguerre_diagram::diagram_edge::pi)              \
+  .def_readonly("pj", &laguerre_diagram::diagram_edge::pj)              \
+  .def_readonly("di", &laguerre_diagram::diagram_edge::di)              \
+  .def_readonly("dj", &laguerre_diagram::diagram_edge::dj)              \
+  .def_readonly("ls", &laguerre_diagram::diagram_edge::ls)              \
+  .def_readonly("dif", &laguerre_diagram::diagram_edge::dif);
+
+
+
+#define BIND_LAGUERRE_DIAGRAM(m)                                        \
+  py::class_<laguerre_diagram>(m, "LaguerreDiagram")                    \
+  .def(py::init<const laguerre_diagram::seeds_t&,                       \
+                const Eigen::Ref<const Eigen::VectorXd>&,               \
+                const physical_parameters &,                            \
+                const simulation_parameters&>(),                        \
+       py::arg("ys"), py::arg("duals"),                                 \
+       py::arg("phys"), py::arg("sim"))                                 \
+  .def_readonly("n", &laguerre_diagram::n)                              \
+  .def_readonly("phys", &laguerre_diagram::phys)                        \
+  .def_readonly("sim", &laguerre_diagram::sim)                          \
+  .def_readonly("ys", &laguerre_diagram::ys)                            \
+  .def_readonly("duals", &laguerre_diagram::duals)                      \
+  .def_readonly("hs", &laguerre_diagram::hs)                            \
+  .def_readonly("edglist", &laguerre_diagram::edglist)                  \
+  .def_readonly("verts", &laguerre_diagram::verts)                      \
+  .def_readonly("faces", &laguerre_diagram::faces)                      \
+  .def_readonly("areas", &laguerre_diagram::areas)                      \
+  .def_readonly("areaerrs", &laguerre_diagram::areaerrs)                \
+  .def("jac", &laguerre_diagram::jac)                                   \
+  .def("jac_coo", &laguerre_diagram::jac_coo);
+  
+  
+
+
+
+#endif
