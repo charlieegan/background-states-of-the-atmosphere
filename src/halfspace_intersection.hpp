@@ -4,7 +4,9 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+#include <exception>
 #include <deque>
+#include <functional>
 #include <Eigen/Dense>
 #include "dvector.hpp"
 
@@ -67,10 +69,50 @@ struct pdedge {
 
   // order the given edges to make up a cycle on primal side (if primal == true) or dual side (if primal == false)
   // if the edges do not make up a cycle, a runtime_error will the thrown
+  // assumes edges are already oriented the same way and a cycle is possible
   template <bool primal = true>
   static std::vector<pdedge> order_cycle(const std::vector<pdedge> &edg) {
     if (edg.size() <= 2)
       return edg;
+
+    std::map<int, std::vector<int>> adj;
+    for (int i = 0; i < (int)edg.size(); ++i) {
+      adj[primal ? edg[i].pi : edg[i].di].push_back(i);
+    }
+    std::vector<bool> used(edg.size(), 0);
+    std::vector<pdedge> path;
+
+    std::function<void(const int&)> dfs = [&](const int &ev){
+      int v = (primal ? edg[ev].pj : edg[ev].dj);
+
+      for (const int &ew : adj[v]) {
+        if (!used[ew]) {
+          int w = (primal ? edg[ew].pj : edg[ew].dj);
+
+          used[ew] = true;
+          dfs(ew);
+        }
+        
+      }
+      path.push_back(edg[ev]);
+    };
+
+    used[0] = 1;
+    dfs(0);
+    
+    std::reverse(path.begin(), path.end());
+
+#ifdef DEBUG_CHECKS
+    if (path.size() != edg.size())
+      throw std::runtime_error("resulting path length in order_cycle is too short");
+    
+    if (primal ? (path.back().pj != path.front().pi) : (path.back().dj != path.front().di))
+      throw std::runtime_error("path in order_cycle does not close");
+#endif
+    
+    return path;
+
+    /*
     std::map<int, int> next;
     for (int i = 0; i < (int)edg.size(); ++i)
       next[primal ? edg[i].pi : edg[i].di] = i;
@@ -90,9 +132,92 @@ struct pdedge {
       res.push_back(edg[j]);
     }
     if ((primal ? res.back().pj : res.back().dj) != (primal ? res.front().pi : res.front().di)) {
-      throw std::runtime_error("edges do not make up a cycle (cycle does not close)");
+      std::stringstream ss;
+      ss << "edges do not make up a cycle (cycle does not close): ";
+      for (auto &e : res)
+        ss << e.repr() << " ";
+      throw std::runtime_error(ss.str());
     }
     return res;
+    */
+  }
+
+  // like order_cycle but allow multiple cycles
+  template <bool primal = true>
+  static std::vector<std::vector<pdedge>> cycle_decomposition(const std::vector<pdedge> &edg) {
+    if (edg.size() <= 2)
+      return {edg};
+
+    std::map<int, std::vector<int>> adj;
+    for (int i = 0; i < (int)edg.size(); ++i) {
+      adj[primal ? edg[i].pi : edg[i].di].push_back(i);
+    }
+    std::vector<bool> used(edg.size(), 0);
+    std::vector<pdedge> path;
+
+    std::function<void(const int&)> dfs = [&](const int &ev){
+      int v = (primal ? edg[ev].pj : edg[ev].dj);
+
+      for (const int &ew : adj[v]) {
+        if (!used[ew]) {
+          int w = (primal ? edg[ew].pj : edg[ew].dj);
+
+          used[ew] = true;
+          dfs(ew);
+        }
+        
+      }
+      path.push_back(edg[ev]);
+    };
+
+
+    std::vector<std::vector<pdedge>> res;
+    for (int vs = 0; vs < (int)used.size(); vs++) {
+      if (!used[vs]) {
+        used[vs] = 1;
+        path.clear();
+        dfs(vs);
+
+        std::reverse(path.begin(), path.end());
+        res.push_back(path);
+        
+#ifdef DEBUG_CHECKS
+        if (primal ? (path.back().pj != path.front().pi) : (path.back().dj != path.front().di))
+          throw std::runtime_error("path in order_cycle does not close");
+#endif
+      }
+    }
+    
+    return res;
+
+    /*
+    std::map<int, int> next;
+    for (int i = 0; i < (int)edg.size(); ++i)
+      next[primal ? edg[i].pi : edg[i].di] = i;
+    std::vector<pdedge> res;
+    res.reserve(edg.size());
+    res.push_back(edg[0]);
+    for (int i = 1, j = 0; i < (int)edg.size(); ++i) {
+      auto it = next.find(primal ? edg[j].pj : edg[j].dj);
+      if (it == next.end()) {
+        std::stringstream ss;
+        ss << "edges do not make up a cycle: ";
+        for (auto & e : edg)
+          ss << e.repr() << " ";
+        throw std::runtime_error(ss.str());
+      }
+      j = it->second;
+      res.push_back(edg[j]);
+    }
+    if ((primal ? res.back().pj : res.back().dj) != (primal ? res.front().pi : res.front().di)) {
+      std::stringstream ss;
+      ss << "edges do not make up a cycle (cycle does not close): ";
+      for (auto &e : res)
+        ss << e.repr() << " ";
+      throw std::runtime_error(ss.str());
+    }
+    return res;
+    */
   }
 };
 
@@ -223,19 +348,19 @@ struct pdmesh {
 #ifdef DEBUG_CHECKS
     int i0 = 
 #endif
-    std::erase_if(padj[e.pi], [&e](const pdedge &f){ return f.pj == e.pj; });
+    std::erase_if(padj[e.pi], [&e](const pdedge &f){ return f.pj == e.pj && f.di == e.di && f.dj == e.dj; });
 #ifdef DEBUG_CHECKS
     int i1 = 
 #endif
-    std::erase_if(padj[e.pj], [&e](const pdedge &f){ return f.pj == e.pi; });
+    std::erase_if(padj[e.pj], [&e](const pdedge &f){ return f.pj == e.pi && f.di == e.dj && f.dj == e.di; });
 #ifdef DEBUG_CHECKS
     int i2 = 
 #endif
-    std::erase_if(dadj[e.di], [&e](const pdedge &f){ return f.dj == e.dj; });
+    std::erase_if(dadj[e.di], [&e](const pdedge &f){ return f.dj == e.dj && f.pi == e.pi && f.pj == e.pj; });
 #ifdef DEBUG_CHECKS
     int i3 = 
 #endif
-    std::erase_if(dadj[e.dj], [&e](const pdedge &f){ return f.dj == e.di; });
+    std::erase_if(dadj[e.dj], [&e](const pdedge &f){ return f.dj == e.di && f.pi == e.pj && f.pj == e.pi; });
 
 #ifdef DEBUG_CHECKS
     if (i0 < 1 || i1 < 1 || i2 < 1 || i3 < 1)
@@ -323,6 +448,23 @@ struct pdmesh {
       throw std::runtime_error("called contains() with invalid points");
 #endif
     return pvert[pi].dot(dvert[di]) <= 0;
+  }
+
+  // find the (index of the) dual point which has largest inner product with d
+  int extramal_dual(const Eigen::Ref<const Eigen::Vector3d> &d) {
+
+    double maxval = -std::numeric_limits<double>::infinity(), val;
+    int res = -1;
+    
+    for (auto it = dadj.begin_idx(); it != dadj.end_idx(); ++it) {
+      int di = *it;
+      if ((val = dvert[di].head<3>().dot(d)) > maxval * dvert[di](3)) {
+        res = di;
+        maxval = val / dvert[di](3);
+      }
+    }
+
+    return res;
   }
   
   // get neighbors of primal index pi (as edges e with e.pi == pi)
@@ -420,7 +562,8 @@ struct pdmesh {
                          [](const pdmesh *m){ return m->dadj.to_vector();}) \
   .def_readonly("pvert", &pdmesh::pvert)                                \
   .def_property_readonly("dvert",                                       \
-                         [](const pdmesh *m){ return m->dvert.to_vector();});
+                         [](const pdmesh *m){ return m->dvert.to_vector();}) \
+  .def("extramal_dual", &pdmesh::extramal_dual);
 
 
 class halfspace_intersection
@@ -476,7 +619,7 @@ public:
 
       used[di] = used_ctr;
       
-      if (err >= 0) {
+      if (err >= 0 && !mesh.contains(pi, di)) {
         di_start = di;
         break;
       }
@@ -515,15 +658,21 @@ public:
     }
 #endif
 
+
     // if there is no point outside, the new halfspace does nothing
     if (di_start < 0) {
       // std::cout << "halfspace completely contains domain" << std::endl;
       return;
     }
+    
+#ifdef DEBUG_CHECKS
+    if (mesh.contains(pi, di_start))
+      throw std::runtime_error(FORMAT("mesh contains starting index {} which it shouldn't", di_start));
+#endif
 
     used_ctr++;
     used[di_start] = used_ctr;
-    std::vector<int> remove_di({di_start});  // dual vertices that are cut off
+    std::vector<int> remove_di({di_start});  // dual vertices that are cut off (contains(pi, *) is false)
     std::vector<pdedge> cross_e;             // edges crossing from cut off part to remaining part (e.di is removed, e.dj is remaining)
 
     // (bfs) traverse set of cut off vertices and store the vertices and edges connecting them to the remaining part
@@ -552,7 +701,7 @@ public:
 
       }
     }
-    
+
     // std::cout << "cut verts: ";
     // for (auto &x: remove_di)
     //   std::cout << x << " ";
@@ -570,38 +719,50 @@ public:
     for (const int &di : remove_di)
       mesh.remove_dual(di);
 
-    // order the cut edges by primal indices (i.e. such that e[i].pj == e[i+1].pi)
-    cross_e = pdedge::order_cycle<true>(cross_e);
+    std::vector<std::vector<pdedge>> cycles;
+    try {
+      // order the cut edges by primal indices (i.e. such that e[i].pj == e[i+1].pi)
+      //cross_e = pdedge::order_cycle<true>(cross_e);
+      cycles = pdedge::cycle_decomposition<true>(cross_e);
+    } catch (std::runtime_error &ex) {
 
-    // add new edges
-    pdedge first_e, prev_e;
-    bool first = true;
-    for (auto &e : cross_e) {
-      // replace dual start of crossing edge with new vertex
-      e.di = mesh.add_dual();
+      py::print("cut_verts:", remove_di);
+      py::print("cross_e:", cross_e);
 
-      // add edge from new vertex to remaining old part
-      // std::cout << "add edge " << e.repr() << " between new and old" << std::endl;
-      mesh.add_edge(e);
-      
-      if (first) {
-        // remember first edge to close the cycle later
-        first_e = e;
-        first = false;
-      } else {
-        // if not first edge, connect to previous
-        // std::cout << "add edge between new and new" << std::endl;
-        mesh.add_edge({e.pi, pi, prev_e.di, e.di});
-      }
-
-      // remember last edge
-      prev_e = e;
+      throw ex;
     }
 
-    // close cycle
-    if (!first) {
-      // std::cout << "add closing edge" << std::endl;
-      mesh.add_edge({first_e.pi, pi, prev_e.di, first_e.di});
+    // add new edges
+    for (auto &cross_e : cycles) {
+      pdedge first_e, prev_e;
+      bool first = true;
+      for (auto &e : cross_e) {
+        // replace dual start of crossing edge with new vertex
+        e.di = mesh.add_dual();
+        
+        // add edge from new vertex to remaining old part
+        // std::cout << "add edge " << e.repr() << " between new and old" << std::endl;
+        mesh.add_edge(e);
+        
+        if (first) {
+          // remember first edge to close the cycle later
+          first_e = e;
+          first = false;
+        } else {
+          // if not first edge, connect to previous
+          // std::cout << "add edge between new and new" << std::endl;
+          mesh.add_edge({e.pi, pi, prev_e.di, e.di});
+        }
+        
+        // remember last edge
+        prev_e = e;
+      }
+      
+      // close cycle
+      if (!first) {
+        // std::cout << "add closing edge" << std::endl;
+        mesh.add_edge({first_e.pi, pi, prev_e.di, first_e.di});
+      }
     }
   }
 };
