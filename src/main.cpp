@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <pybind11/eigen.h>
+#include <pybind11/operators.h>
 #include <Eigen/Dense>
 #include <string>
 #include <sstream>
@@ -20,9 +21,11 @@
 #define FORMAT fmt::format
 #endif
 
-#define DEBUG_CHECKS
+//#define DEBUG_CHECKS
+#define PROFILING
 
 #include "laguerre_diagram.hpp"
+#include "timer.hpp"
 
 namespace py = pybind11;
 
@@ -35,6 +38,8 @@ void hello() {
 PYBIND11_MODULE(_atmosphere_bgs, m) {
   m.def("_hello", &hello); 
 
+  BIND_TIMER(m);
+  
   BIND_PHYSICAL_PARAMETERS(m);
   BIND_SIMULATION_PARAMETERS(m);
   BIND_TANGENT_POINT(m);

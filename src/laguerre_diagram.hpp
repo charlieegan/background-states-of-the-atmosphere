@@ -18,6 +18,8 @@ namespace py = pybind11;
 #include <algorithm>
 #include <numeric>
 
+#include "timer.hpp"
+
 
 class laguerre_diagram
 {
@@ -66,6 +68,20 @@ public:
   std::vector<std::vector<int>> faces;
   // face areas
   Eigen::VectorXd areas, areaerrs;
+
+#ifdef PROFILING
+  std::shared_ptr<timer> time = NULL;
+  int idx_time_halfspace_intersection = -1, idx_time_extract_diagram = -1, idx_time_jacobian = -1;
+
+  void setup_timer() {
+    if (!time)
+      time = std::make_shared<timer>();
+    idx_time_halfspace_intersection = time->get_index_from_name("laguerre_diagram.halfspace_intersection");
+    idx_time_extract_diagram = time->get_index_from_name("laguerre_diagram.extract_diagram");
+    idx_time_jacobian = time->get_index_from_name("laguerre_diagram.jacobian");
+  }
+  
+#endif
   
   laguerre_diagram(const seeds_t &ys,
                    const Eigen::Ref<const Eigen::VectorXd> &duals,
@@ -73,6 +89,10 @@ public:
                    const simulation_parameters &sim) :
     n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim) {
 
+#ifdef PROFILING
+    setup_timer();
+#endif
+    
     if ((int)duals.size() != n + 1)
       throw std::runtime_error("the size of the dual vector must be one larger than the first dimension of seed positions (the last entry of duals corresponds to the boundary cell)");
 
@@ -82,6 +102,10 @@ public:
   }
 
   void do_hs_intersect() {
+#ifdef PROFILING
+    time->start_section(idx_time_halfspace_intersection);
+#endif
+    
     // perform the halfspace intersection
 
     Eigen::Vector3d zeta_min, zeta_max;
@@ -111,11 +135,18 @@ public:
 
       hs.add_halfspace(H);
     }
-    
+
+#ifdef PROFILING
+    time->end_section();
+#endif
   }
 
   
   void extract_diagram() {
+#ifdef PROFILING
+    time->start_section(idx_time_extract_diagram);
+#endif
+
     // extract vertices
     verts.resize(hs.mesh.dvert.capacity(), 2);
     for (int i = 0; i < (int)verts.rows(); i++)
@@ -231,9 +262,16 @@ public:
         
       }
     }
+    
+#ifdef PROFILING
+    time->end_section();
+#endif
   }
 
   std::map<std::pair<int,int>, double> jac() {
+#ifdef PROFILING
+    time->start_section(idx_time_jacobian);
+#endif
     // get jacobian (derivative of masses w.r.t. dual)
 
     std::map<std::pair<int,int>, double> res;
@@ -249,12 +287,19 @@ public:
         res[{j, i}] -= e.dif;
       }
     }
+#ifdef PROFILING
+    time->end_section();
+#endif
     return res;
   }
 
   std::pair<Eigen::VectorXd, std::pair<Eigen::VectorXi, Eigen::VectorXi>> jac_coo() {
     auto J = jac();
-    
+
+#ifdef PROFILING
+    time->start_section(idx_time_jacobian);
+#endif
+
     Eigen::VectorXd data(J.size());
     Eigen::VectorXi i(J.size()), j(J.size());
 
@@ -265,6 +310,9 @@ public:
       j[k++] = v.first.second;
     }
 
+#ifdef PROFILING
+    time->end_section();
+#endif
     return {data, {i, j}};
   }
   
@@ -281,6 +329,12 @@ public:
   .def_readonly("dif", &laguerre_diagram::diagram_edge::dif);
 
 
+#ifdef PROFILING
+#define BIND_LAGUERRE_DIAGRAM_PROFILING(m)      \
+  def_readonly("time", &laguerre_diagram::time)
+#else
+#define BIND_LAGUERRE_DIAGRAM_PROFILING(m)
+#endif
 
 #define BIND_LAGUERRE_DIAGRAM(m)                                        \
   py::class_<laguerre_diagram>(m, "LaguerreDiagram")                    \
@@ -301,6 +355,7 @@ public:
   .def_readonly("faces", &laguerre_diagram::faces)                      \
   .def_readonly("areas", &laguerre_diagram::areas)                      \
   .def_readonly("areaerrs", &laguerre_diagram::areaerrs)                \
+  .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                                   \
   .def("jac", &laguerre_diagram::jac)                                   \
   .def("jac_coo", &laguerre_diagram::jac_coo);
   

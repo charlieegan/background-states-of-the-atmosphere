@@ -7,12 +7,10 @@
 template <typename T>
 class dvector
 {
-protected:
+public:
   std::vector<T> data;
   std::vector<bool> avail;
   std::vector<int> avail_idx;
-  
-public:
 
   dvector() : data(), avail(), avail_idx() {}
   dvector(const int &n) : data(n), avail(n, false), avail_idx() {}
@@ -38,7 +36,7 @@ public:
   void remove(const int &i) {
     avail[i] = true;
     avail_idx.push_back(i);
-  }
+   }
 
   // check whether index i is contained
   bool contains_idx(const int &i) const {
@@ -83,7 +81,7 @@ public:
       return v->data[i];
     }
     iterator& operator++() {
-      while (++i < v->avail.size() && v->avail[i]);
+      while (++i < (int)v->avail.size() && v->avail[i]);
       return *this;
     }
     bool operator==(const iterator &it) const {
@@ -139,7 +137,7 @@ public:
     const_idx_iterator(const_idx_iterator &&it) : v(it.v), i(it.i) {}
     const_idx_iterator(const const_idx_iterator &it) : v(it.v), i(it.i) {}
 
-    const int& operator*() {
+    int operator*() {
       return i;
     }
     const_idx_iterator& operator++() {
@@ -194,6 +192,19 @@ public:
     for (const auto &x : *this)
       res.push_back(x);
     return res;
+  }
+
+  // transform index of this to corresponding index in compressed version as returnd by to_vector
+  int transform_idx(const int &i) const {
+    int sh = 0;
+    for (auto k : avail_idx) {
+      sh += (k <= i);
+#ifdef DEBUG_CHECKS
+      if (k == i)
+        throw std::runtime_error("tried to transform_idx invalid index");
+#endif
+    }
+    return i - sh;
   }
   
   std::string repr() const {
