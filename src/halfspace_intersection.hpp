@@ -122,7 +122,7 @@ struct pdedge {
     if (edg.size() <= 2)
       return {edg};
 
-    std::map<int, std::vector<int>> adj;
+    std::unordered_map<int, std::vector<int>> adj;
     for (int i = 0; i < (int)edg.size(); ++i) {
       adj[primal ? edg[i].pi : edg[i].di].push_back(i);
     }
@@ -147,7 +147,7 @@ struct pdedge {
     std::vector<std::vector<pdedge>> res;
     for (int vs = 0; vs < (int)used.size(); vs++) {
       if (!used[vs]) {
-        used[vs] = 1;
+        used[vs] = true;
         path.clear();
         dfs(vs);
         std::reverse(path.begin(), path.end());
@@ -580,14 +580,18 @@ public:
 
 #ifdef PROFILING
   std::shared_ptr<timer> time = NULL;
-  int idx_time_find_cut = -1, idx_time_partition = -1, idx_time_modify = -1;
+  int idx_time_find_cut = -1, idx_time_partition = -1, idx_time_cycledec = -1, idx_time_add = -1, idx_time_remove = -1;
 
+  int remove_count = 0;
+  
   void setup_timer() {
     if (!time)
       time = std::make_shared<timer>();
     idx_time_find_cut = time->get_index_from_name("halfspace_intersection.find_cut");
     idx_time_partition = time->get_index_from_name("halfspace_intersection.partition");
-    idx_time_modify = time->get_index_from_name("halfspace_intersection.modify");
+    idx_time_cycledec = time->get_index_from_name("halfspace_intersection.cycledec");
+    idx_time_add = time->get_index_from_name("halfspace_intersection.add");
+    idx_time_remove = time->get_index_from_name("halfspace_intersection.remove");
   }  
 #endif
   
@@ -713,11 +717,13 @@ public:
     std::vector<int> remove_di({di_start});  // dual vertices that are cut off (contains(pi, *) is false)
     std::vector<pdedge> cross_e;             // edges crossing from cut off part to remaining part (e.di is removed, e.dj is remaining)
 
-    // (bfs) traverse set of cut off vertices and store the vertices and edges connecting them to the remaining part
-    std::deque<int> q({di_start});
+    // traverse set of cut off vertices and store the vertices and edges connecting them to the remaining part
+    std::vector<int> q({di_start});
     while (!q.empty()) {
-      int di = q.front();
-      q.pop_front();
+      // int di = q.front();
+      // q.pop_front();
+      int di = q.back();
+      q.pop_back();
 
       // std::cout << "visit " << di << std::endl;
 
@@ -745,6 +751,10 @@ public:
     // - add new edges where cross_e used to be (or update these instead of deleting)
     // - add new edges between the new vertices
 
+#ifdef PROFILING
+    time->start_section(idx_time_cycledec);
+#endif
+    
     std::vector<std::vector<pdedge>> cycles;
     try {
       // order the cut edges by primal indices (i.e. such that e[i].pj == e[i+1].pi)
@@ -766,11 +776,13 @@ public:
       throw ex;
     }
     
-#ifdef PROFILING
-    time->start_section(idx_time_modify);
-#endif
 
     try {
+
+#ifdef PROFILING
+    time->start_section(idx_time_add);
+#endif
+    
       // add new edges
       for (auto &cross_e : cycles) {
         pdedge first_e, prev_e;
@@ -836,12 +848,25 @@ public:
         }
       }
   
+#ifdef PROFILING
+    time->start_section(idx_time_remove);
+#endif
+    
     // remove old cut off dual vertices (including all connecting edges)
     for (const int &di : remove_di)
       mesh.remove_dual(di);
+
+#ifdef PROFILING
+    time->end_section();
+    remove_count += remove_di.size();
+#endif
     
     } catch (std::runtime_error &ex) {
 
+#ifdef PROFILING
+    time->end_section();
+#endif
+      
       py::print("in trying to add pi:", pi);
       py::print("integrity:", mesh.check_integrity());
       py::print("cut_verts:", remove_di);
@@ -863,8 +888,9 @@ public:
 };
 
 #ifdef PROFILING
-#define BIND_HALFSPACE_INTERSECTION_PROFILING(m)        \
-  def_readonly("time", &halfspace_intersection::time)
+#define BIND_HALFSPACE_INTERSECTION_PROFILING(m)                        \
+  def_readonly("time", &halfspace_intersection::time)                   \
+  .def_readonly("remove_count", &halfspace_intersection::remove_count)
 #else
 #define BIND_HALFSPACE_INTERSECTION_PROFILING(m)
 #endif

@@ -71,13 +71,16 @@ public:
 
 #ifdef PROFILING
   std::shared_ptr<timer> time = NULL;
-  int idx_time_halfspace_intersection = -1, idx_time_extract_diagram = -1, idx_time_jacobian = -1;
+  int idx_time_halfspace_intersection = -1, idx_time_extract_vertices = -1, idx_time_extract_edges = -1, idx_time_calc_areas = -1, idx_time_calc_integrals = -1, idx_time_jacobian = -1;
 
   void setup_timer() {
     if (!time)
       time = std::make_shared<timer>();
     idx_time_halfspace_intersection = time->get_index_from_name("laguerre_diagram.halfspace_intersection");
-    idx_time_extract_diagram = time->get_index_from_name("laguerre_diagram.extract_diagram");
+    idx_time_extract_vertices = time->get_index_from_name("laguerre_diagram.extract_vertices");
+    idx_time_extract_edges = time->get_index_from_name("laguerre_diagram.extract_edges");
+    idx_time_calc_areas = time->get_index_from_name("laguerre_diagram.calc_areas");
+    idx_time_calc_integrals = time->get_index_from_name("laguerre_diagram.calc_integrals");
     idx_time_jacobian = time->get_index_from_name("laguerre_diagram.jacobian");
   }
   
@@ -141,10 +144,9 @@ public:
 #endif
   }
 
-  
   void extract_diagram() {
 #ifdef PROFILING
-    time->start_section(idx_time_extract_diagram);
+    time->start_section(idx_time_extract_vertices);
 #endif
 
     // extract vertices
@@ -152,17 +154,29 @@ public:
     for (int i = 0; i < (int)verts.rows(); i++)
       verts.row(i) = hs.mesh.dvert[i].head<2>() / hs.mesh.dvert[i](3);
 
+#ifdef PROFILING
+    time->start_section(idx_time_extract_edges);
+#endif
+
     // extract edges and faces
     faces.resize(hs.mesh.pcnt());
+    edglist.reserve(hs.mesh.dcnt());
     for (int i = 0; i < n; i++)
-      for (const auto &e : hs.mesh.pneigh(i + 6))
+      faces[i].reserve(hs.mesh.padj[i + 6].size());
+    for (int i = 0; i < n; i++)
+      for (const auto &e : hs.mesh.padj[i + 6])
         if (e.pj < 6 || e.pi < e.pj) {
             edglist.push_back({e.pi, e.pj, e.di, e.dj,
-                discretized_line_segment(verts.row(e.di), verts.row(e.dj), phys, 1.0)});
+                discretized_line_segment(verts.row(e.di), verts.row(e.dj),
+                                         phys, std::numeric_limits<double>::infinity())});
             
             faces[e.pi].push_back(edglist.size() - 1);
             faces[e.pj].push_back(edglist.size() - 1);
           }
+
+#ifdef PROFILING
+    time->start_section(idx_time_calc_areas);
+#endif
 
     // calculate face areas
     areas.resize(n);
@@ -212,6 +226,10 @@ public:
 
       // py::print(i, "- error after refining:", areaerrs(i) / areas(i));
     }
+
+#ifdef PROFILING
+    time->start_section(idx_time_calc_integrals);
+#endif
     
     // calculate line integrals
     for (auto &e : edglist) {
@@ -268,23 +286,31 @@ public:
 #endif
   }
 
-  std::map<std::pair<int,int>, double> jac() {
+  // std::map<std::pair<int,int>, double> jac() {
+  std::unordered_map<uint64_t, double> jac() {
 #ifdef PROFILING
     time->start_section(idx_time_jacobian);
 #endif
     // get jacobian (derivative of masses w.r.t. dual)
 
-    std::map<std::pair<int,int>, double> res;
+    // std::map<std::pair<int,int>, double> res;
+    std::unordered_map<uint64_t, double> res;
     for (auto &e : edglist) {
       if (e.pj >= 6) {
-        int i = e.pi-6;
-        int j = std::min(e.pj-6,n);
+        uint64_t i = e.pi-6;
+        uint64_t j = std::min(e.pj-6,n);
 
-        res[{i, i}] += e.dif;
-        res[{i, j}] -= e.dif;
+        res[(i << 32) | i] += e.dif;
+        res[(i << 32) | j] -= e.dif;
         
-        res[{j, j}] += e.dif;
-        res[{j, i}] -= e.dif;
+        res[(j << 32) | j] += e.dif;
+        res[(j << 32) | i] -= e.dif;
+        
+        // res[{i, i}] += e.dif;
+        // res[{i, j}] -= e.dif;
+        
+        // res[{j, j}] += e.dif;
+        // res[{j, i}] -= e.dif;
       }
     }
 #ifdef PROFILING
@@ -306,8 +332,10 @@ public:
     int k = 0;
     for (auto &v : J) {
       data[k] = v.second;
-      i[k] = v.first.first;
-      j[k++] = v.first.second;
+      i[k] = v.first >> 32;
+      j[k++] = v.first & 0xFFFFFFFF;
+      // i[k] = v.first.first;
+      // j[k++] = v.first.second;
     }
 
 #ifdef PROFILING

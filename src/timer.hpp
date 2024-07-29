@@ -48,7 +48,7 @@ public:
     current_section = -1;
   }
     
-  std::string format_times() {
+  std::string format_times(std::string sep = ", ") {
     auto t = std::chrono::high_resolution_clock::now();
     double dt = std::chrono::duration_cast<std::chrono::nanoseconds>(t - t_last).count();
     if (current_section >= 0)
@@ -57,7 +57,7 @@ public:
     std::stringstream ss;
     ss << names[0] << ": " << times[0] * 1e-6 << "ms";
     for (int i = 1; i < (int)times.size(); i++)
-      ss << ", " << names[i] << ": " << times[i] * 1e-6 << "ms";
+      ss << sep << names[i] << ": " << times[i] * 1e-6 << "ms";
     return ss.str();
   }
 
@@ -84,7 +84,7 @@ public:
   .def("format_times", &timer::format_times)                            \
   .def(py::self + py::self)                                             \
   .def(py::self += py::self)                                            \
-  .def("__repr__", &timer::format_times);
+  .def("__repr__", [](std::shared_ptr<timer> t){ return t->format_times("\n"); });
 
 #endif
 

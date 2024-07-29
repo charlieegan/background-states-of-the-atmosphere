@@ -16,6 +16,6 @@ name = "atmosphere_bgs"
 description = "TODO"
 authors = [{"name" = "Charles Peter Egan"}, {"name" = "Thilo Stier"}]
 license = {"file" = "LICENSE"}
-version = "0.0.1"
+version = "0.1.0"
 dependencies = ["numpy",]
 requires-python = ">=3.7"

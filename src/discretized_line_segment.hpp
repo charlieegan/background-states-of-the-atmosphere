@@ -54,7 +54,7 @@ private:
   double sqr(const double &x) const { return x * x; }
   
 public:
-  physical_parameters phys;
+  const physical_parameters &phys;
   std::list<tangent_point> points;
   Eigen::Vector2d dzeta;
   
