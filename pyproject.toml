@@ -17,5 +17,20 @@ description = "TODO"
 authors = [{"name" = "Charles Peter Egan"}, {"name" = "Thilo Stier"}]
 license = {"file" = "LICENSE"}
 version = "0.1.0"
-dependencies = ["numpy",]
+readme = "README.md"
+dependencies = [
+    "numpy",
+    "scipy",
+]
 requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
+]
+
+[project.optional-dependencies]
+test = ["pytest",]
