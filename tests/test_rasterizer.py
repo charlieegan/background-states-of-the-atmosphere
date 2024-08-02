@@ -40,6 +40,15 @@ def test_10x10_simple(geometry_simple, geometry_simple_10x10_truth):
     rast = Rasterizer(**geometry_simple, res=res);
     assert np.max(np.abs(rast.out - geometry_simple_10x10_truth)) < 1e-9
 
+@pytest.mark.parametrize("seed", np.arange(50))
+def test_segment_direction_simple(geometry_simple, geometry_simple_10x10_truth, seed):
+    np.random.seed(seed)
+    seg = [(s[1], s[0], s[2]) if np.random.random() > 0.5 else s for s in geometry_simple["seg"]]
+    con = [np.array(c)[np.random.permutation(len(c))] for c in geometry_simple["con"]]
+    res = [10, 10]
+    rast = Rasterizer(seg = seg, con = con, start = geometry_simple["start"], bounds = geometry_simple["bounds"], res=res)
+    assert np.max(np.abs(rast.out - geometry_simple_10x10_truth)) < 1e-9
+
 def meanpool(a, ps):
     res = np.zeros((a.shape[0] // ps[0], a.shape[1] // ps[1]))
     J, I = np.meshgrid(np.repeat(np.arange(res.shape[1]), ps[1]), np.repeat(np.arange(res.shape[0]), ps[0]))
