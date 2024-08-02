@@ -8,6 +8,7 @@ namespace py = pybind11;
 #include "simulation_parameters.hpp"
 #include "discretized_line_segment.hpp"
 #include "halfspace_intersection.hpp"
+#include "rasterizer.hpp"
 
 #include <Eigen/Dense>
 #include <string>
@@ -64,8 +65,10 @@ public:
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> verts;
   // edges
   std::vector<diagram_edge> edglist;
-  // faces (list of edges per face)
+  // primal faces (list of edges per face)
   std::vector<std::vector<int>> faces;
+  // dual facets (list of edges per vertex)
+  std::vector<std::vector<int>> dfacets;
   // face areas
   Eigen::VectorXd areas, areaerrs;
 
@@ -151,6 +154,7 @@ public:
 
     // extract vertices
     verts.resize(hs.mesh.dvert.capacity(), 2);
+    dfacets.resize(hs.mesh.dvert.capacity());
     for (int i = 0; i < (int)verts.rows(); i++)
       verts.row(i) = hs.mesh.dvert[i].head<2>() / hs.mesh.dvert[i](3);
 
@@ -172,6 +176,8 @@ public:
             
             faces[e.pi].push_back(edglist.size() - 1);
             faces[e.pj].push_back(edglist.size() - 1);
+            dfacets[e.di].push_back(edglist.size() - 1);
+            dfacets[e.dj].push_back(edglist.size() - 1);
           }
 
 #ifdef PROFILING
@@ -343,7 +349,17 @@ public:
 #endif
     return {data, {i, j}};
   }
-  
+
+  // calculate a sres x pres matrix containing the value v[i] in cell i
+  // v should have length n + 1 (last value is for default cell outside, may be nan or inf)
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+  rastierize(const Eigen::Ref<const Eigen::VectorXd> &v, int sres, int pres) {
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> a(sres, pres);
+    
+    
+    
+    return a;
+  }
 };
 
 #define BIND_DIAGRAM_EDGE(m)                                            \
@@ -381,6 +397,7 @@ public:
   .def_readonly("edglist", &laguerre_diagram::edglist)                  \
   .def_readonly("verts", &laguerre_diagram::verts)                      \
   .def_readonly("faces", &laguerre_diagram::faces)                      \
+  .def_readonly("dfacets", &laguerre_diagram::dfacets)                  \
   .def_readonly("areas", &laguerre_diagram::areas)                      \
   .def_readonly("areaerrs", &laguerre_diagram::areaerrs)                \
   .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                                   \

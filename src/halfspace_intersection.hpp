@@ -550,6 +550,13 @@ struct pdmesh {
       s << std::endl;
     }
   }
+
+  void order_all() {
+    for (int i = 0; i < (int)padj.size(); ++i) {
+      padj[i] = pdedge::order_cycle<false>(padj[i]);
+    }
+  }
+
 };
 
 #define BIND_PDMESH(m)                                                  \
@@ -566,7 +573,8 @@ struct pdmesh {
   .def_property_readonly("dvert",                                       \
                          [](const pdmesh *m){ return m->dvert.data;})   \
   .def("extremal_dual", &pdmesh::extremal_dual)                         \
-  .def("write_ply", &pdmesh::write_ply);
+  .def("write_ply", &pdmesh::write_ply)                                 \
+  .def("order_all", &pdmesh::order_all);
 
 
 class halfspace_intersection
