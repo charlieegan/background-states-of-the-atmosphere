@@ -3,23 +3,32 @@ import numpy as np
 import itertools
 from _atmosphere_bgs import Rasterizer
 
+
+def meanpool(a, ps):
+    res = np.zeros((a.shape[0] // ps[0], a.shape[1] // ps[1]))
+    J, I = np.meshgrid(np.repeat(np.arange(res.shape[1]), ps[1]), np.repeat(np.arange(res.shape[0]), ps[0]))
+    print(np.repeat(res.shape[1], ps[1]))
+    np.add.at(res, (I.ravel(), J.ravel()), a.ravel())
+    res /= ps[0] * ps[1]
+    return res
+
 @pytest.fixture
 def geometry_simple():
     res = {}
-    vals = [1, 2, 3, 0]
-    res["seg"] = [((0,0), (4,0), np.nan), 
-                  ((4,0), (10,0), np.nan), 
-                  ((4,0), (6,2), vals[1]), 
-                  ((6,2), (8,1), vals[1]), 
-                  ((8,1), (10,3), vals[1]), 
-                  ((4,6), (6,2), vals[0]), 
-                  ((0,7), (4,6), vals[0]), 
-                  ((4,6), (8,7), vals[2]), 
-                  ((8,7), (10,7), vals[2]), 
-                  ((0,10), (10,10), vals[3])]
+    res["val"] = np.array([1, 2, 3, 0])
+    res["seg"] = [((0,0), (4,0), -1), 
+                  ((4,0), (10,0), -1), 
+                  ((4,0), (6,2), 1), 
+                  ((6,2), (8,1), 1), 
+                  ((8,1), (10,3), 1), 
+                  ((4,6), (6,2), 0), 
+                  ((0,7), (4,6), 0), 
+                  ((4,6), (8,7), 2), 
+                  ((8,7), (10,7), 2), 
+                  ((0,10), (10,10), 3)]
     res["con"] = [[0,1,2], [2,3,5], [3,4], [6,5,7], [7,8]]
     res["start"] = [0, 6, 9]
-    res["bounds"] = [0, 10, 0, 10]
+    res["bounds"] = np.array([0, 10, 0, 10])
     return res
 
 @pytest.fixture
@@ -37,8 +46,25 @@ def geometry_simple_10x10_truth():
 
 def test_10x10_simple(geometry_simple, geometry_simple_10x10_truth):
     res = [10,10]
-    rast = Rasterizer(**geometry_simple, res=res);
-    assert np.max(np.abs(rast.out - geometry_simple_10x10_truth)) < 1e-9
+    rast = Rasterizer(seg = geometry_simple["seg"],
+                      con = geometry_simple["con"],
+                      start = geometry_simple["start"],
+                      bounds = geometry_simple["bounds"]);
+    v = rast.rasterize(val = geometry_simple["val"], res = res)
+    assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
+
+def test_consecutive_simple(geometry_simple, geometry_simple_10x10_truth):
+    res = [10,10]
+    rast = Rasterizer(seg = geometry_simple["seg"],
+                      con = geometry_simple["con"],
+                      start = geometry_simple["start"],
+                      bounds = geometry_simple["bounds"]);
+
+    v = rast.rasterize(val = geometry_simple["val"], res = res)
+    assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
+    
+    v = rast.rasterize(val = geometry_simple["val"], res = res)
+    assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
 
 @pytest.mark.parametrize("seed", np.arange(50))
 def test_segment_direction_simple(geometry_simple, geometry_simple_10x10_truth, seed):
@@ -46,21 +72,62 @@ def test_segment_direction_simple(geometry_simple, geometry_simple_10x10_truth, 
     seg = [(s[1], s[0], s[2]) if np.random.random() > 0.5 else s for s in geometry_simple["seg"]]
     con = [np.array(c)[np.random.permutation(len(c))] for c in geometry_simple["con"]]
     res = [10, 10]
-    rast = Rasterizer(seg = seg, con = con, start = geometry_simple["start"], bounds = geometry_simple["bounds"], res=res)
-    assert np.max(np.abs(rast.out - geometry_simple_10x10_truth)) < 1e-9
-
-def meanpool(a, ps):
-    res = np.zeros((a.shape[0] // ps[0], a.shape[1] // ps[1]))
-    J, I = np.meshgrid(np.repeat(np.arange(res.shape[1]), ps[1]), np.repeat(np.arange(res.shape[0]), ps[0]))
-    print(np.repeat(res.shape[1], ps[1]))
-    np.add.at(res, (I.ravel(), J.ravel()), a.ravel())
-    res /= ps[0] * ps[1]
-    return res
+    rast = Rasterizer(seg = seg,
+                      con = con,
+                      start = geometry_simple["start"],
+                      bounds = geometry_simple["bounds"]);
+    v = rast.rasterize(val = geometry_simple["val"], res = res)
+    assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
 
 @pytest.mark.parametrize("rep", list(itertools.product(range(1,5), range(1,5))))
 def test_downsample_simple(geometry_simple, geometry_simple_10x10_truth, rep):
     res = [rep[0] * 10, rep[1] * 10]
-    rast = Rasterizer(**geometry_simple, res=res)
-    assert np.max(np.abs(meanpool(rast.out, rep) - geometry_simple_10x10_truth)) < 1e-9
+    rast = Rasterizer(seg = geometry_simple["seg"],
+                      con = geometry_simple["con"],
+                      start = geometry_simple["start"],
+                      bounds = geometry_simple["bounds"]);
+    v = rast.rasterize(val = geometry_simple["val"], res = res)
+    assert np.max(np.abs(meanpool(v, rep) - geometry_simple_10x10_truth)) < 1e-9
 
+def test_consecutive_different_values_simple(geometry_simple, geometry_simple_10x10_truth):
+    res = [10,10]
+    rast = Rasterizer(seg = geometry_simple["seg"],
+                      con = geometry_simple["con"],
+                      start = geometry_simple["start"],
+                      bounds = geometry_simple["bounds"]);
 
+    v = rast.rasterize(val = geometry_simple["val"], res = res)
+    assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
+    
+    v = rast.rasterize(val = 2 * geometry_simple["val"], res = res)
+    print(v)
+    assert np.max(np.abs(v - 2 * geometry_simple_10x10_truth)) < 1e-9
+
+def test_consecutive_different_sizes_simple(geometry_simple, geometry_simple_10x10_truth):
+    res = [10,10]
+    rast = Rasterizer(seg = geometry_simple["seg"],
+                      con = geometry_simple["con"],
+                      start = geometry_simple["start"],
+                      bounds = geometry_simple["bounds"]);
+
+    v = rast.rasterize(val = geometry_simple["val"], res = res)
+    assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
+    
+    v = rast.rasterize(val = geometry_simple["val"], res = 2 * np.array(res))
+    assert np.max(np.abs(meanpool(v, (2,2)) - geometry_simple_10x10_truth)) < 1e-9
+    
+def test_values_one_by_one_simple(geometry_simple, geometry_simple_10x10_truth):
+    res = [10,10]
+    rast = Rasterizer(seg = geometry_simple["seg"],
+                      con = geometry_simple["con"],
+                      start = geometry_simple["start"],
+                      bounds = geometry_simple["bounds"]);
+    v = np.zeros(res);
+    
+    for i in range(len(geometry_simple["val"])):
+        val = np.zeros(len(geometry_simple["val"]))
+        val[i] = geometry_simple["val"][i]
+        v += rast.rasterize(val = val, res = res)
+        
+    assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
+        

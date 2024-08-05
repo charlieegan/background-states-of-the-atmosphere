@@ -74,7 +74,13 @@ public:
 
 #ifdef PROFILING
   std::shared_ptr<timer> time = NULL;
-  int idx_time_halfspace_intersection = -1, idx_time_extract_vertices = -1, idx_time_extract_edges = -1, idx_time_calc_areas = -1, idx_time_calc_integrals = -1, idx_time_jacobian = -1;
+  int idx_time_halfspace_intersection = -1,
+    idx_time_extract_vertices = -1,
+    idx_time_extract_edges = -1,
+    idx_time_calc_areas = -1,
+    idx_time_calc_integrals = -1,
+    idx_time_prepare_rasterizer = -1,
+    idx_time_jacobian = -1;
 
   void setup_timer() {
     if (!time)
@@ -85,6 +91,7 @@ public:
     idx_time_calc_areas = time->get_index_from_name("laguerre_diagram.calc_areas");
     idx_time_calc_integrals = time->get_index_from_name("laguerre_diagram.calc_integrals");
     idx_time_jacobian = time->get_index_from_name("laguerre_diagram.jacobian");
+    idx_time_prepare_rasterizer = time->get_index_from_name("laguerre_diagram.prepare_rasterizer");
   }
   
 #endif
@@ -105,6 +112,8 @@ public:
     do_hs_intersect();
 
     extract_diagram();
+
+    // prepare_rasterizer();
   }
 
   void do_hs_intersect() {
@@ -292,6 +301,103 @@ public:
 #endif
   }
 
+  rasterizer get_rasterizer() {
+
+#ifdef PROFILING
+    time->start_section(idx_time_prepare_rasterizer);
+#endif
+    
+    // prepare segment indices
+    std::vector<int> sidx(edglist.size() + 1); // index of first segment for each edge
+    sidx[0] = 0;
+    for (int i = 0; i < (int)edglist.size(); ++i) {
+      const auto &e = edglist[i];
+
+      // primal indices 1 == bottom, 2 == left, 3 == right, 4 == top
+      if (e.pj == 2 || e.pj == 3) // skip vertical segments on left and right
+        sidx[i + 1] = sidx[i];
+      else
+        sidx[i + 1] = sidx[i] + e.ls.points.size() - 1;
+    }
+
+    // rasterizer arguments
+    std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> seg;
+    std::vector<std::vector<int>> con;
+    std::vector<int> start;
+    Eigen::Array4d bounds = {sim.spmin(0), sim.spmax(0), sim.spmin(1), sim.spmax(1)};
+
+    // collect segments and transition connections
+    for (int i = 0; i < (int)edglist.size(); ++i) {
+      const auto &e = edglist[i];
+      const auto &points = e.ls.points;
+
+      if (e.pj == 2 || e.pj == 3)
+        continue;
+
+      // get (primal) index of cell below:
+      // if the edge is oriented left-to-right then pi is below, if it goes right-to-left then pj is below
+      // indices >= n (i.e. the top cell) are all combined into n
+      int vidx = std::min(((points.front().x(0) < points.back().x(0)) ? e.pi : e.pj) - 6, n + 1);
+
+      // add segments
+      int j = sidx[i];
+      for (auto it1 = points.begin(), it0 = it1++; it1 != points.end(); it0 = it1++, ++j) {
+        if ((int)seg.size() != j)
+          throw std::runtime_error(FORMAT("segment index does not match expected: {} instead of {}", seg.size(), j));
+        seg.push_back({it0->x, it1->x, vidx});
+      }
+
+      // add transition connections
+      for (int j = 1; j < (int)points.size() - 1; ++j)
+        con.push_back({sidx[i] + j - 1, sidx[i] + j});
+    }
+
+    // collect merge/split points
+    for (int dc = 0; dc < (int)dfacets.size(); ++dc) {
+      const auto &f = dfacets[dc];
+      
+      // ignore empty facets
+      if (!f.size())
+        continue;
+      
+      // find simulation box boundaries the point is on
+      bool on_boundary[6] = {};
+      for (const int &ei : f)
+        if (edglist[ei].pj < 6)
+          on_boundary[edglist[ei].pj] = true;
+
+      // check for top / bottom connections (should not exist)
+      if (on_boundary[0] || on_boundary[5])
+        throw std::runtime_error("found dual point touching 3d limit");
+
+      // if the point is on the left boundary, add the edge going away to start
+      if (on_boundary[2]) { // x0 lo (left)
+        for (const int &ei : f)
+          if (edglist[ei].pj != 2)
+            start.push_back(edglist[ei].di == dc ? sidx[ei] : sidx[ei + 1] - 1);
+      }
+
+      // if the point is not on the left or right boundary, add transition / merge / split connection
+      if (!on_boundary[2] && !on_boundary[3]) {
+        std::vector<int> c;
+        for (const int &ei : f)
+          c.push_back(edglist[ei].di == dc ? sidx[ei] : sidx[ei + 1] - 1);
+        con.push_back(c);
+      }
+    }
+
+    seg.push_back({{sim.spmin(0), sim.spmax(1) + 1}, {sim.spmax(0), sim.spmax(1) + 1}, n});
+    start.push_back(seg.size() - 1);
+    
+    rasterizer rast(seg, con, start, bounds);
+    
+#ifdef PROFILING
+    time->end_section();
+#endif
+
+    return rast;
+  }
+  
   // std::map<std::pair<int,int>, double> jac() {
   std::unordered_map<uint64_t, double> jac() {
 #ifdef PROFILING
@@ -349,17 +455,6 @@ public:
 #endif
     return {data, {i, j}};
   }
-
-  // calculate a sres x pres matrix containing the value v[i] in cell i
-  // v should have length n + 1 (last value is for default cell outside, may be nan or inf)
-  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-  rastierize(const Eigen::Ref<const Eigen::VectorXd> &v, int sres, int pres) {
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> a(sres, pres);
-    
-    
-    
-    return a;
-  }
 };
 
 #define BIND_DIAGRAM_EDGE(m)                                            \
@@ -402,7 +497,8 @@ public:
   .def_readonly("areaerrs", &laguerre_diagram::areaerrs)                \
   .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                                   \
   .def("jac", &laguerre_diagram::jac)                                   \
-  .def("jac_coo", &laguerre_diagram::jac_coo);
+  .def("jac_coo", &laguerre_diagram::jac_coo)                           \
+  .def("get_rasterizer", &laguerre_diagram::get_rasterizer);
   
   
 
