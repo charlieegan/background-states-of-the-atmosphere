@@ -6,10 +6,16 @@ namespace py = pybind11;
 
 #include <fstream>
 #include <iomanip>
+#include <sstream>
 #include <exception>
 #include <deque>
 #include <functional>
 #include <Eigen/Dense>
+#include <cmath>
+#include <map>
+#include <list>
+#include <algorithm>
+#include <numeric>
 #include "dvector.hpp"
 #include "timer.hpp"
 

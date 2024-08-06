@@ -1,12 +1,13 @@
 #ifndef RASTERIZER_HPP
 #define RASTERIZER_HPP
 
-
 #include <string>
+#include <iomanip>
 #include <sstream>
 #include <list>
 #include <vector>
 #include <algorithm>
+#include <Eigen/Dense>
 
 class rasterizer
 {
@@ -14,7 +15,7 @@ public:
 
   struct segment {
     Eigen::Vector2d s, e; // start and end point
-    int idx;              // index of cell below (if it exists)
+    int idx, sidx;        // index of cell below (if it exists), index of segment
     double x0;            // (current) start of trapezoid below segment
 
     std::string repr(const int precision = -1) const {
@@ -25,6 +26,7 @@ public:
          << "s = (" << s(0) << ", " << s(1) << ")"
          << ", e = (" << e(0) << ", " << e(1) << ")"
          << ", idx = " << idx
+         << ", sidx = " << sidx
          << ", x0 = " << x0
          << ")";
       return ss.str();
@@ -33,41 +35,33 @@ public:
 
   typedef std::list<segment>::iterator sit_t;
 
-  enum event_type {
-    TRANSITION, // segment 0 transitions to 1
-    MERGE,      // segments 0, 1 merge into 2 (0 below 1)
-    SPLIT,      // segment 0 splits into 1, 2 (1 below 2)
-  };
-
-  static std::string repr(const event_type &e) {
-    switch (e) {
-    case TRANSITION: return "TRANSITION";
-    case MERGE: return "MERGE";
-    case SPLIT: return "SPLIT";
-    default: return "undefined";
-    }
-  }
-
   struct event {
-    double pos;   // sweepline position (x-coord) of event
-    event_type t; // type of event
-    sit_t its[3]; // segments associated to event (for assignment see type definition)
-    friend bool operator<(const event &lhs, const event &rhs) { return lhs.pos < rhs.pos; }
+    Eigen::Vector2d pos; // position of the event
+    int n_in, n_out;     // number of incoming and outgoing segments
+    sit_t its[3];        // segments associated to event (n_in incoming ones followed by n_out outgoing ones)
+    friend bool operator<(const event &lhs, const event &rhs) {
+      return std::tie(lhs.pos(0), lhs.pos(1)) < std::tie(rhs.pos(0), rhs.pos(1));
+    }
     std::string repr() const {
       std::stringstream ss;
       ss << "event("
-         << "coord = (" << get_full_coord()(0) << ", " << get_full_coord()(1) << ")"
-         << ", t = " << rasterizer::repr(t)
+         << "coord = (" << pos(0) << ", " << pos(1) << ")"
+         << ", in = [";
+      for (int i = 0; i < n_in; ++i)
+        ss << its[i]->sidx << ", ";
+      ss << "]"
+         << ", out = [";
+      for (int i = 0; i < n_out; ++i)
+        ss << its[i + n_in]->sidx << ", ";
+      ss << "]"
          << ")";
       return ss.str();
     }
-    Eigen::Vector2d get_full_coord() const {
-      return its[0]->e;
-    }
   };
 
-  // segments that were not yet visited, are completely visited and have intersection with the sweepline correspondingly
-  std::list<segment> unused, used, line;
+  // segments that are in the current sweep line and ones that are not correspondingly
+  std::list<segment> line, pool;
+  std::vector<bool> used;
 
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> out;
   Eigen::Array4d bounds;
@@ -90,93 +84,131 @@ public:
              const std::vector<std::vector<int>> &con,
              const std::vector<int> &start,
              const Eigen::Ref<const Eigen::Array4d> &bounds) :
+    used(seg.size()),
     bounds(bounds),
     lb(bounds(0), bounds(2)) {
 
-    // costruct segments from input parameters and store them in unused
+    // costruct segments from input parameters and store them in pool
     std::vector<sit_t> sits;
-    for (auto &s : seg) {
+    for (int i = 0; i < (int)seg.size(); ++i) {
+      const auto &s = seg[i];
       if (std::get<0>(s)(0) < std::get<1>(s)(0)) {
-        sits.push_back(unused.insert(unused.end(), {std::get<0>(s), std::get<1>(s), std::get<2>(s), std::get<0>(s)(0)}));
+        sits.push_back(pool.insert(pool.end(), {std::get<0>(s), std::get<1>(s), std::get<2>(s), i, std::get<0>(s)(0)}));
         // py::print("not reversed segment: ", *sits.back());
       } else if (std::get<0>(s)(0) > std::get<1>(s)(0)) {
-        sits.push_back(unused.insert(unused.end(), {std::get<1>(s), std::get<0>(s), std::get<2>(s), std::get<1>(s)(0)}));
+        sits.push_back(pool.insert(pool.end(), {std::get<1>(s), std::get<0>(s), std::get<2>(s), i, std::get<1>(s)(0)}));
         // py::print("reversed segment :", *sits.back());
       } else {
-        sits.push_back(unused.insert(unused.end(), {std::get<0>(s), std::get<1>(s), std::get<2>(s), std::get<0>(s)(0)}));
-        throw std::runtime_error("rasterizer got exactly vertical segment");
+        
+        if (std::get<0>(s)(1) < std::get<1>(s)(1)) {
+          sits.push_back(pool.insert(pool.end(), {std::get<0>(s), std::get<1>(s), std::get<2>(s), i, std::get<0>(s)(0)}));
+        } else if (std::get<0>(s)(1) > std::get<1>(s)(1)) {
+          sits.push_back(pool.insert(pool.end(), {std::get<1>(s), std::get<0>(s), std::get<2>(s), i, std::get<1>(s)(0)}));
+        } else {
+          throw std::runtime_error("rasterizer got 0-length segment, which is currently not supported");
+        }
+        
+        py::print(FORMAT("WARNING: rasterizer got exactly vertical segment {}", sits.back()->repr(16)));
+        
+        //throw std::runtime_error("rasterizer got exactly vertical segment");
       }
     }
 
-    // move starting segments from unused to line (sorted by y-coord)
+#ifdef DEBUG_CHECKS
+    for (const auto &it : sits)
+      if (it->s(0) > it->e(0))
+        throw std::runtime_error(FORMAT("segment was not oriented correctly : {}", it->repr(16)));
+#endif
+    
+    // sort starting segments
     for (auto &i : start)
       pline.push_back(sits[i]);
-    std::sort(pline.begin(), pline.end(), [&](const sit_t &it0, const sit_t &it1){ return it0->s(1) < it1->s(1); });
-
+    std::sort(pline.begin(), pline.end(), [](const sit_t &it0, const sit_t &it1){ return it0->s(1) < it1->s(1); });
+    
     // collect and sort events
     for (auto &c : con) {
-      if (c.size() == 2) {
+      if (c.size() < 2)
+        throw std::runtime_error("rasterizer got invalid connection (size < 2)");
+      if (c.size() > 3)
+        throw std::runtime_error("rasterizer got invalid connection (size > 3)");
 
-        const auto &s0 = *sits[c[0]];
-        const auto &s1 = *sits[c[1]];
-
-        if (s0.e == s1.s) // end of segment 0 is start of segment 1
-          events.push_back(event{s0.e(0), TRANSITION, {sits[c[0]], sits[c[1]], line.end()}});
-        else if (s1.e == s0.s) // end of segment 1 is start of segment 0
-          events.push_back(event{s1.e(0), TRANSITION, {sits[c[1]], sits[c[0]], line.end()}});
+#ifdef DEBUG_CHECKS
+      for (const int &i : c)
+        if (i < 0 || i >= (int)sits.size())
+          throw std::runtime_error(FORMAT("connection contains invalid index {}", i));
+#endif
+      
+      // find common point
+      const auto &s0 = sits[c[0]];
+      const auto &s1 = sits[c[1]];
+      Eigen::Vector2d p;
+      if (s0->s == s1->s || s0->s == s1->e)
+        p = s0->s;
+      else if (s0->e == s1->s || s0->e == s1->e)
+        p = s0->e;
+      else
+        throw std::runtime_error(FORMAT("rasterizer got invalid connection (no common point in first two segments {} and {})", s0->repr(), s1->repr()));
+      
+      // separate into incoming and outgoing segments
+      std::vector<sit_t> seg_in, seg_out;
+      for (const int &i : c) {
+        if (sits[i]->s == p)
+          seg_out.push_back(sits[i]);
+        else if (sits[i]->e == p)
+          seg_in.push_back(sits[i]);
         else
-          throw std::runtime_error("rasterizer got invalid transition");
-
-      } else if (c.size() == 3) {
-
-        const auto &s0 = sits[c[0]];
-        const auto &s1 = sits[c[1]];
-        const auto &s2 = sits[c[2]];
-
-#define CHECK_COMMON(e0, e1, e2) ((e0 ? s0->e : s0->s) == (e1 ? s1->e : s1->s) && (e0 ? s0->e : s0->s) == (e2 ? s2->e : s2->s))
-
-        if (CHECK_COMMON(1, 1, 0))
-          if (is_below(s0, s1))
-            events.push_back({s0->e(0), MERGE, {sits[c[0]], sits[c[1]], sits[c[2]]}});
-          else
-            events.push_back({s0->e(0), MERGE, {sits[c[1]], sits[c[0]], sits[c[2]]}});
-        else if (CHECK_COMMON(1, 0, 1))
-          if (is_below(s0, s2))
-            events.push_back({s0->e(0), MERGE, {sits[c[0]], sits[c[2]], sits[c[1]]}});
-          else
-            events.push_back({s0->e(0), MERGE, {sits[c[2]], sits[c[0]], sits[c[1]]}});
-        else if (CHECK_COMMON(0, 1, 1))
-          if (is_below(s1, s2))
-            events.push_back({s1->e(0), MERGE, {sits[c[1]], sits[c[2]], sits[c[0]]}});
-          else
-            events.push_back({s1->e(0), MERGE, {sits[c[2]], sits[c[1]], sits[c[0]]}});
-        else if (CHECK_COMMON(1, 0, 0))
-          if (is_below(s1, s2))
-            events.push_back({s0->e(0), SPLIT, {sits[c[0]], sits[c[1]], sits[c[2]]}});
-          else
-            events.push_back({s0->e(0), SPLIT, {sits[c[0]], sits[c[2]], sits[c[1]]}});
-        else if (CHECK_COMMON(0, 1, 0))
-          if (is_below(s0, s2))
-            events.push_back({s1->e(0), SPLIT, {sits[c[1]], sits[c[0]], sits[c[2]]}});
-          else
-            events.push_back({s1->e(0), SPLIT, {sits[c[1]], sits[c[2]], sits[c[0]]}});
-        else if (CHECK_COMMON(0, 0, 1))
-          if (is_below(s0, s1))
-            events.push_back({s2->e(0), SPLIT, {sits[c[2]], sits[c[0]], sits[c[1]]}});
-          else
-            events.push_back({s2->e(0), SPLIT, {sits[c[2]], sits[c[1]], sits[c[0]]}});
-        else
-          throw std::runtime_error("rasterizer got invalid split/merge");
-
-#undef CHECK_COMMON
-#undef SEG_BELOW
-
-      } else {
-        throw std::runtime_error(FORMAT("rasterizer got connection with wrong number of arguments: {}", c.size()));
+          throw std::runtime_error(FORMAT("rasterizer got invalid connection of size {}"
+                                          "(participating segment {} does not contain common point ({}, {}))",
+                                          con.size(), sits[i]->repr(), p(0), p(1)));
       }
-    }
-    std::sort(events.begin(), events.end());
 
+#ifdef DEBUG_CHECKS
+      if (seg_in.size() + seg_out.size() != c.size())
+        throw std::runtime_error(FORMAT("incoming and outgoing segments don't add up: {} + {} != {}", seg_in.size(), seg_out.size(), c.size()));
+#endif
+
+      // sort segments by y-order (i.e. slope as they have a common end point)
+      std::sort(seg_in.begin(), seg_in.end(),
+                [](const sit_t &l, const sit_t &r){
+                  return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) >
+                          (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
+      std::sort(seg_out.begin(), seg_out.end(),
+                [](const sit_t &l, const sit_t &r){
+                  return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) <
+                          (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
+
+// #ifdef DEBUG_CHECKS
+//       for (int i = 0; i < (int)seg_in.size() - 1; ++i)
+//         if (!is_below(seg_in[i], seg_in[i+1])) {
+//           std::string msg = "segment ordering in event incorrect (seg_in): ";
+//           for (const auto &it : seg_in)
+//             msg += it->repr(16) + " ";
+//           throw std::runtime_error(msg);
+//         }
+//       for (int i = 0; i < (int)seg_out.size() - 1; ++i)
+//         if (!is_below(seg_out[i], seg_out[i+1])) {
+//           std::string msg = "segment ordering in event incorrect (seg_out): ";
+//           for (const auto &it : seg_out)
+//             msg += it->repr(16) + " ";
+//           throw std::runtime_error(msg);
+//         }
+// #endif
+      
+      // build event
+      event e;
+      e.pos = p;
+      e.n_in = seg_in.size();
+      e.n_out = seg_out.size();
+      for (int i = 0; i < (int)seg_in.size(); ++i)
+        e.its[i] = seg_in[i];
+      for (int i = 0; i < (int)seg_out.size(); ++i)
+        e.its[i + seg_in.size()] = seg_out[i];
+
+      // add event to list
+      events.push_back(e);
+    }
+    
+    std::sort(events.begin(), events.end());
   }
 
   // val = values of cells
@@ -194,13 +226,14 @@ public:
     step = {(bounds(1) - bounds(0)) / res(0), (bounds(3) - bounds(2)) / res(1)};
     pixA = step(0) * step(1);
 
-    // move all segments back into unused (will not do anything first time)
-    unused.splice(unused.end(), line);
-    unused.splice(unused.end(), used);
+    // move all segments back into pool (will not do anything first time)
+    std::fill(used.begin(), used.end(), false);
+    pool.splice(pool.end(), line);
     // move start segments into line
     for (auto &it : pline) {
       it->x0 = lb(0);
-      line.splice(line.end(), unused, it);
+      used[it->sidx] = true;
+      line.splice(line.end(), pool, it);
     }
 
     // process events in order
@@ -216,9 +249,6 @@ public:
   }
   
   void process_event(const event &e) {
-
-    // py::print("process_event " + e.repr() + " line size: " + std::to_string(line.size()));
-
 #ifdef DEBUG_CHECKS
     try {
       assert_line_order();
@@ -226,41 +256,55 @@ public:
       throw std::runtime_error(FORMAT("before processing {}: {}", e.repr(), ex.what()));
     }
 #endif
-    
-    // process line-sweep event e
-    switch (e.t) {
-    case TRANSITION: { // 0 -> 1
-      add_area_below(e.its[0], e.pos);
-      add_area_above(e.its[0], e.pos);
-      e.its[1]->x0 = e.pos;
-      line.splice(e.its[0], unused, e.its[1]);
-      used.splice(used.end(), line, e.its[0]);
-    } break;
-    case MERGE: { // 0, 1 -> 2
-      add_area_below(e.its[0], e.pos);
-      add_area_between(e.its[0], e.its[1], e.pos);
-      add_area_above(e.its[1], e.pos);
-      e.its[2]->x0 = e.pos;
-      line.splice(e.its[0], unused, e.its[2]);
-      used.splice(used.end(), line, e.its[0]);
-      used.splice(used.end(), line, e.its[1]);
-    } break;
-    case SPLIT: { // 0 -> 1, 2
-      add_area_below(e.its[0], e.pos);
-      add_area_above(e.its[0], e.pos);
-      e.its[1]->x0 = e.pos;
-      e.its[2]->x0 = e.pos;
-      line.splice(e.its[0], unused, e.its[1]);
-      line.splice(e.its[0], unused, e.its[2]);
-      used.splice(used.end(), line, e.its[0]);
-    } break;
+
+    // add areas below ending segment
+    for (int i = 0; i < e.n_in; ++i) {
+      const auto &it = e.its[i];
+      add_area_below(it, e.pos(0));
+    }
+
+    // find ins_pos (which is either the one following the highest ending segment in line or has to be found by linear search)
+    sit_t ins_pos;
+    if (e.n_in > 0) {
+      ins_pos = std::next(e.its[e.n_in - 1]);
+    } else {
+      ins_pos = line.begin();
+      while (ins_pos != line.end() && y_at(ins_pos, e.pos(0)) <= e.pos(1))
+        ++ins_pos;
+    }
+
+    // add the area below ins_pos (i.e. area above topmost incoming segment or area which will be cut by event)
+    if (ins_pos != line.end())
+      add_area_below(ins_pos, e.pos(0));
+
+    // remove ending segments from line
+    for (int i = 0; i < e.n_in; ++i) {
+      const auto &it = e.its[i];
+#ifdef DEBUG_CHECKS
+      if (!used[it->sidx])
+        throw std::runtime_error(FORMAT("try to remove segment {} from line that is not contained", it->sidx));
+#endif
+      used[it->sidx] = false;
+      pool.splice(pool.end(), line, it);
+    }
+
+    // add new segments to line (in order: starting at lowest, all before ins_pos)
+    for (int i = 0; i < e.n_out; ++i) {
+      const auto &it = e.its[i + e.n_in];
+      it->x0 = e.pos(0);
+#ifdef DEBUG_CHECKS
+      if (used[it->sidx])
+        throw std::runtime_error(FORMAT("try to add segment {} to line that is already contained", it->sidx));
+#endif
+      used[it->sidx] = true;
+      line.splice(ins_pos, pool, it);
     }
 
 #ifdef DEBUG_CHECKS
     try {
       assert_line_order();
     } catch (std::runtime_error &ex) {
-      throw std::runtime_error(FORMAT("after processing {}: {}", e.repr(), ex.what()));
+      throw std::runtime_error(FORMAT("after processing (line length {}) {}: {}", line.size(), e.repr(), ex.what()));
     }
 #endif
   }
@@ -269,6 +313,7 @@ public:
   static inline double y_at(const double &x0, const double &y0,
                             const double &x1, const double &y1,
                             const double &x) {
+    if (x1 == x0 && x == x0) return 0.5 * (y1 + y0);
     return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
   }
   static inline double y_at(const sit_t &it, const double &x) {
@@ -278,6 +323,7 @@ public:
   static inline double x_at(const double &x0, const double &y0,
                             const double &x1, const double &y1,
                             const double &y) {
+    if (y1 == y0 && y == y0) return 0.5 * (x1 + x0);
     return x0 + (x1 - x0) * (y - y0) / (y1 - y0);
   }
   static inline double x_at(const sit_t &it, const double &y) {
@@ -285,8 +331,17 @@ public:
   }
   // check whether it0 is below it1 assuming they do not intersect except for possibly at endpoints and they have some common x
   static inline bool is_below(const sit_t &it0, const sit_t &it1) {
-    double x = 0.5 * (std::max(it0->s(0), it1->s(0)) +  std::min(it0->e(0), it1->e(0)));
-    return y_at(it0, x) < y_at(it1, x);
+    if (it0->s(0) == it0->e(0)) {
+      if (it1->s(0) == it1->e(0))
+        return (it0->s(1) + it0->e(1)) < (it1->s(1) + it1->e(1));
+      else
+        return 0.5 * (it0->s(1) + it0->e(1)) < y_at(it1, it0->s(0));
+    } else if (it1->s(0) == it1->e(0)) {
+      return y_at(it0, it1->s(0)) < 0.5 * (it1->s(1) + it1->e(1));
+    } else {
+      double x = 0.5 * (std::max(it0->s(0), it1->s(0)) +  std::min(it0->e(0), it1->e(0)));
+      return y_at(it0, x) < y_at(it1, x);
+    }
   }
   // for given x, find pixel column containing it
   inline int x_to_pixel(const double &x) const {
@@ -309,6 +364,8 @@ public:
   static inline double rect_intersect_area(const double &xlo, const double &xhi,
                                            const double &ylo, const double &yhi,
                                            const double &syl, const double &syr) {
+    if (xlo >= xhi)
+      return 0;
     if (syl < ylo)
       if (syr < ylo) // both sides below -> no intersect
         return 0;
@@ -350,6 +407,9 @@ public:
       // x left and right boundaries for pixel column
       double xlo = std::max(x0, pixel_to_x(i));
       double xhi = std::min(x1, pixel_to_x(i + 1));
+
+      if (xlo >= xhi)
+        continue;
 
       // y min-max range on left and right side
       double y0l = y_at(it0, xlo), y0r = y_at(it0, xhi);
@@ -394,6 +454,8 @@ public:
   }
 
   void assert_line_order() {
+    if (line.size() <= 1)
+      return;
     const double epsi = 1e-9;
     for (auto it1 = line.begin(), it0 = it1++; it1 != line.end(); it0 = it1++) {
 
@@ -401,13 +463,15 @@ public:
       double ex = std::min(it0->e(0), it1->e(0));
 
       if (sx - ex > epsi)
-        throw std::runtime_error(FORMAT("sweepline contains segments without x-overlap: {} and {}",
+        throw std::runtime_error(FORMAT("sweepline (length {}) contains segments without x-overlap: {} and {}",
+                                        line.size(),
                                         it0->repr(16), it1->repr(16)));
 
       double x = 0.5 * (sx + ex);
       
       if (y_at(it0, x) - y_at(it1, x) > epsi)
-        throw std::runtime_error(FORMAT("sweepline is out of order between segments {} and {}, ys {} {} @ x {}",
+        throw std::runtime_error(FORMAT("sweepline (length {}) is out of order between segments {} and {}, ys {} {} @ x {}",
+                                        line.size(),
                                         it0->repr(16), it1->repr(16),
                                         y_at(it0, x), y_at(it1, x), x));
     }
@@ -420,20 +484,14 @@ public:
   .def_readonly("e", &rasterizer::segment::e)                   \
   .def_readonly("idx", &rasterizer::segment::idx)               \
   .def_readonly("x0", &rasterizer::segment::x0)                 \
-  .def("__repr__", &rasterizer::segment::repr);
+  .def("__repr__", &rasterizer::segment::repr, py::arg("precision")=-1);
 
-#define BIND_RASTERIZER_EVENT_TYPE(m)                           \
-  py::enum_<rasterizer::event_type>(m, "RasterizerEventType")   \
-  .value("TRANSITION", rasterizer::event_type::TRANSITION)      \
-  .value("MERGE", rasterizer::event_type::MERGE)                \
-  .value("SPLIT", rasterizer::event_type::SPLIT)                \
-  .export_values();
 
 #define BIND_RASTERIZER_EVENT(m)                                        \
   py::class_<rasterizer::event>(m, "RasterizerEvent")                   \
   .def_readonly("pos", &rasterizer::event::pos)                         \
-  .def_readonly("t", &rasterizer::event::t)                             \
-  .def("get_full_coord", &rasterizer::event::get_full_coord)            \
+  .def_readonly("n_in", &rasterizer::event::n_in)                       \
+  .def_readonly("n_out", &rasterizer::event::n_out)                     \
   .def("__repr__", &rasterizer::event::repr);
 
 
@@ -447,8 +505,7 @@ public:
        py::arg("start"), py::arg("bounds"))                             \
   .def("rasterize", &rasterizer::rasterize,                             \
        py::arg("val"), py::arg("res"))                                  \
-  .def_readonly("unused", &rasterizer::unused)                          \
-  .def_readonly("used", &rasterizer::used)                              \
+  .def_readonly("pool", &rasterizer::pool)                              \
   .def_readonly("events", &rasterizer::events)                          \
   .def_property_readonly("pline", [](const rasterizer &rast) {          \
     std::vector<rasterizer::segment> res;                               \

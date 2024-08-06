@@ -21,13 +21,20 @@
 #define FORMAT fmt::format
 #endif
 
-//#define DEBUG_CHECKS
+namespace py = pybind11;
+
+#define DEBUG_CHECKS
 #define PROFILING
+
+#include "rasterizer.hpp"
+
+#undef DEBUG_CHECKS
 
 #include "laguerre_diagram.hpp"
 #include "timer.hpp"
+#include "halfspace_intersection.hpp"
 
-namespace py = pybind11;
+
 
 
 void hello() {
@@ -53,7 +60,6 @@ PYBIND11_MODULE(_atmosphere_bgs, m) {
   BIND_LAGUERRE_DIAGRAM(m);
 
   BIND_RASTERIZER_SEGMENT(m);
-  BIND_RASTERIZER_EVENT_TYPE(m);
   BIND_RASTERIZER_EVENT(m);
   BIND_RASTERIZER(m);
 }

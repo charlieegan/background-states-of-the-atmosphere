@@ -12,6 +12,13 @@ def meanpool(a, ps):
     res /= ps[0] * ps[1]
     return res
 
+def get_con(seg):
+    pts = [tuple(x) for x in np.unique([s[0] for s in seg] + [s[1] for s in seg], axis=0)]
+    return [x for x in [[i for i in range(len(seg)) if p in seg[i]] for p in pts] if len(x) >= 2]
+
+def get_start(seg, x0):
+    return [i for i in range(len(seg)) if seg[i][0][0] == x0 or seg[i][1][0] == x0]
+
 @pytest.fixture
 def geometry_simple():
     res = {}
@@ -130,4 +137,80 @@ def test_values_one_by_one_simple(geometry_simple, geometry_simple_10x10_truth):
         v += rast.rasterize(val = val, res = res)
         
     assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
-        
+
+def test_ending_2():
+    seg = [((0,0), (2,0), -1),
+           ((0,0), (1,1), 1),
+           ((0,2), (1,1), 0),
+           ((0,2), (2,2), 1)]
+    bounds = [0, 2, 0, 2]
+    con = [[1,2]]
+    start = get_start(seg, bounds[0])
+
+    val = [0, 1]
+    res = [2, 2]
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    v = rast.rasterize(val = val, res = res)
+
+    tv = np.array([[0.5, 0.5],
+                   [1.0, 1.0]])
+    assert np.max(np.abs(v - tv)) < 1e-9
+
+def test_ending_3():
+    seg = [((0,0), (2,0), -1),
+           ((0,0), (1,1), 2),
+           ((0,1), (1,1), 0),
+           ((0,2), (1,1), 1),
+           ((0,2), (2,2), 2)]
+    bounds = [0, 2, 0, 2]
+    con = [[1,2,3]]
+    start = get_start(seg, bounds[0])
+
+    val = [0, 1, 2]
+    res = [2, 2]
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    v = rast.rasterize(val = val, res = res)
+
+    tv = np.array([[1.0, 1.5],
+                   [2.0, 2.0]])
+    assert np.max(np.abs(v - tv)) < 1e-9
+
+def test_double_vertical():
+    seg = [((0,0), (1,0), -1),
+           ((1,0), (2,0), -1),
+           ((1,0), (1,1), 1),
+           ((1,2), (1,1), 1),
+           ((0,2), (1,2), 0),
+           ((1,2), (2,2), 1)]
+    bounds = [0, 2, 0, 2]
+    con = get_con(seg)
+    start = get_start(seg, bounds[0])
+
+    val = [0, 1]
+    res = [2, 2]
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    v = rast.rasterize(val = val, res = res)
+
+    tv = np.array([[0.0, 0.0],
+                   [1.0, 1.0]])
+    assert np.max(np.abs(v - tv)) < 1e-9
+
+def test_starting_2():
+    seg = [((0,0), (2,0), -1),
+           ((2,0), (1,1), 0),
+           ((2,2), (1,1), 1),
+           ((0,2), (2,2), 0)]
+    bounds = [0, 2, 0, 2]
+    con = get_con(seg)
+    start = get_start(seg, bounds[0])
+
+    val = [0, 1]
+    res = [2, 2]
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    v = rast.rasterize(val = val, res = res)
+
+    tv = np.array([[0.0, 0.0],
+                   [0.5, 0.5]])
+    assert np.max(np.abs(v - tv)) < 1e-9
+
+    
