@@ -1,11 +1,7 @@
 #ifndef SIMULATION_PARAMETERS_HPP
 #define SIMULATION_PARAMETERS_HPP
 
-#include <string>
-#include <sstream>
-#include <cmath>
-
-#include <Eigen/Dense>
+#include "common.hpp"
 
 struct simulation_parameters
 {

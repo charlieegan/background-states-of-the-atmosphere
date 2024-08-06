@@ -1,13 +1,7 @@
 #ifndef RASTERIZER_HPP
 #define RASTERIZER_HPP
 
-#include <string>
-#include <iomanip>
-#include <sstream>
-#include <list>
-#include <vector>
-#include <algorithm>
-#include <Eigen/Dense>
+#include "common.hpp"
 
 class rasterizer
 {
@@ -70,12 +64,12 @@ public:
   // pixel (i, j) represents area lb + (i, j)^T * step (pointwise multiplication)
 
   Eigen::VectorXd val; // value of function on cells
-  
+
   std::vector<sit_t> pline; // starting line
   std::vector<event> events; // transition events
 
   rasterizer() = default;
-  
+
   // seg = (geometric) segments; seg[i] = {start point, end point, index of cell below segment}; segments should include top and bottom but not left and right border (direction does not matter)
   // con = connectivity, con[i] has length 2 or 3 and contains indices of segments that are connected (order does not matter)
   // start = segment indices of segments at the start
@@ -99,7 +93,7 @@ public:
         sits.push_back(pool.insert(pool.end(), {std::get<1>(s), std::get<0>(s), std::get<2>(s), i, std::get<1>(s)(0)}));
         // py::print("reversed segment :", *sits.back());
       } else {
-        
+
         if (std::get<0>(s)(1) < std::get<1>(s)(1)) {
           sits.push_back(pool.insert(pool.end(), {std::get<0>(s), std::get<1>(s), std::get<2>(s), i, std::get<0>(s)(0)}));
         } else if (std::get<0>(s)(1) > std::get<1>(s)(1)) {
@@ -107,10 +101,8 @@ public:
         } else {
           throw std::runtime_error("rasterizer got 0-length segment, which is currently not supported");
         }
-        
-        py::print(FORMAT("WARNING: rasterizer got exactly vertical segment {}", sits.back()->repr(16)));
-        
-        //throw std::runtime_error("rasterizer got exactly vertical segment");
+
+        // py::print(FORMAT("WARNING: rasterizer got exactly vertical segment {}", sits.back()->repr(16)));
       }
     }
 
@@ -119,12 +111,12 @@ public:
       if (it->s(0) > it->e(0))
         throw std::runtime_error(FORMAT("segment was not oriented correctly : {}", it->repr(16)));
 #endif
-    
+
     // sort starting segments
     for (auto &i : start)
       pline.push_back(sits[i]);
     std::sort(pline.begin(), pline.end(), [](const sit_t &it0, const sit_t &it1){ return it0->s(1) < it1->s(1); });
-    
+
     // collect and sort events
     for (auto &c : con) {
       if (c.size() < 2)
@@ -137,7 +129,7 @@ public:
         if (i < 0 || i >= (int)sits.size())
           throw std::runtime_error(FORMAT("connection contains invalid index {}", i));
 #endif
-      
+
       // find common point
       const auto &s0 = sits[c[0]];
       const auto &s1 = sits[c[1]];
@@ -148,7 +140,7 @@ public:
         p = s0->e;
       else
         throw std::runtime_error(FORMAT("rasterizer got invalid connection (no common point in first two segments {} and {})", s0->repr(), s1->repr()));
-      
+
       // separate into incoming and outgoing segments
       std::vector<sit_t> seg_in, seg_out;
       for (const int &i : c) {
@@ -177,23 +169,23 @@ public:
                   return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) <
                           (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
 
-// #ifdef DEBUG_CHECKS
-//       for (int i = 0; i < (int)seg_in.size() - 1; ++i)
-//         if (!is_below(seg_in[i], seg_in[i+1])) {
-//           std::string msg = "segment ordering in event incorrect (seg_in): ";
-//           for (const auto &it : seg_in)
-//             msg += it->repr(16) + " ";
-//           throw std::runtime_error(msg);
-//         }
-//       for (int i = 0; i < (int)seg_out.size() - 1; ++i)
-//         if (!is_below(seg_out[i], seg_out[i+1])) {
-//           std::string msg = "segment ordering in event incorrect (seg_out): ";
-//           for (const auto &it : seg_out)
-//             msg += it->repr(16) + " ";
-//           throw std::runtime_error(msg);
-//         }
-// #endif
-      
+      // #ifdef DEBUG_CHECKS
+      //       for (int i = 0; i < (int)seg_in.size() - 1; ++i)
+      //         if (!is_below(seg_in[i], seg_in[i+1])) {
+      //           std::string msg = "segment ordering in event incorrect (seg_in): ";
+      //           for (const auto &it : seg_in)
+      //             msg += it->repr(16) + " ";
+      //           throw std::runtime_error(msg);
+      //         }
+      //       for (int i = 0; i < (int)seg_out.size() - 1; ++i)
+      //         if (!is_below(seg_out[i], seg_out[i+1])) {
+      //           std::string msg = "segment ordering in event incorrect (seg_out): ";
+      //           for (const auto &it : seg_out)
+      //             msg += it->repr(16) + " ";
+      //           throw std::runtime_error(msg);
+      //         }
+      // #endif
+
       // build event
       event e;
       e.pos = p;
@@ -207,7 +199,7 @@ public:
       // add event to list
       events.push_back(e);
     }
-    
+
     std::sort(events.begin(), events.end());
   }
 
@@ -221,7 +213,7 @@ public:
 
     // reset out
     out = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Zero(res(0), res(1));
-    
+
     // calculate step spacings
     step = {(bounds(1) - bounds(0)) / res(0), (bounds(3) - bounds(2)) / res(1)};
     pixA = step(0) * step(1);
@@ -247,7 +239,9 @@ public:
 
     return out;
   }
-  
+
+protected:
+
   void process_event(const event &e) {
 #ifdef DEBUG_CHECKS
     try {
@@ -428,7 +422,7 @@ public:
         if (it1->idx < 0 || it1->idx >= val.size())
           throw std::runtime_error(FORMAT("index in rasterizer out of bounds: {}", it1->idx));
 #endif
-        
+
         out(i, j) += std::clamp(A / pixA, 0.0, 1.0) * val[it1->idx];
       }
     }
@@ -468,7 +462,7 @@ public:
                                         it0->repr(16), it1->repr(16)));
 
       double x = 0.5 * (sx + ex);
-      
+
       if (y_at(it0, x) - y_at(it1, x) > epsi)
         throw std::runtime_error(FORMAT("sweepline (length {}) is out of order between segments {} and {}, ys {} {} @ x {}",
                                         line.size(),
@@ -478,20 +472,21 @@ public:
   }
 };
 
-#define BIND_RASTERIZER_SEGMENT(m)                              \
-  py::class_<rasterizer::segment>(m, "RasterizerSegment")       \
-  .def_readonly("s", &rasterizer::segment::s)                   \
-  .def_readonly("e", &rasterizer::segment::e)                   \
-  .def_readonly("idx", &rasterizer::segment::idx)               \
-  .def_readonly("x0", &rasterizer::segment::x0)                 \
+#define BIND_RASTERIZER_SEGMENT(m)                                      \
+  py::class_<rasterizer::segment>(m, "RasterizerSegment")               \
+  .def_readonly("s", &rasterizer::segment::s)                           \
+  .def_readonly("e", &rasterizer::segment::e)                           \
+  .def_readonly("idx", &rasterizer::segment::idx)                       \
+  .def_readonly("sidx", &rasterizer::segment::sidx)                     \
+  .def_readonly("x0", &rasterizer::segment::x0)                         \
   .def("__repr__", &rasterizer::segment::repr, py::arg("precision")=-1);
 
 
-#define BIND_RASTERIZER_EVENT(m)                                        \
-  py::class_<rasterizer::event>(m, "RasterizerEvent")                   \
-  .def_readonly("pos", &rasterizer::event::pos)                         \
-  .def_readonly("n_in", &rasterizer::event::n_in)                       \
-  .def_readonly("n_out", &rasterizer::event::n_out)                     \
+#define BIND_RASTERIZER_EVENT(m)                        \
+  py::class_<rasterizer::event>(m, "RasterizerEvent")   \
+  .def_readonly("pos", &rasterizer::event::pos)         \
+  .def_readonly("n_in", &rasterizer::event::n_in)       \
+  .def_readonly("n_out", &rasterizer::event::n_out)     \
   .def("__repr__", &rasterizer::event::repr);
 
 

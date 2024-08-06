@@ -1,8 +1,7 @@
 #ifndef LAGUERRE_DIAGRAM_HPP
 #define LAGUERRE_DIAGRAM_HPP
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include "common.hpp"
 
 #include "physical_parameters.hpp"
 #include "simulation_parameters.hpp"
@@ -10,22 +9,10 @@ namespace py = pybind11;
 #include "halfspace_intersection.hpp"
 #include "rasterizer.hpp"
 
-#include <Eigen/Dense>
-#include <string>
-#include <sstream>
-#include <cmath>
-#include <map>
-#include <list>
-#include <algorithm>
-#include <numeric>
-
-#include "timer.hpp"
-
-
 class laguerre_diagram
 {
   static inline double sqr(const double &x) { return x * x; }
-  
+
 public:
   typedef Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>> seeds_t;
 
@@ -49,7 +36,7 @@ public:
       return ss.str();
     }
   };
-  
+
   // input parameters
   int n;
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> ys;
@@ -93,9 +80,8 @@ public:
     idx_time_jacobian = time->get_index_from_name("laguerre_diagram.jacobian");
     idx_time_prepare_rasterizer = time->get_index_from_name("laguerre_diagram.prepare_rasterizer");
   }
-  
 #endif
-  
+
   laguerre_diagram(const seeds_t &ys,
                    const Eigen::Ref<const Eigen::VectorXd> &duals,
                    const physical_parameters &phys,
@@ -105,22 +91,20 @@ public:
 #ifdef PROFILING
     setup_timer();
 #endif
-    
+
     if ((int)duals.size() != n + 1)
       throw std::runtime_error("the size of the dual vector must be one larger than the first dimension of seed positions (the last entry of duals corresponds to the boundary cell)");
 
     do_hs_intersect();
 
     extract_diagram();
-
-    // prepare_rasterizer();
   }
 
   void do_hs_intersect() {
 #ifdef PROFILING
     time->start_section(idx_time_halfspace_intersection);
 #endif
-    
+
     // perform the halfspace intersection
 
     Eigen::Vector3d zeta_min, zeta_max;
@@ -179,15 +163,15 @@ public:
     for (int i = 0; i < n; i++)
       for (const auto &e : hs.mesh.padj[i + 6])
         if (e.pj < 6 || e.pi < e.pj) {
-            edglist.push_back({e.pi, e.pj, e.di, e.dj,
-                discretized_line_segment(verts.row(e.di), verts.row(e.dj),
-                                         phys, std::numeric_limits<double>::infinity())});
-            
-            faces[e.pi].push_back(edglist.size() - 1);
-            faces[e.pj].push_back(edglist.size() - 1);
-            dfacets[e.di].push_back(edglist.size() - 1);
-            dfacets[e.dj].push_back(edglist.size() - 1);
-          }
+          edglist.push_back({e.pi, e.pj, e.di, e.dj,
+              discretized_line_segment(verts.row(e.di), verts.row(e.dj),
+                                       phys, std::numeric_limits<double>::infinity())});
+
+          faces[e.pi].push_back(edglist.size() - 1);
+          faces[e.pj].push_back(edglist.size() - 1);
+          dfacets[e.di].push_back(edglist.size() - 1);
+          dfacets[e.dj].push_back(edglist.size() - 1);
+        }
 
 #ifdef PROFILING
     time->start_section(idx_time_calc_areas);
@@ -207,14 +191,14 @@ public:
         areas(i) += (e.pi == i + 6 ? e.ls.area : -e.ls.area);
         areaerrs(i) += e.ls.errb;
       }
-      
+
       if (areas(i) == 0 || areaerrs(i) / areas(i) < sim.tol) {
         // py::print(i, "- error already in tol:", areaerrs(i) / areas(i));
         continue;
       }
-      
+
       std::multimap<double, int> errmap;
-      
+
       for (auto &ei : faces[i + 6]) {
         auto &e = edglist[ei];
         errmap.insert({-e.ls.errb, ei});
@@ -228,14 +212,14 @@ public:
 
         areas(i) -= (e.pi == i + 6 ? e.ls.area : -e.ls.area);
         areaerrs(i) -= e.ls.errb;
-        
+
         e.ls.refine();
-        
+
         areas(i) += (e.pi == i + 6 ? e.ls.area : -e.ls.area);
         areaerrs(i) += e.ls.errb;
 
         // py::print(i, "- refining edge", ei, "with errb ", e.ls.errb, "to:", areaerrs(i) / areas(i));
-        
+
         errmap.insert({-e.ls.errb, ei});
       }
 
@@ -245,37 +229,37 @@ public:
 #ifdef PROFILING
     time->start_section(idx_time_calc_integrals);
 #endif
-    
+
     // calculate line integrals
     for (auto &e : edglist) {
-      
+
       e.dif = 0;
 
       // points and tangents along path
       std::vector<Eigen::Vector2d> x; //, t;
       x.reserve(e.ls.points.size());
       //t.reserve(e.ls.points.size());
-      
+
       for (const auto &tp : e.ls.points) {
         x.push_back(tp.x);
         // t.push_back(tp.t);
       }
 
       auto yi = ys.row(e.pi-6);
-        
+
       if (e.pj >= 6 && e.pj - 6 < n) {
         // inner edges
         auto yj = ys.row(e.pj-6);
-        
+
         double pw = 0;
         for (int k = 0; k < (int)x.size(); ++k) {
           double nw = (k != (int)x.size() - 1 ? (x[k+1] - x[k]).norm() : 0);
-          
+
           // d_x (c(x,yi) - c(x,yj))
           Eigen::Vector2d dc((sqr(yi(0)) - sqr(yj(0))) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))),
                              phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
           e.dif += (pw + nw) / dc.norm(); // * t[k].norm() / t[k].cross(dc);
-          
+
           pw = nw;
         }
       } else if (e.pj - 6 >= n) {
@@ -284,18 +268,18 @@ public:
         double pw = 0;
         for (int k = 0; k < (int)x.size(); ++k) {
           double nw = (k != (int)x.size() - 1 ? (x[k+1] - x[k]).norm() : 0);
-          
+
           // d_x (c(x,yi) - c(x,yj))
           Eigen::Vector2d dc(sqr(yi(0)) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))) - sqr(phys.Omega * phys.a) * x[k](0),
                              phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
           e.dif += (pw + nw) / dc.norm(); //* t[k].norm() / t[k].cross(dc);
-          
+
           pw = nw;
         }
-        
+
       }
     }
-    
+
 #ifdef PROFILING
     time->end_section();
 #endif
@@ -306,7 +290,7 @@ public:
 #ifdef PROFILING
     time->start_section(idx_time_prepare_rasterizer);
 #endif
-    
+
     // prepare segment indices
     std::vector<int> sidx(edglist.size() + 1); // index of first segment for each edge
     sidx[0] = 0;
@@ -334,7 +318,6 @@ public:
       if (e.pj == 2 || e.pj == 3)
         continue;
 
-
       // get (primal) index of cell below:
       // if the edge is oriented left-to-right then pi is below, if it goes right-to-left then pj is below
       // indices >= n (i.e. the top cell) are all combined into n
@@ -356,11 +339,11 @@ public:
     // collect merge/split points
     for (int dc = 0; dc < (int)dfacets.size(); ++dc) {
       const auto &f = dfacets[dc];
-      
+
       // ignore empty facets
       if (!f.size())
         continue;
-      
+
       // find simulation box boundaries the point is on
       bool on_boundary[6] = {};
       for (const int &ei : f)
@@ -389,24 +372,22 @@ public:
 
     seg.push_back({{sim.spmin(0), sim.spmax(1) + 1}, {sim.spmax(0), sim.spmax(1) + 1}, n});
     start.push_back(seg.size() - 1);
-    
+
     rasterizer rast(seg, con, start, bounds);
-    
+
 #ifdef PROFILING
     time->end_section();
 #endif
 
     return rast;
   }
-  
-  // std::map<std::pair<int,int>, double> jac() {
+
   std::unordered_map<uint64_t, double> jac() {
 #ifdef PROFILING
     time->start_section(idx_time_jacobian);
 #endif
     // get jacobian (derivative of masses w.r.t. dual)
 
-    // std::map<std::pair<int,int>, double> res;
     std::unordered_map<uint64_t, double> res;
     for (auto &e : edglist) {
       if (e.pj >= 6) {
@@ -415,15 +396,9 @@ public:
 
         res[(i << 32) | i] += e.dif;
         res[(i << 32) | j] -= e.dif;
-        
+
         res[(j << 32) | j] += e.dif;
         res[(j << 32) | i] -= e.dif;
-        
-        // res[{i, i}] += e.dif;
-        // res[{i, j}] -= e.dif;
-        
-        // res[{j, j}] += e.dif;
-        // res[{j, i}] -= e.dif;
       }
     }
 #ifdef PROFILING
@@ -458,14 +433,14 @@ public:
   }
 };
 
-#define BIND_DIAGRAM_EDGE(m)                                            \
-  py::class_<laguerre_diagram::diagram_edge>(m, "DiagramEdge")          \
-  .def("__repr__", &laguerre_diagram::diagram_edge::repr)               \
-  .def_readonly("pi", &laguerre_diagram::diagram_edge::pi)              \
-  .def_readonly("pj", &laguerre_diagram::diagram_edge::pj)              \
-  .def_readonly("di", &laguerre_diagram::diagram_edge::di)              \
-  .def_readonly("dj", &laguerre_diagram::diagram_edge::dj)              \
-  .def_readonly("ls", &laguerre_diagram::diagram_edge::ls)              \
+#define BIND_DIAGRAM_EDGE(m)                                    \
+  py::class_<laguerre_diagram::diagram_edge>(m, "DiagramEdge")  \
+  .def("__repr__", &laguerre_diagram::diagram_edge::repr)       \
+  .def_readonly("pi", &laguerre_diagram::diagram_edge::pi)      \
+  .def_readonly("pj", &laguerre_diagram::diagram_edge::pj)      \
+  .def_readonly("di", &laguerre_diagram::diagram_edge::di)      \
+  .def_readonly("dj", &laguerre_diagram::diagram_edge::dj)      \
+  .def_readonly("ls", &laguerre_diagram::diagram_edge::ls)      \
   .def_readonly("dif", &laguerre_diagram::diagram_edge::dif);
 
 
@@ -476,33 +451,29 @@ public:
 #define BIND_LAGUERRE_DIAGRAM_PROFILING(m)
 #endif
 
-#define BIND_LAGUERRE_DIAGRAM(m)                                        \
-  py::class_<laguerre_diagram>(m, "LaguerreDiagram")                    \
-  .def(py::init<const laguerre_diagram::seeds_t&,                       \
-                const Eigen::Ref<const Eigen::VectorXd>&,               \
-                const physical_parameters &,                            \
-                const simulation_parameters&>(),                        \
-       py::arg("ys"), py::arg("duals"),                                 \
-       py::arg("phys"), py::arg("sim"))                                 \
-  .def_readonly("n", &laguerre_diagram::n)                              \
-  .def_readonly("phys", &laguerre_diagram::phys)                        \
-  .def_readonly("sim", &laguerre_diagram::sim)                          \
-  .def_readonly("ys", &laguerre_diagram::ys)                            \
-  .def_readonly("duals", &laguerre_diagram::duals)                      \
-  .def_readonly("hs", &laguerre_diagram::hs)                            \
-  .def_readonly("edglist", &laguerre_diagram::edglist)                  \
-  .def_readonly("verts", &laguerre_diagram::verts)                      \
-  .def_readonly("faces", &laguerre_diagram::faces)                      \
-  .def_readonly("dfacets", &laguerre_diagram::dfacets)                  \
-  .def_readonly("areas", &laguerre_diagram::areas)                      \
-  .def_readonly("areaerrs", &laguerre_diagram::areaerrs)                \
-  .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                                   \
-  .def("jac", &laguerre_diagram::jac)                                   \
-  .def("jac_coo", &laguerre_diagram::jac_coo)                           \
+#define BIND_LAGUERRE_DIAGRAM(m)                                \
+  py::class_<laguerre_diagram>(m, "LaguerreDiagram")            \
+  .def(py::init<const laguerre_diagram::seeds_t&,               \
+       const Eigen::Ref<const Eigen::VectorXd>&,                \
+       const physical_parameters &,                             \
+       const simulation_parameters&>(),                         \
+       py::arg("ys"), py::arg("duals"),                         \
+       py::arg("phys"), py::arg("sim"))                         \
+  .def_readonly("n", &laguerre_diagram::n)                      \
+  .def_readonly("phys", &laguerre_diagram::phys)                \
+  .def_readonly("sim", &laguerre_diagram::sim)                  \
+  .def_readonly("ys", &laguerre_diagram::ys)                    \
+  .def_readonly("duals", &laguerre_diagram::duals)              \
+  .def_readonly("hs", &laguerre_diagram::hs)                    \
+  .def_readonly("edglist", &laguerre_diagram::edglist)          \
+  .def_readonly("verts", &laguerre_diagram::verts)              \
+  .def_readonly("faces", &laguerre_diagram::faces)              \
+  .def_readonly("dfacets", &laguerre_diagram::dfacets)          \
+  .def_readonly("areas", &laguerre_diagram::areas)              \
+  .def_readonly("areaerrs", &laguerre_diagram::areaerrs)        \
+  .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                           \
+  .def("jac_coo", &laguerre_diagram::jac_coo)                   \
   .def("get_rasterizer", &laguerre_diagram::get_rasterizer);
-  
-  
-
 
 
 #endif

@@ -1,12 +1,7 @@
 #ifndef DISCRETIZED_LINE_SEGMENT
 #define DISCRETIZED_LINE_SEGMENT
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <cmath>
-#include <Eigen/Dense>
-
+#include "common.hpp"
 
 struct discretized_line_segment;
 
@@ -92,8 +87,6 @@ public:
     auto f = *errmap.begin();
     errmap.erase(errmap.begin());
     
-    // std::cout << "errb = " << errb;
-    
     auto it0 = f.second++;
     auto it2 = f.second;
 
@@ -112,8 +105,6 @@ public:
 
     // todo: more efficient way to calculate area (just add new triangle)
     area += it0->area(*it1) + it1->area(*it2);
-    
-    // std::cout << " replacing with " << err0  << " + " << err1 << std::endl;
     
     errmap.insert({-err0, it0});
     errmap.insert({-err1, it1});

@@ -1,21 +1,7 @@
 #ifndef HALFSPACE_INTERSECTION_HPP
 #define HALFSPACE_INTERSECTION_HPP
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
-
-#include <fstream>
-#include <iomanip>
-#include <sstream>
-#include <exception>
-#include <deque>
-#include <functional>
-#include <Eigen/Dense>
-#include <cmath>
-#include <map>
-#include <list>
-#include <algorithm>
-#include <numeric>
+#include "common.hpp"
 #include "dvector.hpp"
 #include "timer.hpp"
 
@@ -28,7 +14,7 @@ struct pdedge {
   // pdedge(pdedge&&) = default;
   // pdedge& operator=(const pdedge&) = default;
   // pdedge& operator=(pdedge&&) = default;
-  
+
   // get start of dual edge relative to primal index p in [pi, pj]
   const int &dstart(const int &p) const {
 #ifdef DEBUG_CHECKS
@@ -61,7 +47,7 @@ struct pdedge {
 #endif
     return (d == di) ? pj : pi;
   }
-  
+
   std::string repr() const {
     std::stringstream ss;
     ss << "PDEdge(" << pi << ", " << pj << "; " << di << ", " << dj << ")";
@@ -71,7 +57,7 @@ struct pdedge {
   pdedge mirrored() const {
     return {pj, pi, dj, di};
   }
-  
+
   struct cmp_pj { bool operator()(const pdedge &e, const pdedge &f) const { return e.pj < f.pj; } };
   struct cmp_dj { bool operator()(const pdedge &e, const pdedge &f) const { return e.dj < f.dj; } };
 
@@ -101,24 +87,24 @@ struct pdedge {
           used[ew] = true;
           dfs(ew);
         }
-        
+
       }
       path.push_back(edg[ev]);
     };
 
     used[0] = 1;
     dfs(0);
-    
+
     std::reverse(path.begin(), path.end());
 
 #ifdef DEBUG_CHECKS
     if (path.size() != edg.size())
       throw std::runtime_error("resulting path length in order_cycle is too short");
-    
+
     if (primal ? (path.back().pj != path.front().pi) : (path.back().dj != path.front().di))
       throw std::runtime_error("path in order_cycle does not close");
 #endif
-    
+
     return path;
   }
 
@@ -145,7 +131,7 @@ struct pdedge {
           used[ew] = true;
           dfs(ew);
         }
-        
+
       }
       path.push_back(edg[ev]);
     };
@@ -158,28 +144,28 @@ struct pdedge {
         dfs(vs);
         std::reverse(path.begin(), path.end());
         res.push_back(path);
-        
+
 #ifdef DEBUG_CHECKS
         if (primal ? (path.back().pj != path.front().pi) : (path.back().dj != path.front().di))
           throw std::runtime_error("path in cycle_decomposition does not close");
 #endif
       }
     }
-    
+
     return res;
   }
 };
 
-#define BIND_PDEDGE(m)                                  \
-  py::class_<pdedge>(m, "PDEdge")                       \
-  .def("__repr__", &pdedge::repr)                       \
-  .def("pstart", &pdedge::pstart)                       \
-  .def("pend", &pdedge::pend)                           \
-  .def("dstart", &pdedge::dstart)                       \
-  .def("dend", &pdedge::dend)                           \
-  .def_readonly("pi", &pdedge::pi)                      \
-  .def_readonly("pj", &pdedge::pj)                      \
-  .def_readonly("di", &pdedge::di)                      \
+#define BIND_PDEDGE(m)                          \
+  py::class_<pdedge>(m, "PDEdge")               \
+  .def("__repr__", &pdedge::repr)               \
+  .def("pstart", &pdedge::pstart)               \
+  .def("pend", &pdedge::pend)                   \
+  .def("dstart", &pdedge::dstart)               \
+  .def("dend", &pdedge::dend)                   \
+  .def_readonly("pi", &pdedge::pi)              \
+  .def_readonly("pj", &pdedge::pj)              \
+  .def_readonly("di", &pdedge::di)              \
   .def_readonly("dj", &pdedge::dj);
 
 
@@ -192,10 +178,10 @@ struct pdmesh {
 
   // primal vertices
   std::vector<Eigen::Vector4d> pvert;
-  
+
   // dual vertices
   dvector<Eigen::Vector4d> dvert;
-  
+
   pdmesh(const int &pcnt = 0, const int &dcnt = 0) :
     padj(pcnt), dadj(dcnt),
     pvert(pcnt), dvert(dcnt) {}
@@ -208,17 +194,17 @@ struct pdmesh {
 
     /* enumeration of primal and dual vertices is as follows:
      *
-     *      4-----------5           
-     *     /|          /|           
-     *    / |   5     / |       x2  
-     *   /  |     1  /  |       |   
-     *  6-----------7   |       |   
-     *  | 2 |       | 3 |       |   
+     *      4-----------5
+     *     /|          /|
+     *    / |   5     / |       x2
+     *   /  |     1  /  |       |
+     *  6-----------7   |       |
+     *  | 2 |       | 3 |       |
      *  |   0-------|---1       o ----- x0
-     *  |  /  4     |  /       /   
-     *  | /     0   | /       /   
-     *  |/          |/       x1 
-     *  2-----------3           
+     *  |  /  4     |  /       /
+     *  | /     0   | /       /
+     *  |/          |/       x1
+     *  2-----------3
      */
 
     // define primal vertex (i.e. halfspace) coordinates
@@ -245,7 +231,7 @@ struct pdmesh {
     // when following an the edges starting at a dual vertex, e.g. for di = 0
     // {0, 1, _0_, 1}, {1, 2, _0_, 4}, {2, 0, _0_, 2}
     // looking from the inside, they go around counter-clockwise
-    
+
     // bottom edges
     res.add_edge({0, 1, 0, 1});
     res.add_edge({0, 2, 2, 0});
@@ -268,10 +254,10 @@ struct pdmesh {
     if (!res.check_integrity())
       throw std::runtime_error("generated cube has wrong integrity");
 #endif
-    
+
     return res;
   }
-  
+
   int pcnt() const {
 #ifdef DEBUG_CHECKS
     if (padj.size() != pvert.size())
@@ -287,7 +273,7 @@ struct pdmesh {
 #endif
     return dadj.size();
   }
-  
+
   // add primal-dual edge to mesh
   void add_edge(const pdedge &e) {
 #ifdef DEBUG_CHECKS
@@ -295,7 +281,7 @@ struct pdmesh {
         !dadj.contains_idx(e.di) || !dadj.contains_idx(e.dj))
       throw std::runtime_error("tried to add edge containing invalid points " + e.repr());
 #endif
-    
+
     padj[e.pi].push_back(e);
     padj[e.pj].push_back(e.mirrored());
     dadj[e.di].push_back(e);
@@ -305,25 +291,25 @@ struct pdmesh {
     fix_order(e.dj);
   }
 
-  // remove primal-dual edge from mesh 
+  // remove primal-dual edge from mesh
   void remove_edge(const pdedge &e) {
     // TODO: efficiency (using vectors may actually be best when number of elements is very small -> benchmark)
 #ifdef DEBUG_CHECKS
-    int i0 = 
+    int i0 =
 #endif
-    std::erase_if(padj[e.pi], [&e](const pdedge &f){ return f.pj == e.pj && f.di == e.di && f.dj == e.dj; });
+      std::erase_if(padj[e.pi], [&e](const pdedge &f){ return f.pj == e.pj && f.di == e.di && f.dj == e.dj; });
 #ifdef DEBUG_CHECKS
-    int i1 = 
+    int i1 =
 #endif
-    std::erase_if(padj[e.pj], [&e](const pdedge &f){ return f.pj == e.pi && f.di == e.dj && f.dj == e.di; });
+      std::erase_if(padj[e.pj], [&e](const pdedge &f){ return f.pj == e.pi && f.di == e.dj && f.dj == e.di; });
 #ifdef DEBUG_CHECKS
-    int i2 = 
+    int i2 =
 #endif
-    std::erase_if(dadj[e.di], [&e](const pdedge &f){ return f.dj == e.dj && f.pi == e.pi && f.pj == e.pj; });
+      std::erase_if(dadj[e.di], [&e](const pdedge &f){ return f.dj == e.dj && f.pi == e.pi && f.pj == e.pj; });
 #ifdef DEBUG_CHECKS
-    int i3 = 
+    int i3 =
 #endif
-    std::erase_if(dadj[e.dj], [&e](const pdedge &f){ return f.dj == e.di && f.pi == e.pj && f.pj == e.pi; });
+      std::erase_if(dadj[e.dj], [&e](const pdedge &f){ return f.dj == e.di && f.pi == e.pj && f.pj == e.pi; });
 
 #ifdef DEBUG_CHECKS
     if (i0 < 1 || i1 < 1 || i2 < 1 || i3 < 1)
@@ -342,7 +328,7 @@ struct pdmesh {
     if (!dadj.contains_idx(di))
       throw std::runtime_error("tried to erase dual that does not exist");
 #endif
-    
+
     while (dadj[di].size()) {
       remove_edge(dadj[di].back());
     }
@@ -364,17 +350,17 @@ struct pdmesh {
     padj.push_back(std::vector<pdedge>());
     return (int)pvert.size() - 1;
   }
-  
+
   // make sure the order of dadj[di] is correct if dadj[di].size() == 3
   void fix_order(const int &di) {
 #ifdef DEBUG_CHECKS
     if (!dadj.contains_idx(di))
       throw std::runtime_error("fix_order called with invalid index");
 #endif
-    
+
     if (dadj[di].size() != 3)
       return;
-    
+
     if (dadj[di][0].pj != dadj[di][1].pi)
       std::swap(dadj[di][1], dadj[di][2]);
 
@@ -387,8 +373,8 @@ struct pdmesh {
 
     // auto &a = pvert[dadj[di][0].pi];
     // auto &b = pvert[dadj[di][1].pi];
-    // auto &c = pvert[dadj[di][2].pi];         
-    
+    // auto &c = pvert[dadj[di][2].pi];
+
     // dvert[di] =
     //   {
     //     -a({1,2,3}).cross(b({1,2,3})).dot(c({1,2,3})),
@@ -412,7 +398,7 @@ struct pdmesh {
   double hs_error(const int &pi, const int &di) const {
     return pvert[pi].dot(dvert[di]) / (dvert[di](3) * pvert[pi].head<3>().norm());
   }
-  
+
   // check whether halfspace defined by pi contains dual point di
   // if di is not a valid dual index, return default_return
   bool contains(const int &pi, const int &di) const {
@@ -428,7 +414,7 @@ struct pdmesh {
 
     double maxval = -std::numeric_limits<double>::infinity(), val;
     int res = -1;
-    
+
     for (auto it = dadj.begin_idx(); it != dadj.end_idx(); ++it) {
       int di = *it;
 #ifdef DEBUG_CHECKS
@@ -443,7 +429,7 @@ struct pdmesh {
 
     return res;
   }
-  
+
   // get neighbors of primal index pi (as edges e with e.pi == pi)
   const std::vector<pdedge>& pneigh(const int &pi) const {
 #ifdef DEBUG_CHECKS
@@ -467,7 +453,7 @@ struct pdmesh {
     ss << "PDMesh(pcnt = " << pcnt() << ", dcnt = " << dcnt() << ")";
     return ss.str();
   }
-  
+
   std::vector<Eigen::Vector4d> primal_poly(const int &pi) const {
     std::vector<Eigen::Vector4d> res;
     for (auto &e : pdedge::order_cycle<false>(padj[pi])) {
@@ -475,7 +461,7 @@ struct pdmesh {
     }
     return res;
   }
-  
+
   bool check_integrity() const {
     bool res = true;
 
@@ -485,9 +471,9 @@ struct pdmesh {
     }
     if (padj.size() != pvert.size()) {
       py::print("padj and pvert have different sizes");
-      res = false;                                                     
+      res = false;
     }
-    
+
     for (const auto &v : dadj) {
       // check dual face size
       if (v.size() != 3) {
@@ -522,7 +508,7 @@ struct pdmesh {
         res = false;
       }
     }
-   
+
     return res;
   }
 
@@ -588,7 +574,7 @@ class halfspace_intersection
 public:
 
   pdmesh mesh;
-  
+
   std::vector<int> used;
   int used_ctr;
 
@@ -597,7 +583,7 @@ public:
   int idx_time_find_cut = -1, idx_time_partition = -1, idx_time_cycledec = -1, idx_time_add = -1, idx_time_remove = -1;
 
   int remove_count = 0;
-  
+
   void setup_timer() {
     if (!time)
       time = std::make_shared<timer>();
@@ -606,9 +592,9 @@ public:
     idx_time_cycledec = time->get_index_from_name("halfspace_intersection.cycledec");
     idx_time_add = time->get_index_from_name("halfspace_intersection.add");
     idx_time_remove = time->get_index_from_name("halfspace_intersection.remove");
-  }  
+  }
 #endif
-  
+
 
   // start with cuboid domain defined by lower and upper bounds
   halfspace_intersection(const Eigen::Ref<const Eigen::Vector3d> &lb = Eigen::Vector3d(0,0,0),
@@ -621,12 +607,12 @@ public:
     halfspace_intersection(lb, ub) {
     add_halfspaces(hss);
   }
-  
+
   void add_halfspaces(const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) {
     for (auto &hs : hss.rowwise())
       add_halfspace(hs);
   }
-  
+
   void add_halfspace(const Eigen::Ref<const Eigen::Vector4d> &hs) {
 #ifdef DEBUG_CHECKS
     if (!mesh.check_integrity())
@@ -636,12 +622,12 @@ public:
 #ifdef PROFILING
     if (idx_time_find_cut < 0)
       setup_timer();
-    
+
     time->start_section(idx_time_find_cut);
 #endif
 
     // mesh.write_ply("meshdump_pre.ply");
-    
+
     // increment used_ctr to effectively get fresh used array
     used_ctr++;
     // reset used array if necessary (should not really happen with reasonable input sizes)
@@ -666,12 +652,12 @@ public:
       ++steps;
 
       used[di] = used_ctr;
-      
+
       if (err >= 0 && !mesh.contains(pi, di)) {
         di_start = di;
         break;
       }
-      
+
       double max_err = -std::numeric_limits<double>::infinity(), nerr;
       int ndi = -1;
       for (const auto &e : mesh.dneigh(di))
@@ -684,7 +670,7 @@ public:
         di_start = -1;
         break;
       }
-      
+
       di = ndi;
       err = max_err;
     }
@@ -710,7 +696,7 @@ public:
 #ifdef PROFILING
     time->end_section();
 #endif
-    
+
     // if there is no point outside, the new halfspace does nothing
     if (di_start < 0) {
       // py::print("halfspace", pi, "completely contains domain");
@@ -721,7 +707,7 @@ public:
     if (mesh.contains(pi, di_start))
       throw std::runtime_error(FORMAT("mesh contains starting index {} which it shouldn't", di_start));
 #endif
-    
+
 #ifdef PROFILING
     time->start_section(idx_time_partition);
 #endif
@@ -745,7 +731,7 @@ public:
         // ignore already visited vertices
         if (used[e.dj] == used_ctr)
           continue;
-        
+
         if (!mesh.contains(pi, e.dj)) {
           // e.dj is also cut off -> store and push onto queue
           q.push_back(e.dj);
@@ -768,7 +754,7 @@ public:
 #ifdef PROFILING
     time->start_section(idx_time_cycledec);
 #endif
-    
+
     std::vector<std::vector<pdedge>> cycles;
     try {
       // order the cut edges by primal indices (i.e. such that e[i].pj == e[i+1].pi)
@@ -777,26 +763,26 @@ public:
 
       if (cycles.size() != 1)
         py::print("WARNING: 1 != number of cycles:", cycles.size());
-      
+
     } catch (std::runtime_error &ex) {
 
       py::print("cut_verts:", remove_di);
       py::print("cross_e:", cross_e);
 
-      
+
 #ifdef PROFILING
-    time->end_section();
+      time->end_section();
 #endif
       throw ex;
     }
-    
+
 
     try {
 
 #ifdef PROFILING
-    time->start_section(idx_time_add);
+      time->start_section(idx_time_add);
 #endif
-    
+
       // add new edges
       for (auto &cross_e : cycles) {
         pdedge first_e, prev_e;
@@ -807,21 +793,21 @@ public:
           // with the plane with normal vector mesh.pvert[pi] (== hs)
 
           Eigen::Vector4d dv;
-          
+
           auto &a = mesh.pvert[e.pi];
           auto &b = mesh.pvert[e.pj];
           auto &c = mesh.pvert[pi];
-          
+
           double dt = a({0,1,2}).cross(b({0,1,2})).dot(c({0,1,2}));
 
           if (std::abs(dt) < 1e-5) {
             // if the determinant is small, the calculation of the intersect from 3 halfplanes would be
             // imprecise, so do an edge-plane intersection instead (this is not always used as it has
             // it's own imprecision problems for very long edges like the ones on the boundary)
-            
+
             auto &a2 = mesh.dvert[e.di];
             auto &b2 = mesh.dvert[e.dj];
-            
+
             // <a + l * (b - a), hs> = 0
             double l = std::clamp(hs.dot(a2) / hs.dot(a2 - b2), 0., 1.);
 
@@ -832,15 +818,15 @@ public:
                                  -a({3,0,1}).cross(b({3,0,1})).dot(c({3,0,1})) / dt,
                                  1.0);
           }
-    
+
           // replace dual start of crossing edge with new vertex
           e.di = mesh.add_dual(dv);
 
-          
+
           // add edge from new vertex to remaining old part
           // std::cout << "add edge " << e.repr() << " between new and old" << std::endl;
           mesh.add_edge(e);
-          
+
           if (first) {
             // remember first edge to close the cycle later
             first_e = e;
@@ -850,47 +836,47 @@ public:
             // std::cout << "add edge between new and new" << std::endl;
             mesh.add_edge({e.pi, pi, prev_e.di, e.di});
           }
-          
+
           // remember last edge
           prev_e = e;
         }
-        
+
         // close cycle
         if (!first) {
           // std::cout << "add closing edge" << std::endl;
           mesh.add_edge({first_e.pi, pi, prev_e.di, first_e.di});
         }
       }
-  
-#ifdef PROFILING
-    time->start_section(idx_time_remove);
-#endif
-    
-    // remove old cut off dual vertices (including all connecting edges)
-    for (const int &di : remove_di)
-      mesh.remove_dual(di);
 
 #ifdef PROFILING
-    time->end_section();
-    remove_count += remove_di.size();
+      time->start_section(idx_time_remove);
 #endif
-    
+
+      // remove old cut off dual vertices (including all connecting edges)
+      for (const int &di : remove_di)
+        mesh.remove_dual(di);
+
+#ifdef PROFILING
+      time->end_section();
+      remove_count += remove_di.size();
+#endif
+
     } catch (std::runtime_error &ex) {
 
 #ifdef PROFILING
-    time->end_section();
+      time->end_section();
 #endif
-      
+
       py::print("in trying to add pi:", pi);
       py::print("integrity:", mesh.check_integrity());
       py::print("cut_verts:", remove_di);
       py::print("cycles:", cycles);
       py::print("added edges:", mesh.padj[pi]);
-      
+
       mesh.write_ply("meshdump.ply");
 
 #ifdef PROFILING
-    time->end_section();
+      time->end_section();
 #endif
       throw ex;
     }
@@ -912,11 +898,11 @@ public:
 #define BIND_HALFSPACE_INTERSECTION(m)                                  \
   py::class_<halfspace_intersection>(m, "HalfspaceIntersection")        \
   .def(py::init<const Eigen::Ref<const Eigen::Vector3d>&,               \
-                const Eigen::Ref<const Eigen::Vector3d>&>(),            \
+       const Eigen::Ref<const Eigen::Vector3d>&>(),                     \
        py::arg("lb"), py::arg("ub"))                                    \
   .def(py::init<const Eigen::Ref<const Eigen::Vector3d>&,               \
-                const Eigen::Ref<const Eigen::Vector3d>&,               \
-                const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::RowMajor>>>(), \
+       const Eigen::Ref<const Eigen::Vector3d>&,                        \
+       const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::RowMajor>>>(), \
        py::arg("lb"), py::arg("ub"), py::arg("hss"))                    \
   .def("add_halfspace", &halfspace_intersection::add_halfspace,         \
        py::arg("hs"))                                                   \
@@ -925,8 +911,4 @@ public:
   .BIND_HALFSPACE_INTERSECTION_PROFILING(m)                             \
   .def_readonly("mesh", &halfspace_intersection::mesh);
 
-
-
-
 #endif
-

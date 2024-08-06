@@ -1,11 +1,7 @@
 #ifndef PHYSICAL_PARAMETERS_HPP
 #define PHYSICAL_PARAMETERS_HPP
 
-#include <string>
-#include <sstream>
-#include <cmath>
-
-#include <Eigen/Dense>
+#include "common.hpp"
 
 struct physical_parameters
 {

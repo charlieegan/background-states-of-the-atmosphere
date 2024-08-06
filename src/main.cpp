@@ -3,38 +3,18 @@
 #include <pybind11/numpy.h>
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
-#include <Eigen/Dense>
-#include <string>
-#include <sstream>
-#include <cmath>
-#include <map>
-#include <list>
-#include <algorithm>
-#include <numeric>
-
-#if __has_include(<format>)
-#include <format>
-#define FORMAT std::format
-#else
-#define FMT_HEADER_ONLY
-#include <fmt/format.h>
-#define FORMAT fmt::format
-#endif
 
 namespace py = pybind11;
 
-#define DEBUG_CHECKS
 #define PROFILING
 
+#define DEBUG_CHECKS
 #include "rasterizer.hpp"
-
 #undef DEBUG_CHECKS
 
 #include "laguerre_diagram.hpp"
 #include "timer.hpp"
 #include "halfspace_intersection.hpp"
-
-
 
 
 void hello() {
