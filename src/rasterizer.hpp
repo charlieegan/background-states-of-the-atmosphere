@@ -36,8 +36,10 @@ public:
     friend bool operator<(const event &lhs, const event &rhs) {
       return std::tie(lhs.pos(0), lhs.pos(1)) < std::tie(rhs.pos(0), rhs.pos(1));
     }
-    std::string repr() const {
+    std::string repr(const int &precision = -1) const {
       std::stringstream ss;
+      if (precision > 0)
+        ss << std::setprecision(precision);
       ss << "event("
          << "coord = (" << pos(0) << ", " << pos(1) << ")"
          << ", in = [";
@@ -247,7 +249,7 @@ protected:
     try {
       assert_line_order();
     } catch (std::runtime_error &ex) {
-      throw std::runtime_error(FORMAT("before processing {}: {}", e.repr(), ex.what()));
+      throw std::runtime_error(FORMAT("before processing {}: {}", e.repr(15), ex.what()));
     }
 #endif
 
@@ -298,7 +300,7 @@ protected:
     try {
       assert_line_order();
     } catch (std::runtime_error &ex) {
-      throw std::runtime_error(FORMAT("after processing (line length {}) {}: {}", line.size(), e.repr(), ex.what()));
+      throw std::runtime_error(FORMAT("after processing (line length {}) {}: {}", line.size(), e.repr(15), ex.what()));
     }
 #endif
   }
@@ -450,20 +452,20 @@ protected:
   void assert_line_order() {
     if (line.size() <= 1)
       return;
-    const double epsi = 1e-9;
+    const double epsi_x = 1e-9, epsi_y = 1e-4;
     for (auto it1 = line.begin(), it0 = it1++; it1 != line.end(); it0 = it1++) {
 
       double sx = std::max(it0->s(0), it1->s(0));
       double ex = std::min(it0->e(0), it1->e(0));
 
-      if (sx - ex > epsi)
+      if (sx - ex > epsi_x)
         throw std::runtime_error(FORMAT("sweepline (length {}) contains segments without x-overlap: {} and {}",
                                         line.size(),
                                         it0->repr(16), it1->repr(16)));
 
       double x = 0.5 * (sx + ex);
 
-      if (y_at(it0, x) - y_at(it1, x) > epsi)
+      if (y_at(it0, x) - y_at(it1, x) > epsi_y)
         throw std::runtime_error(FORMAT("sweepline (length {}) is out of order between segments {} and {}, ys {} {} @ x {}",
                                         line.size(),
                                         it0->repr(16), it1->repr(16),
