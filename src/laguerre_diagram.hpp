@@ -431,6 +431,51 @@ public:
 #endif
     return {data, {i, j}};
   }
+
+  Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> get_poly(const int &pi_t) {
+    int pi = pi_t + 6;
+    std::vector<diagram_edge*> edg, path;
+    int len = 0;
+    for (const auto &ei : faces[pi]) {
+      edg.push_back(&edglist[ei]);
+      len += edglist[ei].ls.points.size() - 1;
+    }
+
+    if (edg.size() <= 2)
+      throw std::runtime_error("polygon only has 2 sides");
+
+    std::map<int, std::vector<int>> adj;
+    for (int i = 0; i < (int)edg.size(); ++i) {
+      adj[edg[i]->pi == pi ? edg[i]->di : edg[i]->dj].push_back(i);
+    }
+    std::vector<bool> used(edg.size(), 0);
+
+    std::function<void(const int&)> dfs = [&](const int &ev){
+      int v = edg[ev]->pi == pi ? edg[ev]->dj : edg[ev]->di;
+      for (const int &ew : adj[v])
+        if (!used[ew])
+          used[ew] = true, dfs(ew);
+      path.push_back(edg[ev]);
+    };
+    used[0] = 1;
+    dfs(0);
+    std::reverse(path.begin(), path.end());
+
+    if (path.size() != edg.size())
+      throw std::runtime_error(FORMAT("failed to orient polygon {}: got {} edges of {}", pi, path.size(), edg.size()));
+    
+    int ri = 0;
+    Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> res(len, 2);
+    for (auto &ep : path)
+      if (ep->pi == pi)
+        for (auto pit = ep->ls.points.begin(); pit != std::prev(ep->ls.points.end()); ++pit)
+          res.row(ri++) = pit->x;
+      else
+        for (auto pit = std::prev(ep->ls.points.end()); pit != ep->ls.points.begin(); --pit)
+          res.row(ri++) = pit->x;
+
+    return res;
+  }
 };
 
 #define BIND_DIAGRAM_EDGE(m)                                    \
@@ -473,7 +518,8 @@ public:
   .def_readonly("areaerrs", &laguerre_diagram::areaerrs)        \
   .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                           \
   .def("jac_coo", &laguerre_diagram::jac_coo)                   \
-  .def("get_rasterizer", &laguerre_diagram::get_rasterizer);
+  .def("get_rasterizer", &laguerre_diagram::get_rasterizer)     \
+  .def("get_poly", &laguerre_diagram::get_poly);
 
 
 #endif
