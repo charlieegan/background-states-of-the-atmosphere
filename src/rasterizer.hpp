@@ -31,8 +31,7 @@ public:
 
   struct event {
     Eigen::Vector2d pos; // position of the event
-    int n_in, n_out;     // number of incoming and outgoing segments
-    sit_t its[3];        // segments associated to event (n_in incoming ones followed by n_out outgoing ones)
+    std::vector<sit_t> seg_in, seg_out; // incoming and outgoing segments
     friend bool operator<(const event &lhs, const event &rhs) {
       return std::tie(lhs.pos(0), lhs.pos(1)) < std::tie(rhs.pos(0), rhs.pos(1));
     }
@@ -43,12 +42,12 @@ public:
       ss << "event("
          << "coord = (" << pos(0) << ", " << pos(1) << ")"
          << ", in = [";
-      for (int i = 0; i < n_in; ++i)
-        ss << its[i]->sidx << ", ";
+      for (auto &it : seg_in)
+        ss << it->sidx << ", ";
       ss << "]"
          << ", out = [";
-      for (int i = 0; i < n_out; ++i)
-        ss << its[i + n_in]->sidx << ", ";
+      for (auto &it : seg_out)
+        ss << it->sidx << ", ";
       ss << "]"
          << ")";
       return ss.str();
@@ -73,7 +72,7 @@ public:
   rasterizer() = default;
 
   // seg = (geometric) segments; seg[i] = {start point, end point, index of cell below segment}; segments should include top and bottom but not left and right border (direction does not matter)
-  // con = connectivity, con[i] has length 2 or 3 and contains indices of segments that are connected (order does not matter)
+  // con = connectivity, con[i] has length >= 2 and contains indices of segments that are connected (order does not matter)
   // start = segment indices of segments at the start
   // bounds = (left, right, bottom, top) boundaries left < right bounds coordinate 0; bottom < top bounds coordinate 1
   rasterizer(const std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> &seg,
@@ -123,8 +122,6 @@ public:
     for (auto &c : con) {
       if (c.size() < 2)
         throw std::runtime_error("rasterizer got invalid connection (size < 2)");
-      if (c.size() > 3)
-        throw std::runtime_error("rasterizer got invalid connection (size > 3)");
 
 #ifdef DEBUG_CHECKS
       for (const int &i : c)
@@ -191,12 +188,8 @@ public:
       // build event
       event e;
       e.pos = p;
-      e.n_in = seg_in.size();
-      e.n_out = seg_out.size();
-      for (int i = 0; i < (int)seg_in.size(); ++i)
-        e.its[i] = seg_in[i];
-      for (int i = 0; i < (int)seg_out.size(); ++i)
-        e.its[i + seg_in.size()] = seg_out[i];
+      e.seg_in = seg_in;
+      e.seg_out = seg_out;
 
       // add event to list
       events.push_back(e);
@@ -254,15 +247,13 @@ protected:
 #endif
 
     // add areas below ending segment
-    for (int i = 0; i < e.n_in; ++i) {
-      const auto &it = e.its[i];
+    for (auto &it : e.seg_in)
       add_area_below(it, e.pos(0));
-    }
 
     // find ins_pos (which is either the one following the highest ending segment in line or has to be found by linear search)
     sit_t ins_pos;
-    if (e.n_in > 0) {
-      ins_pos = std::next(e.its[e.n_in - 1]);
+    if (e.seg_in.size()) {
+      ins_pos = std::next(e.seg_in.back());
     } else {
       ins_pos = line.begin();
       while (ins_pos != line.end() && y_at(ins_pos, e.pos(0)) <= e.pos(1))
@@ -274,8 +265,7 @@ protected:
       add_area_below(ins_pos, e.pos(0));
 
     // remove ending segments from line
-    for (int i = 0; i < e.n_in; ++i) {
-      const auto &it = e.its[i];
+    for (auto &it : e.seg_in) {
 #ifdef DEBUG_CHECKS
       if (!used[it->sidx])
         throw std::runtime_error(FORMAT("try to remove segment {} from line that is not contained", it->sidx));
@@ -285,8 +275,7 @@ protected:
     }
 
     // add new segments to line (in order: starting at lowest, all before ins_pos)
-    for (int i = 0; i < e.n_out; ++i) {
-      const auto &it = e.its[i + e.n_in];
+    for (auto &it : e.seg_out) {
       it->x0 = e.pos(0);
 #ifdef DEBUG_CHECKS
       if (used[it->sidx])
@@ -435,7 +424,7 @@ protected:
 
   void add_area_above(const sit_t &it, const double &x1) {
     // add area above it (if it exists)
-    sit_t it1 = it; ++it1;
+    sit_t it1 = std::next(it);
     if (it1 == line.end())
       return;
     add_area_between(it, it1, x1);
@@ -445,29 +434,33 @@ protected:
     // add area below it (if it exists)
     if (it == line.begin())
       return;
-    sit_t it0 = it; --it0;
-    add_area_between(it0, it, x1);
+    add_area_between(std::prev(it), it, x1);
   }
 
   void assert_line_order() {
     if (line.size() <= 1)
       return;
-    const double epsi_x = 1e-9, epsi_y = 1e-4;
+    const double epsi_x = 1e-8, epsi_y = 1e-3;
     for (auto it1 = line.begin(), it0 = it1++; it1 != line.end(); it0 = it1++) {
-
+      
       double sx = std::max(it0->s(0), it1->s(0));
       double ex = std::min(it0->e(0), it1->e(0));
 
-      if (sx - ex > epsi_x)
+      double dx = ex - sx;
+      
+      if (dx < -epsi_x)
         throw std::runtime_error(FORMAT("sweepline (length {}) contains segments without x-overlap: {} and {}",
                                         line.size(),
                                         it0->repr(16), it1->repr(16)));
-
+      
       double x = 0.5 * (sx + ex);
 
-      if (y_at(it0, x) - y_at(it1, x) > epsi_y)
-        throw std::runtime_error(FORMAT("sweepline (length {}) is out of order between segments {} and {}, ys {} {} @ x {}",
+      double dy = y_at(it1, x) - y_at(it0, x);
+
+      if (dy < -epsi_y)
+        throw std::runtime_error(FORMAT("sweepline (length {}) is out of order (dx = {}, dy = {}) between segments {} and {}, ys {} {} @ x {}",
                                         line.size(),
+                                        dx, dy,
                                         it0->repr(16), it1->repr(16),
                                         y_at(it0, x), y_at(it1, x), x));
     }
@@ -487,8 +480,8 @@ protected:
 #define BIND_RASTERIZER_EVENT(m)                        \
   py::class_<rasterizer::event>(m, "RasterizerEvent")   \
   .def_readonly("pos", &rasterizer::event::pos)         \
-  .def_readonly("n_in", &rasterizer::event::n_in)       \
-  .def_readonly("n_out", &rasterizer::event::n_out)     \
+  .def_property_readonly("n_in", [](const rasterizer::event &e){ return e.seg_in.size(); }) \
+  .def_property_readonly("n_out", [](const rasterizer::event &e){ return e.seg_out.size(); }) \
   .def("__repr__", &rasterizer::event::repr);
 
 
