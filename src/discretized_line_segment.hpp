@@ -79,7 +79,7 @@ public:
 
     area = ts.area(te);
     
-    for (int i = 0; (i < max_res) && (i < min_res || errb > tol); ++i)
+    for (int i = 2; (i < max_res) && (i < min_res || errb > tol); ++i)
       refine();
   }
 
