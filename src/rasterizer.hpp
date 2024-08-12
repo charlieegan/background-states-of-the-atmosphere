@@ -52,6 +52,16 @@ public:
          << ")";
       return ss.str();
     }
+    void sort() {
+      std::sort(seg_in.begin(), seg_in.end(), //is_below);
+                [](const sit_t &l, const sit_t &r){
+                  return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) >
+                          (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
+      std::sort(seg_out.begin(), seg_out.end(), //is_below);
+                [](const sit_t &l, const sit_t &r){
+                  return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) <
+                          (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
+    }
   };
 
   // segments that are in the current sweep line and ones that are not correspondingly
@@ -78,11 +88,12 @@ public:
   rasterizer(const std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> &seg,
              const std::vector<std::vector<int>> &con,
              const std::vector<int> &start,
-             const Eigen::Ref<const Eigen::Array4d> &bounds) :
+             const Eigen::Ref<const Eigen::Array4d> &bounds,
+             const double &merge_epsi) :
     used(seg.size()),
     bounds(bounds),
     lb(bounds(0), bounds(2)) {
-
+    
     // costruct segments from input parameters and store them in pool
     std::vector<sit_t> sits;
     for (int i = 0; i < (int)seg.size(); ++i) {
@@ -158,33 +169,6 @@ public:
         throw std::runtime_error(FORMAT("incoming and outgoing segments don't add up: {} + {} != {}", seg_in.size(), seg_out.size(), c.size()));
 #endif
 
-      // sort segments by y-order (i.e. slope as they have a common end point)
-      std::sort(seg_in.begin(), seg_in.end(),
-                [](const sit_t &l, const sit_t &r){
-                  return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) >
-                          (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
-      std::sort(seg_out.begin(), seg_out.end(),
-                [](const sit_t &l, const sit_t &r){
-                  return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) <
-                          (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
-
-      // #ifdef DEBUG_CHECKS
-      //       for (int i = 0; i < (int)seg_in.size() - 1; ++i)
-      //         if (!is_below(seg_in[i], seg_in[i+1])) {
-      //           std::string msg = "segment ordering in event incorrect (seg_in): ";
-      //           for (const auto &it : seg_in)
-      //             msg += it->repr(16) + " ";
-      //           throw std::runtime_error(msg);
-      //         }
-      //       for (int i = 0; i < (int)seg_out.size() - 1; ++i)
-      //         if (!is_below(seg_out[i], seg_out[i+1])) {
-      //           std::string msg = "segment ordering in event incorrect (seg_out): ";
-      //           for (const auto &it : seg_out)
-      //             msg += it->repr(16) + " ";
-      //           throw std::runtime_error(msg);
-      //         }
-      // #endif
-
       // build event
       event e;
       e.pos = p;
@@ -196,6 +180,98 @@ public:
     }
 
     std::sort(events.begin(), events.end());
+
+    // merge very close events (and endpoints of corresponding segments)
+    double epsi_x = merge_epsi * (bounds[1] - bounds[0]);
+    double epsi_y = merge_epsi * (bounds[3] - bounds[2]);
+
+    int merge_cnt = 0;
+    
+    for (int l = 0, r = 0; r < (int)events.size(); ++l) {
+      while (r < (int)events.size() && events[r].pos(0) - events[l].pos(0) < epsi_x)
+        ++r;
+
+      // don't merge for empty events
+      if (events[l].seg_in.empty() && events[l].seg_out.empty())
+        continue;
+
+      // find events to merge with
+      for (int i = l + 1; i < r; ++i) {
+        // check if event[i] is within merging distance
+        if (std::abs(events[l].pos(1) - events[i].pos(1)) < epsi_y) {
+          // py::print("merge", events[l].repr(16), "and", events[i].repr(16));
+
+          // merge events[i].seg_in; handle collapsed and flipped segments
+          auto &p = events[l].pos;
+          for (auto &it : events[i].seg_in) {
+
+            it->e = p;
+            
+            // handle cases of segments collapsed to point or flipped due to merging
+            if (seg_is_oriented(it->s,  it->e)) {
+              // py::print("change endpoint of segment without flipping");
+              events[l].seg_in.push_back(it);
+            } else {
+              int si = -1;
+              for (int j = i - 1; j >= 0 && events[j].pos(0) >= it->s(0); --j) {
+                if (events[j].pos == it->s) {
+                  si = j;
+                  break;
+                }
+              }
+              if (si < 0)
+                throw std::runtime_error("did not find starting event of segment flipped in merging operation");
+
+              std::erase(events[si].seg_out, it);
+              
+              if (it->s != it->e) {
+                // py::print("flipping segment");
+                
+                std::swap(it->s, it->e);
+                
+                events[l].seg_out.push_back(it);
+                events[si].seg_in.push_back(it);
+                
+              } else {
+                // py::print("segment collapsed to point is ignored");
+              }  
+            }
+          }
+          events[i].seg_in.clear();
+
+          // merge events[i].seg_out; segments here are always regular
+          for (auto &it : events[i].seg_out) {
+            it->s = p;
+            events[l].seg_out.push_back(it);
+          }
+          events[i].seg_out.clear();
+          
+          ++merge_cnt;
+        }
+      }
+    }
+
+    // sort event segments
+    for (auto &e : events)
+      e.sort();
+
+#ifdef DEBUG_CHECKS
+    for (auto &e : events) {
+      if (!is_sorted(e.seg_in.begin(), e.seg_in.end(), is_below)) {
+        std::string msg = FORMAT("incoming segments in event are not sorted in event {}:", e.repr(16));
+        for (auto &it : e.seg_in)
+          msg += FORMAT(" {}", it->repr(16));
+        throw std::runtime_error(msg);
+      }
+      if (!is_sorted(e.seg_out.begin(), e.seg_out.end(), is_below)) {
+        std::string msg = FORMAT("outgoing segments in event are not sorted in event {}:", e.repr(16));
+        for (auto &it : e.seg_out)
+          msg += FORMAT(" {}", it->repr(16));
+        throw std::runtime_error(msg);
+      }
+    }
+#endif
+    
   }
 
   // val = values of cells
@@ -245,6 +321,10 @@ protected:
       throw std::runtime_error(FORMAT("before processing {}: {}", e.repr(15), ex.what()));
     }
 #endif
+
+    // ignore empty event
+    if (e.seg_in.size() == 0 && e.seg_out.size() == 0)
+      return;
 
     // add areas below ending segment
     for (auto &it : e.seg_in)
@@ -328,6 +408,11 @@ protected:
       return y_at(it0, x) < y_at(it1, x);
     }
   }
+
+  static inline bool seg_is_oriented(const Eigen::Ref<const Eigen::Vector2d> &s, const Eigen::Ref<const Eigen::Vector2d> &e) {
+    return (s(0) < e(0)) || ((s(0) == e(0)) && s(1) < e(1));
+  }
+  
   // for given x, find pixel column containing it
   inline int x_to_pixel(const double &x) const {
     return std::floor((x - lb(0)) / step(0));
@@ -490,9 +575,11 @@ protected:
   .def(py::init<const std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> &, \
        const std::vector<std::vector<int>> &,                           \
        const std::vector<int> &,                                        \
-       const Eigen::Ref<const Eigen::Array4d> &>(),                     \
+       const Eigen::Ref<const Eigen::Array4d> &,                        \
+       const double &>(),                                               \
        py::arg("seg"), py::arg("con"),                                  \
-       py::arg("start"), py::arg("bounds"))                             \
+       py::arg("start"), py::arg("bounds"),                             \
+       py::arg("merge_epsi"))                                           \
   .def("rasterize", &rasterizer::rasterize,                             \
        py::arg("val"), py::arg("res"))                                  \
   .def_readonly("pool", &rasterizer::pool)                              \

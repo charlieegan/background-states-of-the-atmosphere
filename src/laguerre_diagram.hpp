@@ -285,7 +285,7 @@ public:
 #endif
   }
 
-  rasterizer get_rasterizer() {
+  rasterizer get_rasterizer(const double &merge_epsi) {
 
 #ifdef PROFILING
     time->start_section(idx_time_prepare_rasterizer);
@@ -322,6 +322,7 @@ public:
       // if the edge is oriented left-to-right then pi is below, if it goes right-to-left then pj is below
       // indices >= n (i.e. the top cell) are all combined into n
       int vidx = std::min(((points.front().x(0) > points.back().x(0)) ? e.pj : e.pi) - 6, n);
+      if (vidx < 0) vidx = n;
 
       // add segments
       int j = sidx[i];
@@ -373,7 +374,10 @@ public:
     seg.push_back({{sim.spmin(0), sim.spmax(1) + 1}, {sim.spmax(0), sim.spmax(1) + 1}, n});
     start.push_back(seg.size() - 1);
 
-    rasterizer rast(seg, con, start, bounds);
+    // seg.push_back({{sim.spmin(0), sim.spmin(1) - 1}, {sim.spmax(0), sim.spmin(1) - 1}, n});
+    // start.push_back(seg.size() - 1);
+
+    rasterizer rast(seg, con, start, bounds, merge_epsi);
 
 #ifdef PROFILING
     time->end_section();
@@ -518,7 +522,8 @@ public:
   .def_readonly("areaerrs", &laguerre_diagram::areaerrs)        \
   .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                           \
   .def("jac_coo", &laguerre_diagram::jac_coo)                   \
-  .def("get_rasterizer", &laguerre_diagram::get_rasterizer)     \
+  .def("get_rasterizer", &laguerre_diagram::get_rasterizer,     \
+       py::arg("merge_epsi") = 1e-8)                            \
   .def("get_poly", &laguerre_diagram::get_poly);
 
 
