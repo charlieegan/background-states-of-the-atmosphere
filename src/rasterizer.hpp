@@ -53,11 +53,11 @@ public:
       return ss.str();
     }
     void sort() {
-      std::sort(seg_in.begin(), seg_in.end(), //is_below);
+      std::sort(seg_in.begin(), seg_in.end(), //is_below_it);
                 [](const sit_t &l, const sit_t &r){
                   return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) >
                           (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
-      std::sort(seg_out.begin(), seg_out.end(), //is_below);
+      std::sort(seg_out.begin(), seg_out.end(), //is_below_it);
                 [](const sit_t &l, const sit_t &r){
                   return ((l->e(1) - l->s(1)) / (l->e(0) - l->s(0)) <
                           (r->e(1) - r->s(1)) / (r->e(0) - r->s(0))); });
@@ -255,15 +255,18 @@ public:
     for (auto &e : events)
       e.sort();
 
+    if (!check_topology())
+      throw std::runtime_error("invalid topology detected in rasterizer");
+
 #ifdef DEBUG_CHECKS
     for (auto &e : events) {
-      if (!is_sorted(e.seg_in.begin(), e.seg_in.end(), is_below)) {
+      if (!std::is_sorted(e.seg_in.begin(), e.seg_in.end(), is_below_it)) {
         std::string msg = FORMAT("incoming segments in event are not sorted in event {}:", e.repr(16));
         for (auto &it : e.seg_in)
           msg += FORMAT(" {}", it->repr(16));
         throw std::runtime_error(msg);
       }
-      if (!is_sorted(e.seg_out.begin(), e.seg_out.end(), is_below)) {
+      if (!std::is_sorted(e.seg_out.begin(), e.seg_out.end(), is_below_it)) {
         std::string msg = FORMAT("outgoing segments in event are not sorted in event {}:", e.repr(16));
         for (auto &it : e.seg_out)
           msg += FORMAT(" {}", it->repr(16));
@@ -312,7 +315,49 @@ public:
   }
 
 protected:
+  
+  bool check_topology() {
+    std::fill(used.begin(), used.end(), false);
+    pool.splice(pool.end(), line);
+    for (auto &it : pline) {
+      it->x0 = lb(0);
+      used[it->sidx] = true;
+      line.splice(line.end(), pool, it);
+    }
+    for (auto &e : events) {
+      if (e.seg_in.empty() && e.seg_out.empty())
+        continue;
 
+      sit_t ins_pos;
+      if (e.seg_in.size()) {
+        ins_pos = std::next(e.seg_in.back());
+      } else {
+        ins_pos = line.begin();
+        while (ins_pos != line.end() && y_at(ins_pos, e.pos(0)) <= e.pos(1))
+          ++ins_pos;
+      }
+
+      for (auto &it : e.seg_in) {
+        if (!used[it->sidx])
+          return false;
+        used[it->sidx] = false;
+        pool.splice(pool.end(), line, it);
+      }
+      
+      for (auto &it : e.seg_out) {
+        it->x0 = e.pos(0);
+        if (used[it->sidx])
+          return false;
+        used[it->sidx] = true;
+        line.splice(ins_pos, pool, it);
+      }
+
+      if (!std::is_sorted(line.begin(), line.end(), is_below))
+        return false;
+    }
+    return true;
+  }
+  
   void process_event(const event &e) {
 #ifdef DEBUG_CHECKS
     try {
@@ -323,7 +368,7 @@ protected:
 #endif
 
     // ignore empty event
-    if (e.seg_in.size() == 0 && e.seg_out.size() == 0)
+    if (e.seg_in.empty() && e.seg_out.empty())
       return;
 
     // add areas below ending segment
@@ -382,7 +427,10 @@ protected:
     return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
   }
   static inline double y_at(const sit_t &it, const double &x) {
-    return y_at(it->s(0), it->s(1), it->e(0), it->e(1), x);
+    return y_at(*it, x);
+  }
+  static inline double y_at(const segment &s, const double &x) {
+    return y_at(s.s(0), s.s(1), s.e(0), s.e(1), x);
   }
   // calculate x-coordinate of segment (extended to line) (x0, y0) -- (x1, y1) at y-coord y
   static inline double x_at(const double &x0, const double &y0,
@@ -392,20 +440,26 @@ protected:
     return x0 + (x1 - x0) * (y - y0) / (y1 - y0);
   }
   static inline double x_at(const sit_t &it, const double &y) {
-    return x_at(it->s(0), it->s(1), it->e(0), it->e(1), y);
+    return x_at(*it, y);
+  }
+  static inline double x_at(const segment &s, const double &y) {
+    return x_at(s.s(0), s.s(1), s.e(0), s.e(1), y);
   }
   // check whether it0 is below it1 assuming they do not intersect except for possibly at endpoints and they have some common x
-  static inline bool is_below(const sit_t &it0, const sit_t &it1) {
-    if (it0->s(0) == it0->e(0)) {
-      if (it1->s(0) == it1->e(0))
-        return (it0->s(1) + it0->e(1)) < (it1->s(1) + it1->e(1));
+  static inline bool is_below_it(const sit_t &it0, const sit_t &it1) {
+    return is_below(*it0, *it1);
+  }
+  static inline bool is_below(const segment &s0, const segment &s1) {
+    if (s0.s(0) == s0.e(0)) {
+      if (s1.s(0) == s1.e(0))
+        return (s0.s(1) + s0.e(1)) < (s1.s(1) + s1.e(1));
       else
-        return 0.5 * (it0->s(1) + it0->e(1)) < y_at(it1, it0->s(0));
-    } else if (it1->s(0) == it1->e(0)) {
-      return y_at(it0, it1->s(0)) < 0.5 * (it1->s(1) + it1->e(1));
+        return 0.5 * (s0.s(1) + s0.e(1)) < y_at(s1, s0.s(0));
+    } else if (s1.s(0) == s1.e(0)) {
+      return y_at(s0, s1.s(0)) < 0.5 * (s1.s(1) + s1.e(1));
     } else {
-      double x = 0.5 * (std::max(it0->s(0), it1->s(0)) +  std::min(it0->e(0), it1->e(0)));
-      return y_at(it0, x) < y_at(it1, x);
+      double x = 0.5 * (std::max(s0.s(0), s1.s(0)) +  std::min(s0.e(0), s1.e(0)));
+      return y_at(s0, x) < y_at(s1, x);
     }
   }
 
