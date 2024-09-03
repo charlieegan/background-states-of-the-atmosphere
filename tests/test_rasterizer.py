@@ -56,7 +56,8 @@ def test_10x10_simple(geometry_simple, geometry_simple_10x10_truth):
     rast = Rasterizer(seg = geometry_simple["seg"],
                       con = geometry_simple["con"],
                       start = geometry_simple["start"],
-                      bounds = geometry_simple["bounds"]);
+                      bounds = geometry_simple["bounds"],
+                      merge_epsi = 0);
     v = rast.rasterize(val = geometry_simple["val"], res = res)
     assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
 
@@ -65,7 +66,8 @@ def test_consecutive_simple(geometry_simple, geometry_simple_10x10_truth):
     rast = Rasterizer(seg = geometry_simple["seg"],
                       con = geometry_simple["con"],
                       start = geometry_simple["start"],
-                      bounds = geometry_simple["bounds"]);
+                      bounds = geometry_simple["bounds"],
+                      merge_epsi = 0);
 
     v = rast.rasterize(val = geometry_simple["val"], res = res)
     assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
@@ -82,7 +84,8 @@ def test_segment_direction_simple(geometry_simple, geometry_simple_10x10_truth, 
     rast = Rasterizer(seg = seg,
                       con = con,
                       start = geometry_simple["start"],
-                      bounds = geometry_simple["bounds"]);
+                      bounds = geometry_simple["bounds"],
+                      merge_epsi = 0);
     v = rast.rasterize(val = geometry_simple["val"], res = res)
     assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
 
@@ -92,7 +95,8 @@ def test_downsample_simple(geometry_simple, geometry_simple_10x10_truth, rep):
     rast = Rasterizer(seg = geometry_simple["seg"],
                       con = geometry_simple["con"],
                       start = geometry_simple["start"],
-                      bounds = geometry_simple["bounds"]);
+                      bounds = geometry_simple["bounds"],
+                      merge_epsi = 0);
     v = rast.rasterize(val = geometry_simple["val"], res = res)
     assert np.max(np.abs(meanpool(v, rep) - geometry_simple_10x10_truth)) < 1e-9
 
@@ -101,7 +105,8 @@ def test_consecutive_different_values_simple(geometry_simple, geometry_simple_10
     rast = Rasterizer(seg = geometry_simple["seg"],
                       con = geometry_simple["con"],
                       start = geometry_simple["start"],
-                      bounds = geometry_simple["bounds"]);
+                      bounds = geometry_simple["bounds"],
+                      merge_epsi = 0);
 
     v = rast.rasterize(val = geometry_simple["val"], res = res)
     assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
@@ -115,7 +120,8 @@ def test_consecutive_different_sizes_simple(geometry_simple, geometry_simple_10x
     rast = Rasterizer(seg = geometry_simple["seg"],
                       con = geometry_simple["con"],
                       start = geometry_simple["start"],
-                      bounds = geometry_simple["bounds"]);
+                      bounds = geometry_simple["bounds"],
+                      merge_epsi = 0);
 
     v = rast.rasterize(val = geometry_simple["val"], res = res)
     assert np.max(np.abs(v - geometry_simple_10x10_truth)) < 1e-9
@@ -128,7 +134,8 @@ def test_values_one_by_one_simple(geometry_simple, geometry_simple_10x10_truth):
     rast = Rasterizer(seg = geometry_simple["seg"],
                       con = geometry_simple["con"],
                       start = geometry_simple["start"],
-                      bounds = geometry_simple["bounds"]);
+                      bounds = geometry_simple["bounds"],
+                      merge_epsi = 0);
     v = np.zeros(res);
     
     for i in range(len(geometry_simple["val"])):
@@ -149,7 +156,7 @@ def test_ending_2():
 
     val = [0, 1]
     res = [2, 2]
-    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds, merge_epsi = 0)
     v = rast.rasterize(val = val, res = res)
 
     tv = np.array([[0.5, 0.5],
@@ -168,7 +175,7 @@ def test_ending_3():
 
     val = [0, 1, 2]
     res = [2, 2]
-    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds, merge_epsi = 0)
     v = rast.rasterize(val = val, res = res)
 
     tv = np.array([[1.0, 1.5],
@@ -188,7 +195,7 @@ def test_double_vertical():
 
     val = [0, 1]
     res = [2, 2]
-    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds, merge_epsi = 0)
     v = rast.rasterize(val = val, res = res)
 
     tv = np.array([[0.0, 0.0],
@@ -206,7 +213,7 @@ def test_starting_2():
 
     val = [0, 1]
     res = [2, 2]
-    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds)
+    rast = Rasterizer(seg = seg, con = con, start = start, bounds = bounds, merge_epsi = 0)
     v = rast.rasterize(val = val, res = res)
 
     tv = np.array([[0.0, 0.0],

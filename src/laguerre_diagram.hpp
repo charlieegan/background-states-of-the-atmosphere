@@ -523,7 +523,7 @@ public:
   .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                           \
   .def("jac_coo", &laguerre_diagram::jac_coo)                   \
   .def("get_rasterizer", &laguerre_diagram::get_rasterizer,     \
-       py::arg("merge_epsi") = 1e-8)                            \
+       py::arg("merge_epsi") = 0)                               \
   .def("get_poly", &laguerre_diagram::get_poly);
 
 
