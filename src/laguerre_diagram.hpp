@@ -9,12 +9,17 @@
 #include "halfspace_intersection.hpp"
 #include "rasterizer.hpp"
 
+template <typename T> // dual type, used for duals and halfspace intersection (not everything)
 class laguerre_diagram
 {
   static inline double sqr(const double &x) { return x * x; }
 
 public:
   typedef Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>> seeds_t;
+  typedef Eigen::Vector3<T> Vec3;
+  typedef Eigen::Vector4<T> Vec4;
+  typedef Eigen::VectorX<T> VecX;
+
 
   struct diagram_edge {
     int pi, pj;
@@ -40,12 +45,12 @@ public:
   // input parameters
   int n;
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> ys;
-  Eigen::VectorXd duals;
+  VecX duals;
   physical_parameters phys;
   simulation_parameters sim;
 
   // halfspace intersection
-  halfspace_intersection hs;
+  halfspace_intersection<T> hs;
 
   // diagram:
   // vertices
@@ -83,7 +88,7 @@ public:
 #endif
 
   laguerre_diagram(const seeds_t &ys,
-                   const Eigen::Ref<const Eigen::VectorXd> &duals,
+                   const Eigen::Ref<const VecX> &duals,
                    const physical_parameters &phys,
                    const simulation_parameters &sim) :
     n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim) {
@@ -107,30 +112,30 @@ public:
 
     // perform the halfspace intersection
 
-    Eigen::Vector3d zeta_min, zeta_max;
-    zeta_min << phys.tf(sim.spmin), -1e100;
-    zeta_max << phys.tf(sim.spmax), 1e100;
-    hs = halfspace_intersection(zeta_min, zeta_max);
+    Vec3 zeta_min, zeta_max;
+    zeta_min << phys.tf<T>(sim.spmin.cast<T>()), (T)-1e100;
+    zeta_max << phys.tf<T>(sim.spmax.cast<T>()), (T)1e100;
+    hs = halfspace_intersection<T>(zeta_min, zeta_max);
 
     // add seed halfspaces
     for (int i = 0; i < n; i++) {
-      Eigen::Vector4d H(-0.5 * sqr(ys(i, 0) / phys.a),
-                        -phys.cp * ys(i, 1),
-                        1.0,
-                        phys.Omega * ys(i, 0) + duals(i));
+      Vec4 H(-0.5 * sqr(ys(i, 0) / phys.a),
+             -phys.cp * ys(i, 1),
+             1.0,
+             phys.Omega * ys(i, 0) + duals(i));
 
       hs.add_halfspace(H);
     }
 
     // add boundary halfspaces
     for (int i = 0; i < sim.boundary_res; i++) {
-      double s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / (sim.boundary_res - 1);
-      double z0 = 1. / (1 - s * s);
+      T s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / (sim.boundary_res - 1);
+      T z0 = 1. / (1 - s * s);
 
-      Eigen::Vector4d H(-0.5 * sqr(phys.Omega * phys.a / z0),
-                        0.0,
-                        1.0,
-                        duals(n) + sqr(phys.Omega * phys.a) / z0);
+      Vec4 H(-0.5 * sqr(phys.Omega * phys.a / z0),
+             0.0,
+             1.0,
+             duals(n) + sqr(phys.Omega * phys.a) / z0);
 
       hs.add_halfspace(H);
     }
@@ -149,7 +154,7 @@ public:
     verts.resize(hs.mesh.dvert.capacity(), 2);
     dfacets.resize(hs.mesh.dvert.capacity());
     for (int i = 0; i < (int)verts.rows(); i++)
-      verts.row(i) = hs.mesh.dvert[i].head<2>() / hs.mesh.dvert[i](3);
+      verts.row(i) = (hs.mesh.dvert[i].head(2) / hs.mesh.dvert[i](3)).template cast<double>();
 
 #ifdef PROFILING
     time->start_section(idx_time_extract_edges);
@@ -483,49 +488,49 @@ public:
   }
 };
 
-#define BIND_DIAGRAM_EDGE(m)                                    \
-  py::class_<laguerre_diagram::diagram_edge>(m, "DiagramEdge")  \
-  .def("__repr__", &laguerre_diagram::diagram_edge::repr)       \
-  .def_readonly("pi", &laguerre_diagram::diagram_edge::pi)      \
-  .def_readonly("pj", &laguerre_diagram::diagram_edge::pj)      \
-  .def_readonly("di", &laguerre_diagram::diagram_edge::di)      \
-  .def_readonly("dj", &laguerre_diagram::diagram_edge::dj)      \
-  .def_readonly("ls", &laguerre_diagram::diagram_edge::ls)      \
-  .def_readonly("dif", &laguerre_diagram::diagram_edge::dif);
+#define BIND_DIAGRAM_EDGE(m, T, name)                                   \
+  py::class_<laguerre_diagram<T>::diagram_edge>(m, name)                \
+  .def("__repr__", &laguerre_diagram<T>::diagram_edge::repr)            \
+  .def_readonly("pi", &laguerre_diagram<T>::diagram_edge::pi)           \
+  .def_readonly("pj", &laguerre_diagram<T>::diagram_edge::pj)           \
+  .def_readonly("di", &laguerre_diagram<T>::diagram_edge::di)           \
+  .def_readonly("dj", &laguerre_diagram<T>::diagram_edge::dj)           \
+  .def_readonly("ls", &laguerre_diagram<T>::diagram_edge::ls)           \
+  .def_readonly("dif", &laguerre_diagram<T>::diagram_edge::dif);
 
 
 #ifdef PROFILING
-#define BIND_LAGUERRE_DIAGRAM_PROFILING(m)      \
-  def_readonly("time", &laguerre_diagram::time)
+#define BIND_LAGUERRE_DIAGRAM_PROFILING(m, T)           \
+  def_readonly("time", &laguerre_diagram<T>::time)
 #else
-#define BIND_LAGUERRE_DIAGRAM_PROFILING(m)
+#define BIND_LAGUERRE_DIAGRAM_PROFILING(m, T)
 #endif
 
-#define BIND_LAGUERRE_DIAGRAM(m)                                \
-  py::class_<laguerre_diagram>(m, "LaguerreDiagram")            \
-  .def(py::init<const laguerre_diagram::seeds_t&,               \
-       const Eigen::Ref<const Eigen::VectorXd>&,                \
+#define BIND_LAGUERRE_DIAGRAM(m, T, name)                       \
+  py::class_<laguerre_diagram<T>>(m, name)                      \
+  .def(py::init<const laguerre_diagram<T>::seeds_t&,            \
+       const Eigen::Ref<const laguerre_diagram<T>::VecX>&,      \
        const physical_parameters &,                             \
        const simulation_parameters&>(),                         \
        py::arg("ys"), py::arg("duals"),                         \
        py::arg("phys"), py::arg("sim"))                         \
-  .def_readonly("n", &laguerre_diagram::n)                      \
-  .def_readonly("phys", &laguerre_diagram::phys)                \
-  .def_readonly("sim", &laguerre_diagram::sim)                  \
-  .def_readonly("ys", &laguerre_diagram::ys)                    \
-  .def_readonly("duals", &laguerre_diagram::duals)              \
-  .def_readonly("hs", &laguerre_diagram::hs)                    \
-  .def_readonly("edglist", &laguerre_diagram::edglist)          \
-  .def_readonly("verts", &laguerre_diagram::verts)              \
-  .def_readonly("faces", &laguerre_diagram::faces)              \
-  .def_readonly("dfacets", &laguerre_diagram::dfacets)          \
-  .def_readonly("areas", &laguerre_diagram::areas)              \
-  .def_readonly("areaerrs", &laguerre_diagram::areaerrs)        \
-  .BIND_LAGUERRE_DIAGRAM_PROFILING(m)                           \
-  .def("jac_coo", &laguerre_diagram::jac_coo)                   \
-  .def("get_rasterizer", &laguerre_diagram::get_rasterizer,     \
+  .def_readonly("n", &laguerre_diagram<T>::n)                   \
+  .def_readonly("phys", &laguerre_diagram<T>::phys)             \
+  .def_readonly("sim", &laguerre_diagram<T>::sim)               \
+  .def_readonly("ys", &laguerre_diagram<T>::ys)                 \
+  .def_readonly("duals", &laguerre_diagram<T>::duals)           \
+  .def_readonly("hs", &laguerre_diagram<T>::hs)                 \
+  .def_readonly("edglist", &laguerre_diagram<T>::edglist)       \
+  .def_readonly("verts", &laguerre_diagram<T>::verts)           \
+  .def_readonly("faces", &laguerre_diagram<T>::faces)           \
+  .def_readonly("dfacets", &laguerre_diagram<T>::dfacets)       \
+  .def_readonly("areas", &laguerre_diagram<T>::areas)           \
+  .def_readonly("areaerrs", &laguerre_diagram<T>::areaerrs)     \
+  .BIND_LAGUERRE_DIAGRAM_PROFILING(m, T)                        \
+  .def("jac_coo", &laguerre_diagram<T>::jac_coo)                \
+  .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer,  \
        py::arg("merge_epsi") = 0)                               \
-  .def("get_poly", &laguerre_diagram::get_poly);
+  .def("get_poly", &laguerre_diagram<T>::get_poly);
 
 
 #endif

@@ -33,11 +33,38 @@ PYBIND11_MODULE(_atmosphere_bgs, m) {
   BIND_DISCRETIZED_LINE_SEGMENT(m); 
 
   BIND_PDEDGE(m);
-  BIND_PDMESH(m);
-  BIND_HALFSPACE_INTERSECTION(m);
+  BIND_PDMESH(m, double, "PDMesh_f64");
+  BIND_HALFSPACE_INTERSECTION(m, double, "HalfspaceIntersection_fp64");
 
-  BIND_DIAGRAM_EDGE(m);
-  BIND_LAGUERRE_DIAGRAM(m);
+  BIND_DIAGRAM_EDGE(m, double, "DiagramEdge_f64");
+  BIND_LAGUERRE_DIAGRAM(m, double, "LaguerreDiagram_f64");
+
+
+  BIND_PDMESH(m, long double, "PDMesh_f128");
+  BIND_HALFSPACE_INTERSECTION(m, long double, "HalfspaceIntersection_fp128");
+
+  BIND_DIAGRAM_EDGE(m, long double, "DiagramEdge_f128");
+  BIND_LAGUERRE_DIAGRAM(m, long double, "LaguerreDiagram_f128");
+
+  m.def("LaguerreDiagram",
+        [](const laguerre_diagram<double>::seeds_t &ys,
+           const Eigen::Ref<const laguerre_diagram<double>::VecX> &duals,
+           const physical_parameters &phys,
+           const simulation_parameters &sim) {
+          return laguerre_diagram<double>(ys, duals, phys, sim);
+        },
+        py::arg("ys"), py::arg("duals"),          
+        py::arg("phys"), py::arg("sim"));
+
+  m.def("LaguerreDiagram",
+        [](const laguerre_diagram<long double>::seeds_t &ys,
+           const Eigen::Ref<const laguerre_diagram<long double>::VecX> &duals,
+           const physical_parameters &phys,
+           const simulation_parameters &sim) {
+          return laguerre_diagram<long double>(ys, duals, phys, sim);
+        },
+        py::arg("ys"), py::arg("duals"),          
+        py::arg("phys"), py::arg("sim"));
 
   BIND_RASTERIZER_SEGMENT(m);
   BIND_RASTERIZER_EVENT(m);

@@ -16,24 +16,28 @@ struct physical_parameters
     a(a), Omega(Omega), p00(p00), kappa(kappa), cp(cp),
     ikappa(1. / kappa), tc0p(1. / (a * a)), tc1p(kappa * cp * std::pow(p00, -kappa)) {}
 
-  Eigen::Vector2d itf(const Eigen::Ref<const Eigen::Vector2d> &zeta) const {
-    return Eigen::Vector2d(std::sqrt(std::max(0., 1. - 1. / zeta(0))),
-                           p00 * std::pow(std::max(0., zeta(1)), ikappa));
+  template <typename T>
+  Eigen::Vector2<T> itf(const Eigen::Ref<const Eigen::Vector2<T>> &zeta) const {
+    return Eigen::Vector2<T>(std::sqrt(std::max(0., 1. - 1. / zeta(0))),
+                             p00 * std::pow(std::max(0., zeta(1)), ikappa));
   }
 
-  Eigen::Vector2d ditf(const Eigen::Ref<const Eigen::Vector2d> &zeta) const {
-    return Eigen::Vector2d(0.5 / (std::sqrt(std::max(0., 1. - 1. / zeta(0))) * zeta(0) * zeta(0)),
-                           p00 * ikappa * std::pow(std::max(0., zeta(1)), ikappa - 1));
+  template <typename T>
+  Eigen::Vector2<T> ditf(const Eigen::Ref<const Eigen::Vector2<T>> &zeta) const {
+    return Eigen::Vector2<T>(0.5 / (std::sqrt(std::max((T)0., (T)1. - 1. / zeta(0))) * zeta(0) * zeta(0)),
+                             p00 * ikappa * std::pow(std::max((T)0., (T)zeta(1)), ikappa - 1));
   }
 
-  Eigen::Vector2d tf(const Eigen::Ref<const Eigen::Vector2d> &x) const {
-    return Eigen::Vector2d(1. / (1. - x[0] * x[0]),
-                           std::pow(x[1] / p00, kappa));
+  template <typename T>
+  Eigen::Vector2<T> tf(const Eigen::Ref<const Eigen::Vector2<T>> &x) const {
+    return Eigen::Vector2<T>(1. / (1. - x[0] * x[0]),
+                             std::pow(x[1] / p00, kappa));
   }
 
-  Eigen::Vector2d dtf(const Eigen::Ref<const Eigen::Vector2d> &x) const {
-    return Eigen::Vector2d(2. * x[0] / ((1. - x[0] * x[0]) * (1. - x[0] * x[0])),
-                           kappa / std::pow(p00, kappa) * std::pow(x[1], kappa - 1));
+  template <typename T>
+  Eigen::Vector2<T> dtf(const Eigen::Ref<const Eigen::Vector2<T>> &x) const {
+    return Eigen::Vector2<T>(2. * x[0] / ((1. - x[0] * x[0]) * (1. - x[0] * x[0])),
+                             kappa / std::pow(p00, kappa) * std::pow(x[1], kappa - 1));
   }
 
   std::string repr() const {
@@ -53,8 +57,8 @@ struct physical_parameters
        py::arg("a") = 6371000., py::arg("Omega") = 7.2921e-05, \
        py::arg("p00") = 101325., py::arg("kappa") = 2. / 7., py::arg("cp") = 1003.5) \
   .def("__repr__", &physical_parameters::repr) \
-  .def("itf", &physical_parameters::itf, py::arg("zeta")) \
-  .def("tf", &physical_parameters::tf, py::arg("x")) \
+  .def("itf", &physical_parameters::itf<double>, py::arg("zeta")) \
+  .def("tf", &physical_parameters::tf<double>, py::arg("x")) \
   .def_readonly("a", &physical_parameters::a) \
   .def_readonly("Omega", &physical_parameters::Omega) \
   .def_readonly("p00", &physical_parameters::p00) \

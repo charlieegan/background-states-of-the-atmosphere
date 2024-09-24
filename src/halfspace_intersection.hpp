@@ -169,7 +169,11 @@ struct pdedge {
   .def_readonly("dj", &pdedge::dj);
 
 
+template <typename T = double>
 struct pdmesh {
+  typedef Eigen::Vector3<T> Vec3;
+  typedef Eigen::Vector4<T> Vec4;
+  
   // primal adjacency list - for each primal index: list of incident edges
   std::vector<std::vector<pdedge>> padj;
 
@@ -177,17 +181,17 @@ struct pdmesh {
   dvector<std::vector<pdedge>> dadj;
 
   // primal vertices
-  std::vector<Eigen::Vector4d> pvert;
+  std::vector<Vec4> pvert;
 
   // dual vertices
-  dvector<Eigen::Vector4d> dvert;
+  dvector<Vec4> dvert;
 
   pdmesh(const int &pcnt = 0, const int &dcnt = 0) :
     padj(pcnt), dadj(dcnt),
     pvert(pcnt), dvert(dcnt) {}
 
-  static pdmesh cube(const Eigen::Ref<const Eigen::Vector3d> &lb,
-                     const Eigen::Ref<const Eigen::Vector3d> &ub) {
+  static pdmesh cube(const Eigen::Ref<const Vec3> &lb,
+                     const Eigen::Ref<const Vec3> &ub) {
     pdmesh res(6, 8);
 
     // a cuboid mesh has 6 prima vertices, 8 dual vertices, 12 edges
@@ -337,7 +341,7 @@ struct pdmesh {
   }
 
   // add a new dual, return the index
-  int add_dual(const Eigen::Ref<const Eigen::Vector4d> &p) {
+  int add_dual(const Eigen::Ref<const Vec4> &p) {
     dvert.add(p);
     int di = dadj.add(std::vector<pdedge>());
     // std::cout << "added dual " << di << std::endl;
@@ -345,7 +349,7 @@ struct pdmesh {
   }
 
   // ad a new primal vertex and return the index
-  int add_primal(const Eigen::Ref<const Eigen::Vector4d> &hs) {
+  int add_primal(const Eigen::Ref<const Vec4> &hs) {
     pvert.push_back(hs);
     padj.push_back(std::vector<pdedge>());
     return (int)pvert.size() - 1;
@@ -395,8 +399,8 @@ struct pdmesh {
 
   // find how far inside / outside of the halfspace corresponding to pi the dual point di is
   // negative if inside, positive outside
-  double hs_error(const int &pi, const int &di) const {
-    return pvert[pi].dot(dvert[di]) / (dvert[di](3) * pvert[pi].head<3>().norm());
+  T hs_error(const int &pi, const int &di) const {
+    return pvert[pi].dot(dvert[di]) / (dvert[di](3) * pvert[pi].head(3).norm());
   }
 
   // check whether halfspace defined by pi contains dual point di
@@ -410,9 +414,9 @@ struct pdmesh {
   }
 
   // find the (index of the) dual point which has largest inner product with d
-  int extremal_dual(const Eigen::Ref<const Eigen::Vector3d> &d) {
+  int extremal_dual(const Eigen::Ref<const Vec3> &d) {
 
-    double maxval = -std::numeric_limits<double>::infinity(), val;
+    T maxval = -std::numeric_limits<T>::infinity(), val;
     int res = -1;
 
     for (auto it = dadj.begin_idx(); it != dadj.end_idx(); ++it) {
@@ -421,7 +425,7 @@ struct pdmesh {
       if (di >= dadj.capacity())
         throw std::runtime_error("dvector idx iterator returned index oob");
 #endif
-      if ((val = dvert[di].head<3>().dot(d)) > maxval * dvert[di](3)) {
+      if ((val = dvert[di].head(3).dot(d)) > maxval * dvert[di](3)) {
         res = di;
         maxval = val / dvert[di](3);
       }
@@ -454,8 +458,8 @@ struct pdmesh {
     return ss.str();
   }
 
-  std::vector<Eigen::Vector4d> primal_poly(const int &pi) const {
-    std::vector<Eigen::Vector4d> res;
+  std::vector<Vec4> primal_poly(const int &pi) const {
+    std::vector<Vec4> res;
     for (auto &e : pdedge::order_cycle<false>(padj[pi])) {
       res.push_back(dvert[e.di]);
     }
@@ -525,9 +529,9 @@ struct pdmesh {
       << "property list uint uint vertex_indices" << std::endl
       << "end_header" << std::endl;
     for (const auto &v : dvert.data) {
-      s << std::clamp(v[0] / v[3], -1e30, 1e30) << " "
-        << std::clamp(v[1] / v[3], -1e30, 1e30) << " "
-        << std::clamp(v[2] / v[3], -1e30, 1e30) << std::endl;
+      s << std::clamp(v[0] / v[3], (T)-1e30, (T)1e30) << " "
+        << std::clamp(v[1] / v[3], (T)-1e30, (T)1e30) << " "
+        << std::clamp(v[2] / v[3], (T)-1e30, (T)1e30) << std::endl;
     }
     for (const auto &es : padj) {
       s << es.size();
@@ -551,29 +555,33 @@ struct pdmesh {
 
 };
 
-#define BIND_PDMESH(m)                                                  \
-  py::class_<pdmesh>(m, "PDMesh")                                       \
-  .def("__repr__", &pdmesh::repr)                                       \
-  .def("check_integrity", &pdmesh::check_integrity)                     \
-  .def("primal_poly", &pdmesh::primal_poly)                             \
-  .def_property_readonly("pcnt", &pdmesh::pcnt)                         \
-  .def_property_readonly("dcnt", &pdmesh::dcnt)                         \
-  .def_readonly("padj", &pdmesh::padj)                                  \
+#define BIND_PDMESH(m, T, name)                                         \
+  py::class_<pdmesh<T>>(m, name)                                        \
+  .def("__repr__", &pdmesh<T>::repr)                                    \
+  .def("check_integrity", &pdmesh<T>::check_integrity)                  \
+  .def("primal_poly", &pdmesh<T>::primal_poly)                          \
+  .def_property_readonly("pcnt", &pdmesh<T>::pcnt)                      \
+  .def_property_readonly("dcnt", &pdmesh<T>::dcnt)                      \
+  .def_readonly("padj", &pdmesh<T>::padj)                               \
   .def_property_readonly("dadj",                                        \
-                         [](const pdmesh *m){ return m->dadj.data;})    \
-  .def_readonly("pvert", &pdmesh::pvert)                                \
+                         [](const pdmesh<T> *m){ return m->dadj.data;}) \
+  .def_readonly("pvert", &pdmesh<T>::pvert)                             \
   .def_property_readonly("dvert",                                       \
-                         [](const pdmesh *m){ return m->dvert.data;})   \
-  .def("extremal_dual", &pdmesh::extremal_dual)                         \
-  .def("write_ply", &pdmesh::write_ply)                                 \
-  .def("order_all", &pdmesh::order_all);
+                         [](const pdmesh<T> *m){ return m->dvert.data;}) \
+  .def("extremal_dual", &pdmesh<T>::extremal_dual)                      \
+  .def("write_ply", &pdmesh<T>::write_ply)                              \
+  .def("order_all", &pdmesh<T>::order_all);
 
 
+template <typename T = double>
 class halfspace_intersection
 {
 public:
+  typedef Eigen::Vector3<T> Vec3;
+  typedef Eigen::Vector4<T> Vec4;
 
-  pdmesh mesh;
+
+  pdmesh<T> mesh;
 
   std::vector<int> used;
   int used_ctr;
@@ -597,23 +605,23 @@ public:
 
 
   // start with cuboid domain defined by lower and upper bounds
-  halfspace_intersection(const Eigen::Ref<const Eigen::Vector3d> &lb = Eigen::Vector3d(0,0,0),
-                         const Eigen::Ref<const Eigen::Vector3d> &ub = Eigen::Vector3d(1,1,1)) :
-    mesh(pdmesh::cube(lb, ub)), used(8), used_ctr(0) { }
+  halfspace_intersection(const Eigen::Ref<const Vec3> &lb = Vec3(0,0,0),
+                         const Eigen::Ref<const Vec3> &ub = Vec3(1,1,1)) :
+    mesh(pdmesh<T>::cube(lb, ub)), used(8), used_ctr(0) { }
 
-  halfspace_intersection(const Eigen::Ref<const Eigen::Vector3d> &lb,
-                         const Eigen::Ref<const Eigen::Vector3d> &ub,
-                         const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) :
+  halfspace_intersection(const Eigen::Ref<const Vec3> &lb,
+                         const Eigen::Ref<const Vec3> &ub,
+                         const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) :
     halfspace_intersection(lb, ub) {
     add_halfspaces(hss);
   }
 
-  void add_halfspaces(const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) {
+  void add_halfspaces(const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) {
     for (auto &hs : hss.rowwise())
       add_halfspace(hs);
   }
 
-  void add_halfspace(const Eigen::Ref<const Eigen::Vector4d> &hs) {
+  void add_halfspace(const Eigen::Ref<const Vec4> &hs) {
 #ifdef DEBUG_CHECKS
     if (!mesh.check_integrity())
       throw std::runtime_error("mesh integrity broken before adding new halfspace");
@@ -647,7 +655,7 @@ public:
     // find dual point outside of halfspace
 #if true
     int di = *mesh.dadj.begin_idx(), steps=0;
-    double err = mesh.hs_error(pi, di);
+    T err = mesh.hs_error(pi, di);
     while (true) {
       ++steps;
 
@@ -658,7 +666,7 @@ public:
         break;
       }
 
-      double max_err = -std::numeric_limits<double>::infinity(), nerr;
+      T max_err = -std::numeric_limits<T>::infinity(), nerr;
       int ndi = -1;
       for (const auto &e : mesh.dneigh(di))
         if ((nerr = mesh.hs_error(pi, e.dj)) > max_err && used[e.dj] != used_ctr)
@@ -792,13 +800,13 @@ public:
           // i.e. the segment [mesh.dvert[e.di], mesh.dvert[e.dj]]
           // with the plane with normal vector mesh.pvert[pi] (== hs)
 
-          Eigen::Vector4d dv;
+          Vec4 dv;
 
           auto &a = mesh.pvert[e.pi];
           auto &b = mesh.pvert[e.pj];
           auto &c = mesh.pvert[pi];
 
-          double dt = a({0,1,2}).cross(b({0,1,2})).dot(c({0,1,2}));
+          T dt = a({0,1,2}).cross(b({0,1,2})).dot(c({0,1,2}));
 
           if (std::abs(dt) < 1e-5) {
             // if the determinant is small, the calculation of the intersect from 3 halfplanes would be
@@ -809,14 +817,14 @@ public:
             auto &b2 = mesh.dvert[e.dj];
 
             // <a + l * (b - a), hs> = 0
-            double l = std::clamp(hs.dot(a2) / hs.dot(a2 - b2), 0., 1.);
+            T l = std::clamp(hs.dot(a2) / hs.dot(a2 - b2), (T)0., (T)1.);
 
             dv = a2 + l * (b2 - a2);
           } else {
-            dv = Eigen::Vector4d(-a({1,2,3}).cross(b({1,2,3})).dot(c({1,2,3})) / dt,
-                                 a({2,3,0}).cross(b({2,3,0})).dot(c({2,3,0})) / dt,
-                                 -a({3,0,1}).cross(b({3,0,1})).dot(c({3,0,1})) / dt,
-                                 1.0);
+            dv = Vec4(-a({1,2,3}).cross(b({1,2,3})).dot(c({1,2,3})) / dt,
+                      a({2,3,0}).cross(b({2,3,0})).dot(c({2,3,0})) / dt,
+                      -a({3,0,1}).cross(b({3,0,1})).dot(c({3,0,1})) / dt,
+                      1.0);
           }
 
           // replace dual start of crossing edge with new vertex
@@ -888,27 +896,27 @@ public:
 };
 
 #ifdef PROFILING
-#define BIND_HALFSPACE_INTERSECTION_PROFILING(m)                        \
-  def_readonly("time", &halfspace_intersection::time)                   \
-  .def_readonly("remove_count", &halfspace_intersection::remove_count)
+#define BIND_HALFSPACE_INTERSECTION_PROFILING(m, T)                     \
+  def_readonly("time", &halfspace_intersection<T>::time)                   \
+  .def_readonly("remove_count", &halfspace_intersection<T>::remove_count)
 #else
-#define BIND_HALFSPACE_INTERSECTION_PROFILING(m)
+#define BIND_HALFSPACE_INTERSECTION_PROFILING(m, T)
 #endif
 
-#define BIND_HALFSPACE_INTERSECTION(m)                                  \
-  py::class_<halfspace_intersection>(m, "HalfspaceIntersection")        \
-  .def(py::init<const Eigen::Ref<const Eigen::Vector3d>&,               \
-       const Eigen::Ref<const Eigen::Vector3d>&>(),                     \
+#define BIND_HALFSPACE_INTERSECTION(m, T, name)                         \
+  py::class_<halfspace_intersection<T>>(m, name)                        \
+  .def(py::init<const Eigen::Ref<const halfspace_intersection<T>::Vec3>&, \
+       const Eigen::Ref<const halfspace_intersection<T>::Vec3>&>(),     \
        py::arg("lb"), py::arg("ub"))                                    \
-  .def(py::init<const Eigen::Ref<const Eigen::Vector3d>&,               \
-       const Eigen::Ref<const Eigen::Vector3d>&,                        \
-       const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::RowMajor>>>(), \
+  .def(py::init<const Eigen::Ref<const halfspace_intersection<T>::Vec3>&, \
+       const Eigen::Ref<const halfspace_intersection<T>::Vec3>&,        \
+       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>>>(), \
        py::arg("lb"), py::arg("ub"), py::arg("hss"))                    \
-  .def("add_halfspace", &halfspace_intersection::add_halfspace,         \
+  .def("add_halfspace", &halfspace_intersection<T>::add_halfspace,      \
        py::arg("hs"))                                                   \
-  .def("add_halfspaces", &halfspace_intersection::add_halfspaces,       \
+  .def("add_halfspaces", &halfspace_intersection<T>::add_halfspaces,    \
        py::arg("hss"))                                                  \
-  .BIND_HALFSPACE_INTERSECTION_PROFILING(m)                             \
-  .def_readonly("mesh", &halfspace_intersection::mesh);
+  .BIND_HALFSPACE_INTERSECTION_PROFILING(m, T)                          \
+  .def_readonly("mesh", &halfspace_intersection<T>::mesh);
 
 #endif
