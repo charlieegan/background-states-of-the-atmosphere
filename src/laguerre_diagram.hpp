@@ -322,7 +322,8 @@ public:
       // if the edge is oriented left-to-right then pi is below, if it goes right-to-left then pj is below
       // indices >= n (i.e. the top cell) are all combined into n
       int vidx = std::min(((points.front().x(0) > points.back().x(0)) ? e.pj : e.pi) - 6, n);
-      if (vidx < 0) vidx = n;
+      if (vidx < 0) vidx = std::min(((points.front().x(0) > points.back().x(0)) ? e.pi : e.pj) - 6, n);
+      if (vidx < 0) throw std::runtime_error("in preparing rasterizer, edge has both primal vertices outside: " + e.repr());
 
       // add segments
       int j = sidx[i];

@@ -84,7 +84,7 @@ public:
   std::list<segment> line, pool;
   std::vector<bool> used;
 
-  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> out;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> out, fill;
   Eigen::Array4d bounds;
   Eigen::Array2d lb, step;
   double pixA;
@@ -218,6 +218,7 @@ public:
 
     // reset out
     out = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Zero(res(0), res(1));
+    fill = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Zero(res(0), res(1));
 
     // calculate step spacings
     step = {(bounds(1) - bounds(0)) / res(0), (bounds(3) - bounds(2)) / res(1)};
@@ -500,7 +501,10 @@ protected:
                             const T &x1, const T &y1,
                             const T &x) {
     if (x1 == x0 && x == x0) return 0.5 * (y1 + y0);
-    return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+    double res = y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+    if (std::min(x0, x1) <= x && x <= std::max(x0, x1))
+      res = std::clamp(res, std::min(y0, y1), std::max(y0, y1));
+    return res;
   }
   template <typename T = double>
   static inline double y_at(const sit_t &it, const T &x) {
@@ -515,7 +519,10 @@ protected:
                             const double &x1, const double &y1,
                             const double &y) {
     if (y1 == y0 && y == y0) return 0.5 * (x1 + x0);
-    return x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+    double res = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+    if (std::min(y0, y1) <= y && y <= std::max(y0, y1))
+      res = std::clamp(res, std::min(x0, x1), std::max(x0, x1));
+    return res;
   }
   static inline double x_at(const sit_t &it, const double &y) {
     return x_at(*it, y);
@@ -584,6 +591,11 @@ protected:
 
     const double &x0 = it1->x0;
 
+#ifdef DEBUG_CHECKS
+    if (x0 > x1)
+      throw std::runtime_error(FORMAT("add_area_between with negative x-interval {} to {}", x0, x1));
+#endif
+
     // find pixel-index bounding box
     int imin = std::max(0,                   x_to_pixel(x0));
     int imax = std::min((int)out.rows() - 1, x_to_pixel(x1));
@@ -615,6 +627,7 @@ protected:
 #endif
 
         out(i, j) += std::clamp(A / pixA, 0.0, 1.0) * val[it1->idx];
+        fill(i, j) += std::clamp(A / pixA, 0.0, 1.0);
       }
     }
 
@@ -670,6 +683,7 @@ protected:
   })                                                                    \
   .def_readonly("line", &rasterizer::line)                              \
   .def_readonly("out", &rasterizer::out)                                \
+  .def_readonly("fill", &rasterizer::fill)                              \
   .def_readonly("bounds", &rasterizer::bounds)                          \
   .def_readonly("lb", &rasterizer::lb)                                  \
   .def_readonly("step", &rasterizer::step)                              \
