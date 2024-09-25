@@ -204,7 +204,7 @@ public:
 
 #ifdef DEBUG_CHECKS
     if (!check_topology())
-      throw std::runtime_error("invalid topology detected in rasterizer");
+      throw std::runtime_error("invalid topology detected in rasterizer: " + top_error);
 #endif
   }
 
@@ -332,7 +332,9 @@ protected:
       used[it->sidx] = true;
       line.splice(line.end(), pool, it);
     }
-    for (auto &e : events) {
+    for (int i = 0; i < (int)events.size(); ++i) {
+      auto &e = events[i];
+      
       if (e.seg_in.empty() && e.seg_out.empty())
         continue;
 
@@ -364,7 +366,8 @@ protected:
         line.splice(ins_pos, pool, it);
       }
 
-      if (!std::is_sorted(line.begin(), line.end(),
+      if ((i + 1 == (int)events.size() || events[i + 1].pos(0) != e.pos(0)) &&
+          !std::is_sorted(line.begin(), line.end(),
                           [&e](const segment &lhs, const segment &rhs) {
                             return y_at(lhs, e.pos(0)) < y_at(rhs, e.pos(0));
                           })) {

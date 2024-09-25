@@ -64,7 +64,7 @@ public:
     phys(phys),
     dzeta(zeta_e - zeta_s) {
 
-    const int min_res = 2;
+    const int min_res = 4;
     const int max_res = 100;
     
     tangent_point ts(zeta_s, dzeta, this);
