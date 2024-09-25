@@ -22,6 +22,8 @@ namespace py = pybind11;
 #include <exception>
 #include <functional>
 
+#include <random>
+
 #include "timer.hpp"
 
 #if __has_include(<format>)
