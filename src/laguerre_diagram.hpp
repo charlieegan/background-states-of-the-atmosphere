@@ -197,7 +197,7 @@ public:
         areaerrs(i) += e.ls.errb;
       }
 
-      if (areas(i) == 0 || areaerrs(i) / areas(i) < sim.tol) {
+      if (areas(i) == 0 || areaerrs(i) / areas(i) < sim.area_tolerance) {
         // py::print(i, "- error already in tol:", areaerrs(i) / areas(i));
         continue;
       }
@@ -209,7 +209,7 @@ public:
         errmap.insert({-e.ls.errb, ei});
       }
 
-      for (int j = 0; errmap.size() > 0 && j < sim.max_refine_steps && areaerrs(i) / areas(i) >= sim.tol; j++) {
+      for (int j = 0; errmap.size() > 0 && j < sim.max_refine_steps && areaerrs(i) / areas(i) >= sim.area_tolerance; j++) {
         auto [err, ei] = *errmap.begin();
         errmap.erase(errmap.begin());
 

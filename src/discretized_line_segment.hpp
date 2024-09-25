@@ -60,12 +60,9 @@ public:
   discretized_line_segment(const Eigen::Ref<const Eigen::Vector2d> &zeta_s, // start point in linear coords
                            const Eigen::Ref<const Eigen::Vector2d> &zeta_e, // end point in linear coords
                            const physical_parameters &phys,
-                           const double &tol) :
+                           const simulation_parameters &sim) :
     phys(phys),
     dzeta(zeta_e - zeta_s) {
-
-    const int min_res = 4;
-    const int max_res = 100;
     
     tangent_point ts(zeta_s, dzeta, this);
     tangent_point te(zeta_e, dzeta, this);
@@ -79,7 +76,7 @@ public:
 
     area = ts.area(te);
     
-    for (int i = 2; (i < max_res) && (i < min_res || errb > tol); ++i)
+    for (int i = 2; (i < sim.max_line_resolution) && (i < sim.min_line_resolution || errb > sim.line_tolerance); ++i)
       refine();
   }
 
