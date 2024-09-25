@@ -434,6 +434,31 @@ struct pdmesh {
     return res;
   }
 
+  // find the (index of the) primal point which is first cut off by the plane with normal d when translating it
+  // return {pi, <d, last (dual) vertex of pi cut off>}
+  std::pair<int, T> closest_primal(const Eigen::Ref<const Vec3> &d) {
+    
+    T maxval = -std::numeric_limits<T>::infinity(), val;
+    int res = -1;
+
+    for (int pi = 6; pi < (int)padj.size(); ++pi) {
+
+      if (padj[pi].size() == 0)
+        continue;
+      
+      val = std::numeric_limits<T>::infinity();
+      for (auto &e : padj[pi])
+        val = std::min(val, dvert[e.di].head(3).dot(d) / dvert[e.di](3));
+      
+      if (val > maxval) {
+        res = pi;
+        maxval = val;
+      }
+    }
+    
+    return {res, maxval};
+  }
+
   // get neighbors of primal index pi (as edges e with e.pi == pi)
   const std::vector<pdedge>& pneigh(const int &pi) const {
 #ifdef DEBUG_CHECKS
@@ -569,6 +594,7 @@ struct pdmesh {
   .def_property_readonly("dvert",                                       \
                          [](const pdmesh<T> *m){ return m->dvert.data;}) \
   .def("extremal_dual", &pdmesh<T>::extremal_dual)                      \
+  .def("closest_primal", &pdmesh<T>::closest_primal)                    \
   .def("write_ply", &pdmesh<T>::write_ply)                              \
   .def("order_all", &pdmesh<T>::order_all);
 

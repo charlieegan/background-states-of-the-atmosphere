@@ -290,6 +290,42 @@ public:
 #endif
   }
 
+  VecX touching_dual() {
+    // get the dual (except last coord) that touches the polytope
+    // for primal coords that are part of the polytope, this is unchanged
+    // for primal coords that are not part, it is larger
+    // equivalent to c-transform on other dual
+    VecX res = VecX::Zero(n);
+
+    for (int pi = 0; pi < n; ++pi) {
+      if (hs.mesh.pneigh(pi + 6).size() > 0) {
+        // plane already intersects -> keep current value of dual
+        res[pi] = duals[pi];
+      } else {
+        // plane does not currently intersect...
+        
+        // direction of halfplane at index pi
+        auto pp = hs.mesh.pvert[pi + 6].head(3);
+        // z-offset of plane (without dual potential part)
+        auto os = phys.Omega * ys(pi, 0);
+        // find closest dual point
+        int di = hs.mesh.extremal_dual(pp);
+        auto dp = hs.mesh.dvert[di].head(3) / hs.mesh.dvert[di][3];
+        
+        auto d0 = pp.dot(dp);
+        // mathematically, at phi[pi] := (-d0 - os), the plane would be touching (usually in one point)
+        // however, rounding error may make it barely not touch, so we make sure it does so with a margin by looking at the neighborhood
+
+        // get 
+        auto [pj, v] = hs.mesh.closest_primal(pp);
+        
+        res[pi] = -0.5 * (d0 + v) - os;
+      }
+    }
+
+    return res;
+  }
+
   rasterizer get_rasterizer(const double &merge_epsi) {
 
 #ifdef PROFILING
@@ -527,6 +563,7 @@ public:
   .def_readonly("areas", &laguerre_diagram<T>::areas)           \
   .def_readonly("areaerrs", &laguerre_diagram<T>::areaerrs)     \
   .BIND_LAGUERRE_DIAGRAM_PROFILING(m, T)                        \
+  .def("touching_dual", &laguerre_diagram<T>::touching_dual)    \
   .def("jac_coo", &laguerre_diagram<T>::jac_coo)                \
   .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer,  \
        py::arg("merge_epsi") = 0)                               \
