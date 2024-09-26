@@ -163,6 +163,8 @@ class OTSolver:
             if lr <= lr_min:
                 raise RuntimeError("can not find sufficiently small learning rate")
 
+            self.ld = ld
+            
             self.runstats["lr"] += [lr]
             self.runstats["maxerr"] += [np.max(err / self.tmn)]
             self.runstats["l2err"] += [np.sum((err / self.tmn)**2)**.5]
