@@ -3,9 +3,9 @@ from numpy import matlib
 import _atmosphere_bgs
 import re
 
-class prepare_data:
+class DataLoader:
     
-    def __init__(self,path,pmin=10,nextra=0):
+    def __init__(self, path, pmin=10, nextra=0):
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:

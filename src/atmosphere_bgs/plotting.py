@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from scipy.ndimage import gaussian_filter
 
-def plot_Lag_tess(ld,val,res=[1000,1000], bw = 0, contour_levels = 0, plot_lines = True, title = None, background = False):
-    '''ld - Laguerre diagram class
+def plot_lag_tess(ld, val, res=[1000,1000], bw = 0, contour_levels = 0, plot_lines = True, title = None, background = False):
+    '''
+    ld - Laguerre diagram class
     val - value to assign to each cell
     res - resolution of rasterized image
     bw - bandwidth of Gaussian blur kernel
