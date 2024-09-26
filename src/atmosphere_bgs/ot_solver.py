@@ -6,7 +6,7 @@ from scipy.sparse.linalg import spsolve
 import time
 
 class OTSolver:
-    def __init__(self, input_data, ot_tol=1e-4):
+    def __init__(self, input_data, ot_tol=1e-4, boundary_res=2000):
         
         self.y = input_data.y
         self.tm = input_data.tm
@@ -15,7 +15,7 @@ class OTSolver:
         self.sp = _atmosphere_bgs.SimulationParameters(area_tolerance=.2*ot_tol, 
                                                       line_tolerance=1e-4,
                                                       min_line_resolution=4,
-                                                      boundary_res=2000,
+                                                      boundary_res=boundary_res,
                                                       max_refine_steps=1000, 
                                                       smin=input_data.smin,
                                                       smax=input_data.smax,
