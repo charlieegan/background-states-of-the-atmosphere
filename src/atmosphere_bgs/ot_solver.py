@@ -90,6 +90,7 @@ class OTSolver:
         ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
         psi = ld.touching_dual(randomize=True)
         self.timer += ld.time
+        self.timer += ld.hs.time
         
         ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
         err = np.abs(self.tmn - ld.areas)
@@ -115,6 +116,7 @@ class OTSolver:
 
                 if cnt_tries > 1:
                     self.timer += ld2.time
+                    self.timer += ld2.hs.time
                 
                 # calculate ld after step
                 ld2 = _atmosphere_bgs.LaguerreDiagram(self.y, psi2, self.pp, self.sp)
@@ -132,6 +134,7 @@ class OTSolver:
 
                 if areas_good and descent_good:
                     self.timer += ld.time
+                    self.timer += ld.hs.time
                     # accept step
                     psi = psi2
                     ld = ld2
@@ -153,6 +156,7 @@ class OTSolver:
                     
                 psi = ld.touching_dual(randomize=True)
                 self.timer += ld.time
+                self.timer += ld.hs.time
                 ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
                 err = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
@@ -184,6 +188,7 @@ class OTSolver:
             print(f"finished in {t11 - t00:.2f}s")
 
         self.timer += ld.time
+        self.timer += ld.hs.time
             
         # assign variables to class
         self.ld = ld
