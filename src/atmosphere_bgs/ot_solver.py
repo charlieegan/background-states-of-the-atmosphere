@@ -49,30 +49,11 @@ class OTSolver:
         phi = np.append(phi, phi_0)
         return phi
 
-    def initialise_final_weight(self, psi):
-        '''find value of psi[-1] to just barely be non-empty'''
-        ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
-
-        # top edges (adjacent to upper p-boundary)
-        te = [e for e in ld.hs.mesh.padj[4] if e.pj >= 6]
-
-        psi0 = np.inf
-
-        for e in te:
-            yi = self.y[e.pj - 6]
-            zeta0 = ld.hs.mesh.dvert[e.di]
-            zeta1 = ld.hs.mesh.dvert[e.dj]
-
-            c0 = yi[0]**2 / (2 * self.pp.a**2) * zeta0[0] + self.pp.cp * yi[1] * zeta0[1] - self.pp.Omega * yi[0] + 0.5 * self.pp.Omega**2 * self.pp.a**2 / zeta0[0]
-            c1 = yi[0]**2 / (2 * self.pp.a**2) * zeta1[0] + self.pp.cp * yi[1] * zeta1[1] - self.pp.Omega * yi[0] + 0.5 * self.pp.Omega**2 * self.pp.a**2 / zeta1[0]
-
-            psi0 = np.min([psi0, psi[e.pj - 6] - c0, psi[e.pj - 6] - c1])
-
-        psi[-1] = psi0 + 100 # 5000
-
-        return psi
-
-    def get_bgs(self, use_long_double=False, verbose=False, max_its=1000, descent_accept_thresh=0.01, min_area=0, max_lost_areas=None, lr_up=2.0, lr_down=0.5, lr_max=1.0, lr_min=1e-20, lr_init=1e-5):
+    def get_bgs(self,
+                use_long_double=False, verbose=False,
+                max_its=1000, descent_accept_thresh=0.01,
+                min_area=0, max_lost_areas=None,
+                lr_up=2.0, lr_down=0.5, lr_max=1.0, lr_min=1e-20, lr_init=1e-5):
         """
         run the modified damped Newton solver
         
@@ -103,10 +84,13 @@ class OTSolver:
         if use_long_double:
             psi = psi.astype(np.float128)
 
-        psi = self.initialise_final_weight(psi)
-
         self.runstats = {"na" : [],  "lr" : [], "maxerr" : [], "l2err" : [], "meanerr" : [], "good" : [], "bad" : [], "tries" : []}
+        self.timer = _atmosphere_bgs.Timer([])
 
+        ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
+        psi = ld.touching_dual(randomize=True)
+        self.timer += ld.time
+        
         ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
         err = np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
@@ -129,6 +113,9 @@ class OTSolver:
                 # calculate step given step size lr
                 psi2 = psi + lr * np.concatenate([d, [0]])
 
+                if cnt_tries > 1:
+                    self.timer += ld2.time
+                
                 # calculate ld after step
                 ld2 = _atmosphere_bgs.LaguerreDiagram(self.y, psi2, self.pp, self.sp)
                 err2 = np.abs(self.tmn - ld2.areas)
@@ -144,6 +131,7 @@ class OTSolver:
                 descent_good = aerr2 < (1 - descent_accept_thresh * lr) * aerr
 
                 if areas_good and descent_good:
+                    self.timer += ld.time
                     # accept step
                     psi = psi2
                     ld = ld2
@@ -162,8 +150,9 @@ class OTSolver:
                 good_areas_prev = good_areas
                 if verbose:
                     print(f"try to fix {np.sum(~good_areas_prev)} bad area(s)")
-
-                psi[:-1] = ld.touching_dual(randomize=True)
+                    
+                psi = ld.touching_dual(randomize=True)
+                self.timer += ld.time
                 ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
                 err = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
@@ -192,6 +181,8 @@ class OTSolver:
         if verbose:
             print(f"finished in {t11 - t00:.2f}s")
 
+        self.timer += ld.time
+            
         # assign variables to class
         self.ld = ld
         return ld

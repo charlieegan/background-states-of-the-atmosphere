@@ -72,7 +72,9 @@ public:
     idx_time_calc_areas = -1,
     idx_time_calc_integrals = -1,
     idx_time_prepare_rasterizer = -1,
-    idx_time_jacobian = -1;
+    idx_time_jacobian = -1,
+    idx_time_touching_dual = -1,
+    idx_time_touching_dual_n = -1;
 
   void setup_timer() {
     if (!time)
@@ -84,6 +86,8 @@ public:
     idx_time_calc_integrals = time->get_index_from_name("laguerre_diagram.calc_integrals");
     idx_time_jacobian = time->get_index_from_name("laguerre_diagram.jacobian");
     idx_time_prepare_rasterizer = time->get_index_from_name("laguerre_diagram.prepare_rasterizer");
+    idx_time_touching_dual = time->get_index_from_name("laguerre_diagram.touching_dual");
+    idx_time_touching_dual_n = time->get_index_from_name("laguerre_diagram.touching_dual_n");
   }
 #endif
 
@@ -291,21 +295,23 @@ public:
   }
 
   VecX touching_dual(bool randomize) {
-    // get the dual (except last coord) that touches the polytope
+    // get the dual that touches the polytope
     // for primal coords that are part of the polytope, this is unchanged
     // for primal coords that are not part, it is larger
     // equivalent to c-transform on other dual
-    VecX res = VecX::Zero(n);
 
+#ifdef PROFILING
+    time->start_section(idx_time_touching_dual);
+#endif
+
+    VecX res = duals;
+    
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0.25, 0.75);
     
     for (int pi = 0; pi < n; ++pi) {
-      if (hs.mesh.pneigh(pi + 6).size() > 0) {
-        // plane already intersects -> keep current value of dual
-        res[pi] = duals[pi];
-      } else {
+      if (hs.mesh.pneigh(pi + 6).size() == 0) {
         // plane does not currently intersect...
         
         // direction of halfplane at index pi
@@ -333,6 +339,43 @@ public:
       }
     }
 
+#ifdef PROFILING
+    time->start_section(idx_time_touching_dual_n);
+#endif
+    
+    // top boundary dual
+    bool touches = false;
+    for (int pi = hs.mesh.pcnt()-1; pi >= n + 6; --pi)
+      if (hs.mesh.pneigh(pi).size() > 0) {
+        touches = true;
+        break;
+      }
+
+    if (!touches) {
+      T mx = std::numeric_limits<T>::infinity(), mn = std::numeric_limits<T>::infinity();
+      for (int pi = hs.mesh.pcnt()-1; pi >= n + 6; --pi) {
+        auto pp = hs.mesh.pvert[pi].head(3);
+        auto os = hs.mesh.pvert[pi][3] - duals[n];
+        int di = hs.mesh.extremal_dual(pp);
+        auto dp = hs.mesh.dvert[di].head(3) / hs.mesh.dvert[di][3];
+        auto d0 = pp.dot(dp);
+        auto [pj, v] = hs.mesh.closest_primal(pp);
+        
+        mx = std::min(mx, -d0 - os);
+        mn = std::min(mn, -v - os);
+      }
+      if (randomize) {
+        double w = dis(gen);
+        res[n] = (w * mn + (1 - w) * mx);
+      } else {
+        res[n] = 0.5 * (mn + mx);
+      }
+    }
+    
+#ifdef PROFILING
+    time->end_section();
+#endif
+    
     return res;
   }
 
