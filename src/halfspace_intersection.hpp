@@ -447,8 +447,11 @@ struct pdmesh {
         continue;
       
       val = std::numeric_limits<T>::infinity();
-      for (auto &e : padj[pi])
+      for (auto &e : padj[pi]) {
         val = std::min(val, dvert[e.di].head(3).dot(d) / dvert[e.di](3));
+        if (val < maxval)
+          break;
+      }
       
       if (val > maxval) {
         res = pi;
