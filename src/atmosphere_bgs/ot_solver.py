@@ -1,7 +1,7 @@
 import numpy as np
 import _atmosphere_bgs
 import matplotlib.pyplot as plt
-from scipy.sparse import coo_array
+from scipy.sparse import coo_array, dia_array
 from scipy.sparse.linalg import spsolve
 import time
 
@@ -110,16 +110,16 @@ class OTSolver:
         ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
         err = np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
-        jac = coo_array(ld.jac_coo(), shape=(self.n+1,self.n+1)).tocsr()[:-1,:-1]
-        jac.setdiag(np.where(good_areas, jac.diagonal(), 1))
-        d = spsolve(jac, (self.tmn - ld.areas))
-        d[~good_areas] = np.mean(d[good_areas]) - 1e9
-
         if verbose:
             print(f'it={-1}, lr={lr:.2e}, good_areas={np.sum(good_areas)}/{good_areas.shape[0]}')
 
         t00 = time.time()
         for it in range(max_its):
+
+            jac = coo_array(ld.jac_coo(), shape=(self.n+1, self.n+1)).tocsr()[:-1,:-1]
+            jac += dia_array((1.0 - good_areas[None,:], [0]), shape=(self.n, self.n))
+            d = spsolve(jac, (self.tmn - ld.areas))
+            d[~good_areas] = np.mean(d[good_areas]) - 1e9
 
             cnt_lost_areas_prev = self.n
             lr = np.minimum(lr_max, lr_up * lr)
@@ -149,10 +149,6 @@ class OTSolver:
                     ld = ld2
                     err = err2
                     good_areas = good_areas2
-                    jac = coo_array(ld.jac_coo(), shape=(self.n+1,self.n+1)).tocsr()[:-1,:-1]
-                    jac.setdiag(np.where(good_areas, jac.diagonal(), 1))
-                    d = spsolve(jac, (self.tmn - ld.areas))
-                    d[~good_areas] = np.mean(d[good_areas]) - 1e9
                     break
 
                 else:
@@ -168,14 +164,9 @@ class OTSolver:
                     print(f"try to fix {np.sum(~good_areas_prev)} bad area(s)")
 
                 psi[:-1] = ld.touching_dual(randomize=True)
-
                 ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
                 err = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
-                jac = coo_array(ld.jac_coo(), shape=(self.n+1,self.n+1)).tocsr()[:-1,:-1]
-                jac.setdiag(np.where(good_areas, jac.diagonal(), 1))
-                d = spsolve(jac, (self.tmn - ld.areas))
-                d[~good_areas] = np.mean(d[good_areas])
 
                 if verbose:
                     print(f"managed to fix {np.sum(good_areas & ~good_areas_prev)} and broke {np.sum(good_areas_prev & ~good_areas)}")
