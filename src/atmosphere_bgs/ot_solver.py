@@ -49,6 +49,24 @@ class OTSolver:
         phi = np.append(phi, phi_0)
         return phi
 
+    def initialise_weights2(self, phi_0=-1e4):
+        c = np.array([(1 / (2*self.pp.a**2)) * self.y[:,0]**2, 
+                      self.pp.cp * self.y[:,1],
+                      -self.pp.Omega * self.y[:,0]]).T
+        
+        c_max = np.max(c[:,:2], axis=0)
+        c_min = np.min(c[:,:2], axis=0)
+        
+        z_min = self.pp.tf([max(0.01, self.sp.spmin[0]), np.maximum(10000, self.sp.spmin[1])])
+        z_max = self.pp.tf([min(0.99, self.sp.spmax[0]), self.pp.p00])
+        
+        a = (z_max - z_min) / (c_max - c_min)
+        b = z_min / a + c_max
+        
+        phi = -0.5 * np.sum(a[None,:] * (b[None,:] - c[:,:2])**2, axis=1) + c[:,2]
+        
+        return np.append(phi, phi_0)
+
     def get_bgs(self,
                 use_long_double=False, verbose=False,
                 max_its=1000, descent_accept_thresh=0.01,
