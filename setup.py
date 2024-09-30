@@ -15,6 +15,8 @@ ext_modules = [
     ),
 ]
 
+#ext_modules[0]._add_ldflags(["-lstdc++exp"])
+
 setup(
     ext_modules=ext_modules,
     zip_safe=False

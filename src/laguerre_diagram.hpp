@@ -12,8 +12,6 @@
 template <typename T> // dual type, used for duals and halfspace intersection (not everything)
 class laguerre_diagram
 {
-  static inline double sqr(const double &x) { return x * x; }
-
 public:
   typedef Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>> seeds_t;
   typedef Eigen::Vector3<T> Vec3;
@@ -379,7 +377,7 @@ public:
     return res;
   }
 
-  rasterizer get_rasterizer(const double &merge_epsi) {
+  rasterizer get_rasterizer() {
 
 #ifdef PROFILING
     time->start_section(idx_time_prepare_rasterizer);
@@ -400,11 +398,9 @@ public:
 
     // rasterizer arguments
     std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> seg;
-    std::vector<std::vector<int>> con;
-    std::vector<int> start;
     Eigen::Array4d bounds = {sim.spmin(0), sim.spmax(0), sim.spmin(1), sim.spmax(1)};
 
-    // collect segments and transition connections
+    // collect segments
     for (int i = 0; i < (int)edglist.size(); ++i) {
       const auto &e = edglist[i];
       const auto &points = e.ls.points;
@@ -426,53 +422,13 @@ public:
           throw std::runtime_error(FORMAT("segment index does not match expected: {} instead of {}", seg.size(), j));
         seg.push_back({it0->x, it1->x, vidx});
       }
-
-      // add transition connections
-      for (int j = 1; j < (int)points.size() - 1; ++j)
-        con.push_back({sidx[i] + j - 1, sidx[i] + j});
     }
 
-    // collect merge/split points
-    for (int dc = 0; dc < (int)dfacets.size(); ++dc) {
-      const auto &f = dfacets[dc];
-
-      // ignore empty facets
-      if (!f.size())
-        continue;
-
-      // find simulation box boundaries the point is on
-      bool on_boundary[6] = {};
-      for (const int &ei : f)
-        if (edglist[ei].pj < 6)
-          on_boundary[edglist[ei].pj] = true;
-
-      // check for top / bottom connections (should not exist)
-      if (on_boundary[0] || on_boundary[5])
-        throw std::runtime_error("found dual point touching 3d limit");
-
-      // if the point is on the left boundary, add the edge going away to start
-      if (on_boundary[2]) { // x0 lo (left)
-        for (const int &ei : f)
-          if (edglist[ei].pj != 2)
-            start.push_back(edglist[ei].di == dc ? sidx[ei] : sidx[ei + 1] - 1);
-      }
-
-      // if the point is not on the left or right boundary, add transition / merge / split connection
-      if (!on_boundary[2] && !on_boundary[3]) {
-        std::vector<int> c;
-        for (const int &ei : f)
-          c.push_back(edglist[ei].di == dc ? sidx[ei] : sidx[ei + 1] - 1);
-        con.push_back(c);
-      }
-    }
-
+    // add a segment across the top (for boundary cell)
     seg.push_back({{sim.spmin(0), sim.spmax(1) + 1}, {sim.spmax(0), sim.spmax(1) + 1}, n});
-    start.push_back(seg.size() - 1);
-
     // seg.push_back({{sim.spmin(0), sim.spmin(1) - 1}, {sim.spmax(0), sim.spmin(1) - 1}, n});
-    // start.push_back(seg.size() - 1);
 
-    rasterizer rast(seg, con, start, bounds, merge_epsi);
+    rasterizer rast(seg, bounds);
 
 #ifdef PROFILING
     time->end_section();
@@ -619,8 +575,7 @@ public:
   .def("touching_dual", &laguerre_diagram<T>::touching_dual,    \
        py::arg("randomize")=false)                              \
   .def("jac_coo", &laguerre_diagram<T>::jac_coo)                \
-  .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer,  \
-       py::arg("merge_epsi") = 0)                               \
+  .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer)  \
   .def("get_poly", &laguerre_diagram<T>::get_poly);
 
 

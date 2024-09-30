@@ -14,10 +14,10 @@ def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, p
 
     if val is not None:
 
-        rast = ld.get_rasterizer(0)
+        rast = ld.get_rasterizer()
           
         val = np.concatenate([val, [np.nan]])
-        rv = rast.rasterize(val, res)
+        rv = rast.rasterize(val, res).copy()
         
         if bw > 0:
             tmp0 = rv.copy()
