@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "pool.hpp"
+#include "gfx/timsort.hpp"
 
 class rasterizer
 {
@@ -35,11 +36,15 @@ public:
     //return std::lerp(x0, x1, t);
   }
 
+  struct segment_cmp;
+  
   // alignment is needed for events
   struct alignas(64) segment {
     Eigen::Vector2d s, e;  // start and end point
     int idx, sidx;         // index of cell below (if it exists), index of segment
     double x0;             // (current) start of trapezoid below segment
+
+    std::set<segment*>::iterator self; // set iterator (for line) of self (if it is in the line)
 
     segment() = default;
     
@@ -241,6 +246,12 @@ public:
   int idx_time_intersects_upper_bound_iterate = -1;
   int idx_time_intersects_end_erase = -1;
   int idx_time_intersect_post = -1;
+  int idx_time_rasterize_prepare = -1;
+  int idx_time_rasterize_upper_bound = -1;
+  int idx_time_rasterize_add_start = -1;
+  int idx_time_rasterize_add_end = -1;
+  int idx_time_rasterize_line_insert = -1;
+  int idx_time_rasterize_line_erase = -1;
 
   void setup_timer() {
     if (!time)
@@ -258,6 +269,12 @@ public:
     idx_time_intersects_upper_bound_iterate = time->get_index_from_name("rasterizer.fix_intersects.start.upper_bound_iterate");
     idx_time_intersects_end_erase = time->get_index_from_name("rasterizer.fix_intersects.end.erase");
     idx_time_intersect_post = time->get_index_from_name("rasterizer.fix_intersects.post");
+    idx_time_rasterize_prepare = time->get_index_from_name("rasterizer.rasterize.prepare");
+    idx_time_rasterize_upper_bound = time->get_index_from_name("rasterizer.rasterize.upper_bound");
+    idx_time_rasterize_add_start = time->get_index_from_name("rasterizer.rasterize.add_start");
+    idx_time_rasterize_add_end = time->get_index_from_name("rasterizer.rasterize.add_end");
+    idx_time_rasterize_line_insert = time->get_index_from_name("rasterizer.rasterize.insert");
+    idx_time_rasterize_line_erase = time->get_index_from_name("rasterizer.rasterize.erase");
   }
 #endif
   
@@ -315,7 +332,8 @@ public:
 #endif
     
     // sort events
-    std::sort(events.begin(), events.end());
+    //std::sort(events.begin(), events.end());
+    gfx::timsort(events.begin(), events.end(), std::less<event>());
     
 #ifdef PROFILING
     time->end_section();
@@ -341,7 +359,12 @@ public:
   Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
   rasterize(const Eigen::Ref<const Eigen::VectorXd> &val,
             const Eigen::Ref<const Eigen::Array2i> &res) {
-
+    
+#ifdef PROFILING
+    setup_timer();
+    time->start_section(idx_time_rasterize_prepare);
+#endif
+    
     this->val = val;
     
     *cur_x = bounds(0);
@@ -355,6 +378,11 @@ public:
     step = {(bounds(1) - bounds(0)) / res(0), (bounds(3) - bounds(2)) / res(1)};
     pixA = step(0) * step(1);
 
+#ifdef PROFILING
+    time->end_section();
+#endif
+
+    
 #ifdef DEBUG_CHECKS
     if (!line.empty())
       throw std::runtime_error("line not empty at start of rasterize");
@@ -379,36 +407,56 @@ public:
         throw std::runtime_error(FORMAT("line {}is not sorted at x = {}, start of {}", ss.str(), *cur_x, e.repr()));
       }
 #endif
-            
+
+#ifdef PROFILING
+      time->start_section(idx_time_rasterize_upper_bound);
+#endif
+
       // find segment above
-      auto ub = line.upper_bound(e.seg());
+      auto ub = e.start() ? line.upper_bound(e.seg()) : std::next(e.seg()->self);
 
 #ifdef DEBUG_CHECKS
       if (!e.start() && ub == line.begin())
         throw std::runtime_error("ub == line.begin() at segment end");
 #endif
 
-      // add up to 2 areas below ub
-      if (ub != line.begin()) {
-        auto prev = std::prev(ub);
-#ifdef DEBUG_CHECKS
-        if (!e.start() && (*prev != e.seg()))
-          throw std::runtime_error("*prev != e.seg at end event");
-#endif  
+#ifdef PROFILING
+      time->start_section(e.start() ? idx_time_rasterize_add_start : idx_time_rasterize_add_end);
+#endif
+
+      // add areas that are topologically changed
+      if (e.start()) {
+        // when a segment starts, the area which it will split needs to be added (if there is such an area)
+        if (ub != line.begin() && ub != line.end())
+          add_area_between(*std::prev(ub), *ub, e.pos()(0));
+      } else {
+        // when a segment ends, the areas above and below it need to be added
         if (ub != line.end())
-          add_area_between(*prev, *ub, e.pos()(0));
-        if (prev != line.begin()) {
-          auto pprev = std::prev(prev);
-          add_area_between(*pprev, *prev, e.pos()(0));
-        }
+          add_area_between(e.seg(), *ub, e.pos()(0));
+        if (e.seg()->self != line.begin())
+          add_area_between(*std::prev(e.seg()->self), e.seg(), e.pos()(0));
       }
 
+#ifdef PROFILING
+      time->end_section();
+#endif
+      
       if (e.start()) {
+
+#ifdef PROFILING
+        time->start_section(idx_time_rasterize_line_insert);
+#endif
+        
         // if the event is a segment start, set starting x and insert segment
         e.seg()->x0 = e.pos()(0);
-        auto insit = line.insert(ub, e.seg());
+        e.seg()->self = line.insert(ub, e.seg());
+
+#ifdef PROFILING
+        time->end_section();
+#endif
+        
 #ifdef DEBUG_CHECKS
-        if (insit != std::prev(ub))
+        if (e.seg()->self != std::prev(ub))
           throw std::runtime_error("line insert at unexpected position");
 #endif
       } else {
@@ -422,8 +470,17 @@ public:
                                           e.seg()->x0, e.pos()(0), e.pos()(0) - e.seg()->x0));
         
 #endif
-        line.erase(std::prev(ub));
-        //line.erase(e.seg());
+
+#ifdef PROFILING
+        time->start_section(idx_time_rasterize_line_erase);
+#endif
+
+        line.erase(e.seg()->self);
+
+#ifdef PROFILING
+        time->end_section();
+#endif
+        
       }
 
 #ifdef EXPENSIVE_DEBUG_CHECKS
@@ -484,7 +541,7 @@ protected:
 
         // find neighboring segments in line
         segment *s = e.seg();
-        auto lit = line.upper_bound(s); // element that would come after s in line
+        auto lit = e.start() ? line.upper_bound(s) : std::next(s->self); // element that would come after s in line
         segment *s_prev = (lit == line.begin() ? NULL : *std::prev(lit));
         segment *s_next = (lit == line.end() ? NULL : *lit);
 
@@ -512,7 +569,7 @@ protected:
 #ifdef PROFILING
           time->start_section(idx_time_intersects_noint);
 #endif
-          line.insert(lit, s);
+          s->self = line.insert(lit, s);
           ++it;
 #ifdef PROFILING
           time->end_section();
@@ -553,7 +610,7 @@ protected:
 #endif          
           
           // delete intersecting segment from line
-          line.erase(s_int);
+          line.erase(s_int->self);
 
 #ifdef PROFILING
           time->start_section(idx_time_intersects_erase_events);
@@ -584,7 +641,7 @@ protected:
               aevents.insert(event(segs.back(), true));
               aevents.insert(event(segs.back(), false));
               if (event(segs.back(), true) < e)
-                line.insert(&segs.back());
+                segs.back().self = line.insert(&segs.back()).first;
 #ifdef DEBUG_CHECKS
               if (event(segs.back(), false) < e)
                 throw std::runtime_error("end of split segment event is before current event");
@@ -614,7 +671,7 @@ protected:
         time->start_section(idx_time_intersects_end_erase);
 #endif
         
-        line.erase(e.seg());
+        line.erase(e.seg()->self);
         ++it;
 
 #ifdef PROFILING
@@ -671,8 +728,6 @@ protected:
   static inline double rect_intersect_area(const double &xlo, const double &xhi,
                                            const double &ylo, const double &yhi,
                                            const double &syl, const double &syr) {
-    if (xlo >= xhi)
-      return 0;
     if (syl < ylo)
       if (syr < ylo) // both sides below -> no intersect
         return 0;
@@ -705,14 +760,14 @@ protected:
     
     const double &x0 = s1->x0;
 
+    if (x0 == x1)
+      return;
+
 #ifdef DEBUG_CHECKS
     if (x0 > x1)
       throw std::runtime_error(FORMAT("add_area_between with negative x-interval {} to {}", x0, x1));
 #endif
 
-    if (x0 == x1)
-      return;
-    
     // find pixel-index bounding box
     int imin = std::max(0,                   x_to_pixel(x0));
     int imax = std::min((int)out.rows() - 1, x_to_pixel(x1));

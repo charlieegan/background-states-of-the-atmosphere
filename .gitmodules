@@ -7,3 +7,6 @@
 [submodule "extern/fmt"]
 	path = extern/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "extern/cpp-TimSort"]
+	path = extern/cpp-TimSort
+	url = https://github.com/timsort/cpp-TimSort.git
