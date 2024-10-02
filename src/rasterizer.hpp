@@ -129,11 +129,8 @@ public:
       if (x < xmin || x > xmax)
         throw std::runtime_error("intersection is outside of x-bounds");
 
-      if ((y_at(x) <=> o.y_at(x)) * ord0 < 0)
-        throw std::runtime_error("calculated intersection is too far right (segments have swapped already)");
-      
-      if (std::nextafter(x, -INF) >= xmin && (y_at(std::nextafter(x, -INF)) <=> o.y_at(std::nextafter(x, -INF))) * ord0 <= 0)
-        throw std::runtime_error("calculated intersection is too far right (at previous value segments already touch)");
+      if ((y_at(x) <=> o.y_at(x)) * ord0 <= 0)
+        throw std::runtime_error("calculated intersection is too far right (segments have touched or swapped already)");;
 #endif
       
       p(0) = x;
