@@ -62,4 +62,18 @@ static std::string to_string(const std::partial_ordering &o) {
   return "unordered";
 }
 
+template <typename T>
+struct type_name {
+  static std::string value() {
+    if (std::is_floating_point_v<T>)
+      return FORMAT("float{}", 8 * sizeof(T));
+    else if (std::is_integral_v<T> && std::is_signed_v<T>)
+      return FORMAT("int{}", 8 * sizeof(T));
+    else if (std::is_integral_v<T> && std::is_unsigned_v<T>)
+      return FORMAT("uint{}", 8 * sizeof(T));
+    return typeid(T).name();
+  }
+};
+
+
 #endif
