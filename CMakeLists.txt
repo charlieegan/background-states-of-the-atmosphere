@@ -8,13 +8,9 @@ project(
 set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
-set (CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20)
 
-include_directories(extern/eigen extern/pybind11/include extern/fmt/include extern/cpp-TimSort/include)
-
-pybind11_add_module(dvector SHARED src/dvector.cpp)
-
-pybind11_add_module(_atmosphere_bgs src/main.cpp)
-target_link_libraries(_atmosphere_bgs PUBLIC dvector)
+pybind11_add_module(_atmosphere_bgs MODULE src/main.cpp src/rasterizer.cpp)
+target_include_directories(_atmosphere_bgs PUBLIC extern/eigen extern/pybind11/include extern/fmt/include extern/cpp-TimSort/include)
 
 install(TARGETS _atmosphere_bgs LIBRARY DESTINATION .)
