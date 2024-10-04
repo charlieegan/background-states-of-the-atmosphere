@@ -66,7 +66,7 @@ PYBIND11_MODULE(_atmosphere_bgs, m) {
         py::arg("ys"), py::arg("duals"),          
         py::arg("phys"), py::arg("sim"));
 
-  BIND_RASTERIZER_SEGMENT(m);
-  BIND_RASTERIZER_EVENT(m);
-  BIND_RASTERIZER(m);
+  rasterizer::segment::bind(m);
+  rasterizer::event::bind(m);
+  rasterizer::bind(m);
 }

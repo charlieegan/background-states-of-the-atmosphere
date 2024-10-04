@@ -1,14 +1,18 @@
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 import sysconfig
+import glob
 
 extra_compile_args = sysconfig.get_config_var('CFLAGS').split()
 extra_compile_args += ["-O3", "-Wall"]
 
+source_files = ["src/main.cpp", "src/dvector.cpp"]
+#sorted(glob.glob("src/*.cpp"))
+
 ext_modules = [
     Pybind11Extension(
         "_atmosphere_bgs",
-        ["src/main.cpp"],
+        source_files,
         include_dirs = ["extern/eigen", "extern/pybind11/include", "extern/fmt/include", "extern/cpp-TimSort/include"],
         cxx_std = 20,
         extra_compile_args = extra_compile_args,

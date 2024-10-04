@@ -2,6 +2,10 @@
 #define COMMON_HPP
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+#include <pybind11/eigen.h>
+#include <pybind11/operators.h>
 namespace py = pybind11;
 
 #include <Eigen/Dense>
@@ -17,7 +21,7 @@ namespace py = pybind11;
 
 #include <map>
 #include <list>
-#include <forward_list>
+#include <set>
 #include <vector>
 
 #include <exception>
@@ -38,20 +42,9 @@ namespace py = pybind11;
 #define FORMAT fmt::format
 #endif
 
-#if __has_include(<stacktrace>) and __cplusplus >= 202302L
-#include <stacktrace>
-std::string get_trace() {
-  return std::to_string(std::stacktrace::current());
-}
-#else
-std::string get_trace() {
-  return "use C++23 for stacktrace support";
-}
-#endif
+static inline auto sqr(const auto &x) { return x * x; }
 
-inline auto sqr(const auto &x) { return x * x; }
-
-std::partial_ordering operator*(const std::partial_ordering &o0, const std::partial_ordering &o1) {
+static std::partial_ordering operator*(const std::partial_ordering &o0, const std::partial_ordering &o1) {
   if (o0 == 0 || o1 == 0)
     return 0 <=> 0;
   if ((o0 < 0 && o1 < 0) || (o0 > 0 && o1 > 0))
@@ -59,7 +52,7 @@ std::partial_ordering operator*(const std::partial_ordering &o0, const std::part
   return 0 <=> 1;
 }
 
-std::string to_string(const std::partial_ordering &o) {
+static std::string to_string(const std::partial_ordering &o) {
   if (o == std::partial_ordering::less)
     return "less";
   if (o == std::partial_ordering::equivalent)
