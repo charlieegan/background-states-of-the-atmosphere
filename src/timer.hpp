@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <chrono>
+#include "common.hpp"
 
 class alignas(64) timer : public std::enable_shared_from_this<timer> {
 public:
@@ -72,19 +73,20 @@ public:
   friend timer operator+(timer lhs, const timer &rhs) {
     return lhs += rhs;
   }
-};
 
-#define BIND_TIMER(m)                                                   \
-  py::class_<timer, std::shared_ptr<timer>>(m, "Timer")                 \
-  .def(py::init<std::vector<std::string>>(), py::arg("names"))          \
-  .def_readonly("names", &timer::names)                                 \
-  .def("get_index_from_name", &timer::get_index_from_name)              \
-  .def("start_section", &timer::start_section)                          \
-  .def("end_section", &timer::end_section)                              \
-  .def("format_times", &timer::format_times)                            \
-  .def(py::self + py::self)                                             \
-  .def(py::self += py::self)                                            \
-  .def("__repr__", [](std::shared_ptr<timer> t){ return t->format_times("\n"); });
+  static void bind(py::module_ &m) {
+    py::class_<timer, std::shared_ptr<timer>>(m, "Timer")
+      .def(py::init<std::vector<std::string>>(), py::arg("names"))
+      .def_readonly("names", &timer::names)
+      .def("get_index_from_name", &timer::get_index_from_name)
+      .def("start_section", &timer::start_section)
+      .def("end_section", &timer::end_section)
+      .def("format_times", &timer::format_times)
+      .def(py::self + py::self)
+      .def(py::self += py::self)
+      .def("__repr__", [](std::shared_ptr<timer> t){ return t->format_times("\n"); });
+  }
+};
 
 #endif
 

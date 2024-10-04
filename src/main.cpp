@@ -25,20 +25,19 @@ void hello() {
 PYBIND11_MODULE(_atmosphere_bgs, m) {
   m.def("_hello", &hello); 
 
-  BIND_TIMER(m);
-  
-  BIND_PHYSICAL_PARAMETERS(m);
-  BIND_SIMULATION_PARAMETERS(m);
+  timer::bind(m);
 
+  physical_parameters::bind(m);
+  simulation_parameters::bind(m);
+  
   tangent_point::bind(m);
   discretized_line_segment::bind(m);
 
-  BIND_PDEDGE(m);
-  BIND_PDMESH(m, double, "PDMesh_f64");
-  BIND_HALFSPACE_INTERSECTION(m, double, "HalfspaceIntersection_fp64");
-
-  BIND_PDMESH(m, long double, "PDMesh_f128");
-  BIND_HALFSPACE_INTERSECTION(m, long double, "HalfspaceIntersection_fp128");
+  pdedge::bind(m);
+  pdmesh<double>::bind(m);
+  pdmesh<long double>::bind(m);
+  halfspace_intersection<double>::bind(m);
+  halfspace_intersection<long double>::bind(m);
 
   laguerre_diagram<double>::diagram_edge::bind(m);
   laguerre_diagram<double>::bind(m);

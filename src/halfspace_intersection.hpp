@@ -154,19 +154,20 @@ struct pdedge {
 
     return res;
   }
-};
 
-#define BIND_PDEDGE(m)                          \
-  py::class_<pdedge>(m, "PDEdge")               \
-  .def("__repr__", &pdedge::repr)               \
-  .def("pstart", &pdedge::pstart)               \
-  .def("pend", &pdedge::pend)                   \
-  .def("dstart", &pdedge::dstart)               \
-  .def("dend", &pdedge::dend)                   \
-  .def_readonly("pi", &pdedge::pi)              \
-  .def_readonly("pj", &pdedge::pj)              \
-  .def_readonly("di", &pdedge::di)              \
-  .def_readonly("dj", &pdedge::dj);
+  static void bind(py::module_ &m) {
+    py::class_<pdedge>(m, "PDEdge")
+      .def("__repr__", &pdedge::repr)
+      .def("pstart", &pdedge::pstart)
+      .def("pend", &pdedge::pend)
+      .def("dstart", &pdedge::dstart)
+      .def("dend", &pdedge::dend)
+      .def_readonly("pi", &pdedge::pi)
+      .def_readonly("pj", &pdedge::pj)
+      .def_readonly("di", &pdedge::di)
+      .def_readonly("dj", &pdedge::dj);
+  }
+};
 
 
 template <typename T = double>
@@ -581,26 +582,25 @@ struct pdmesh {
     }
   }
 
+  static void bind(py::module_ &m) {
+    py::class_<pdmesh<T>>(m, ("PDMesh_" + type_name<T>::value()).c_str())
+      .def("__repr__", &pdmesh<T>::repr)
+      .def("check_integrity", &pdmesh<T>::check_integrity)
+      .def("primal_poly", &pdmesh<T>::primal_poly)
+      .def_property_readonly("pcnt", &pdmesh<T>::pcnt)
+      .def_property_readonly("dcnt", &pdmesh<T>::dcnt)
+      .def_readonly("padj", &pdmesh<T>::padj)
+      .def_property_readonly("dadj",
+                             [](const pdmesh<T> *m){ return m->dadj.data;})
+      .def_readonly("pvert", &pdmesh<T>::pvert)
+      .def_property_readonly("dvert",
+                             [](const pdmesh<T> *m){ return m->dvert.data;})
+      .def("extremal_dual", &pdmesh<T>::extremal_dual)
+      .def("closest_primal", &pdmesh<T>::closest_primal)
+      .def("write_ply", &pdmesh<T>::write_ply)
+      .def("order_all", &pdmesh<T>::order_all);
+  }
 };
-
-#define BIND_PDMESH(m, T, name)                                         \
-  py::class_<pdmesh<T>>(m, name)                                        \
-  .def("__repr__", &pdmesh<T>::repr)                                    \
-  .def("check_integrity", &pdmesh<T>::check_integrity)                  \
-  .def("primal_poly", &pdmesh<T>::primal_poly)                          \
-  .def_property_readonly("pcnt", &pdmesh<T>::pcnt)                      \
-  .def_property_readonly("dcnt", &pdmesh<T>::dcnt)                      \
-  .def_readonly("padj", &pdmesh<T>::padj)                               \
-  .def_property_readonly("dadj",                                        \
-                         [](const pdmesh<T> *m){ return m->dadj.data;}) \
-  .def_readonly("pvert", &pdmesh<T>::pvert)                             \
-  .def_property_readonly("dvert",                                       \
-                         [](const pdmesh<T> *m){ return m->dvert.data;}) \
-  .def("extremal_dual", &pdmesh<T>::extremal_dual)                      \
-  .def("closest_primal", &pdmesh<T>::closest_primal)                    \
-  .def("write_ply", &pdmesh<T>::write_ply)                              \
-  .def("order_all", &pdmesh<T>::order_all);
-
 
 template <typename T = double>
 class halfspace_intersection
@@ -922,30 +922,27 @@ public:
     time->end_section();
 #endif
   }
+
+  static void bind(py::module_ &m) {
+    py::class_<halfspace_intersection<T>>(m, ("HalfspaceIntersection_" + type_name<T>::value()).c_str())
+      .def(py::init<const Eigen::Ref<const halfspace_intersection<T>::Vec3>&,
+           const Eigen::Ref<const halfspace_intersection<T>::Vec3>&>(),
+           py::arg("lb"), py::arg("ub"))
+      .def(py::init<const Eigen::Ref<const halfspace_intersection<T>::Vec3>&,
+           const Eigen::Ref<const halfspace_intersection<T>::Vec3>&,
+           const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>>>(),
+           py::arg("lb"), py::arg("ub"), py::arg("hss"))
+      .def("add_halfspace", &halfspace_intersection<T>::add_halfspace,
+           py::arg("hs"))
+      .def("add_halfspaces", &halfspace_intersection<T>::add_halfspaces,
+           py::arg("hss"))
+#ifdef PROFILING
+      .def_readonly("time", &halfspace_intersection<T>::time)
+      .def_readonly("remove_count", &halfspace_intersection<T>::remove_count)
+#endif
+      .def_readonly("mesh", &halfspace_intersection<T>::mesh);
+  }
 };
 
-#ifdef PROFILING
-#define BIND_HALFSPACE_INTERSECTION_PROFILING(m, T)                     \
-  def_readonly("time", &halfspace_intersection<T>::time)                   \
-  .def_readonly("remove_count", &halfspace_intersection<T>::remove_count)
-#else
-#define BIND_HALFSPACE_INTERSECTION_PROFILING(m, T)
 #endif
 
-#define BIND_HALFSPACE_INTERSECTION(m, T, name)                         \
-  py::class_<halfspace_intersection<T>>(m, name)                        \
-  .def(py::init<const Eigen::Ref<const halfspace_intersection<T>::Vec3>&, \
-       const Eigen::Ref<const halfspace_intersection<T>::Vec3>&>(),     \
-       py::arg("lb"), py::arg("ub"))                                    \
-  .def(py::init<const Eigen::Ref<const halfspace_intersection<T>::Vec3>&, \
-       const Eigen::Ref<const halfspace_intersection<T>::Vec3>&,        \
-       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>>>(), \
-       py::arg("lb"), py::arg("ub"), py::arg("hss"))                    \
-  .def("add_halfspace", &halfspace_intersection<T>::add_halfspace,      \
-       py::arg("hs"))                                                   \
-  .def("add_halfspaces", &halfspace_intersection<T>::add_halfspaces,    \
-       py::arg("hss"))                                                  \
-  .BIND_HALFSPACE_INTERSECTION_PROFILING(m, T)                          \
-  .def_readonly("mesh", &halfspace_intersection<T>::mesh);
-
-#endif

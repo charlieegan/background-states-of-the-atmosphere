@@ -45,28 +45,29 @@ struct simulation_parameters
        << ", max_line_resolution = " << max_line_resolution;
     return ss.str();
   }
-};
 
-#define BIND_SIMULATION_PARAMETERS(m)                                   \
-  py::class_<simulation_parameters>(m, "SimulationParameters")          \
-  .def(py::init<double, double, double, double,                         \
-       int, double, int, double, int, int>(),                           \
-       py::arg("smin") = 0.1747087883522576, py::arg("smax") = 0.9809294113733709, \
-       py::arg("pmin") = 7300., py::arg("pmax") = 141855.,              \
-       py::arg("boundary_res") = 1000,                                  \
-       py::arg("area_tolerance") = 1e-4,                                \
-       py::arg("max_refine_steps") = 1000,                              \
-       py::arg("line_tolerance") = 1e-3,                                \
-       py::arg("min_line_resolution") = 4,                              \
-       py::arg("max_line_resolution") = 100)                            \
-  .def_readonly("spmin", &simulation_parameters::spmin)                 \
-  .def_readonly("spmax", &simulation_parameters::spmax)                 \
-  .def_readonly("boundary_res", &simulation_parameters::boundary_res)   \
-  .def_readonly("area_tolerance", &simulation_parameters::area_tolerance) \
-  .def_readonly("max_refine_steps", &simulation_parameters::max_refine_steps) \
-  .def_readonly("line_tolerance", &simulation_parameters::line_tolerance) \
-  .def_readonly("min_line_resolution", &simulation_parameters::min_line_resolution) \
-  .def_readonly("max_line_resolution", &simulation_parameters::max_line_resolution) \
-  .def("__repr__", &simulation_parameters::repr)
+  static void bind(py::module_ &m) {
+    py::class_<simulation_parameters>(m, "SimulationParameters")
+      .def(py::init<double, double, double, double,
+           int, double, int, double, int, int>(),
+           py::arg("smin") = 0.1747087883522576, py::arg("smax") = 0.9809294113733709,
+           py::arg("pmin") = 7300., py::arg("pmax") = 141855.,
+           py::arg("boundary_res") = 1000,
+           py::arg("area_tolerance") = 1e-4,
+           py::arg("max_refine_steps") = 1000,
+           py::arg("line_tolerance") = 1e-3,
+           py::arg("min_line_resolution") = 4,
+           py::arg("max_line_resolution") = 100)
+      .def_readonly("spmin", &simulation_parameters::spmin)
+      .def_readonly("spmax", &simulation_parameters::spmax)
+      .def_readonly("boundary_res", &simulation_parameters::boundary_res)
+      .def_readonly("area_tolerance", &simulation_parameters::area_tolerance)
+      .def_readonly("max_refine_steps", &simulation_parameters::max_refine_steps)
+      .def_readonly("line_tolerance", &simulation_parameters::line_tolerance)
+      .def_readonly("min_line_resolution", &simulation_parameters::min_line_resolution)
+      .def_readonly("max_line_resolution", &simulation_parameters::max_line_resolution)
+      .def("__repr__", &simulation_parameters::repr);
+  }
+};
 
 #endif

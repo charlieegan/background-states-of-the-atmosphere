@@ -49,21 +49,21 @@ struct physical_parameters
        << ", cp = " << cp;
     return ss.str();
   }
-};
 
-#define BIND_PHYSICAL_PARAMETERS(m) \
-  py::class_<physical_parameters>(m, "PhysicalParameters") \
-  .def(py::init<double, double, double, double, double>(), \
-       py::arg("a") = 6371000., py::arg("Omega") = 7.2921e-05, \
-       py::arg("p00") = 101325., py::arg("kappa") = 2. / 7., py::arg("cp") = 1003.5) \
-  .def("__repr__", &physical_parameters::repr) \
-  .def("itf", &physical_parameters::itf<double>, py::arg("zeta")) \
-  .def("tf", &physical_parameters::tf<double>, py::arg("x")) \
-  .def_readonly("a", &physical_parameters::a) \
-  .def_readonly("Omega", &physical_parameters::Omega) \
-  .def_readonly("p00", &physical_parameters::p00) \
-  .def_readonly("kappa", &physical_parameters::kappa) \
-  .def_readonly("cp", &physical_parameters::cp);
-  
+  static void bind(py::module_ &m) {
+    py::class_<physical_parameters>(m, "PhysicalParameters")
+      .def(py::init<double, double, double, double, double>(),
+           py::arg("a") = 6371000., py::arg("Omega") = 7.2921e-05,
+           py::arg("p00") = 101325., py::arg("kappa") = 2. / 7., py::arg("cp") = 1003.5)
+      .def("__repr__", &physical_parameters::repr)
+      .def("itf", &physical_parameters::itf<double>, py::arg("zeta"))
+      .def("tf", &physical_parameters::tf<double>, py::arg("x"))
+      .def_readonly("a", &physical_parameters::a)
+      .def_readonly("Omega", &physical_parameters::Omega)
+      .def_readonly("p00", &physical_parameters::p00)
+      .def_readonly("kappa", &physical_parameters::kappa)
+      .def_readonly("cp", &physical_parameters::cp);
+  }
+};
 
 #endif
