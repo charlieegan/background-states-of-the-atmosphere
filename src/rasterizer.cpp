@@ -576,12 +576,8 @@ int rasterizer::fix_intersects() {
             segs.push_back(seg);
             aevents.insert(event(segs.back(), true));
             aevents.insert(event(segs.back(), false));
-            if (event(segs.back(), true) < e)
+            if (event(segs.back(), true) < e && !(event(segs.back(), false) < e))
               segs.back().self = line.insert(&segs.back()).first;
-#ifdef DEBUG_CHECKS
-            if (event(segs.back(), false) < e)
-              throw std::runtime_error("end of split segment event is before current event");
-#endif
           }
         }
 
