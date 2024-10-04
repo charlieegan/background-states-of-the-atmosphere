@@ -2,6 +2,8 @@
 #define DISCRETIZED_LINE_SEGMENT
 
 #include "common.hpp"
+#include "physical_parameters.hpp"
+#include "simulation_parameters.hpp"
 
 struct discretized_line_segment;
 

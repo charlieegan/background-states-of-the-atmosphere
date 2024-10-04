@@ -2,9 +2,6 @@
 
 #include "laguerre_diagram.hpp"
 
-// include the source file of discretized_line_segment so it is in the same translation unit
-#include "discretized_line_segment.cpp"
-
 // explicit instantiations
 template class laguerre_diagram<double>;
 template class laguerre_diagram<long double>;
