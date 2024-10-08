@@ -109,6 +109,8 @@ class OTSolver:
         psi = ld.touching_dual(randomize=True)
         self.timer += ld.time
         self.timer += ld.hs.time
+
+        psi -= np.mean(psi)
         
         ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
         err = np.abs(self.tmn - ld.areas)
@@ -154,7 +156,7 @@ class OTSolver:
                     self.timer += ld.time
                     self.timer += ld.hs.time
                     # accept step
-                    psi = psi2
+                    psi = psi2 - np.mean(psi2)
                     ld = ld2
                     err = err2
                     good_areas = good_areas2
