@@ -112,7 +112,7 @@ class OTSolver:
 
         psi -= np.mean(psi)
         
-        ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
+        ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp, ld.hints)
         err = np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
         if verbose:
@@ -139,7 +139,7 @@ class OTSolver:
                     self.timer += ld2.hs.time
                 
                 # calculate ld after step
-                ld2 = _atmosphere_bgs.LaguerreDiagram(self.y, psi2, self.pp, self.sp)
+                ld2 = _atmosphere_bgs.LaguerreDiagram(self.y, psi2, self.pp, self.sp, ld.hints)
                 err2 = np.abs(self.tmn - ld2.areas)
                 good_areas2 = (ld2.areas > min_area)
 
@@ -177,7 +177,7 @@ class OTSolver:
                 psi = ld.touching_dual(randomize=True)
                 self.timer += ld.time
                 self.timer += ld.hs.time
-                ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
+                ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp, ld.hints)
                 err = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
 

@@ -54,7 +54,27 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
                                       const Eigen::Ref<const VecX> &duals,
                                       const physical_parameters &phys,
                                       const simulation_parameters &sim) :
-  n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim) {
+  n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + sim.boundary_res, -1) {
+
+#ifdef PROFILING
+  setup_timer();
+#endif
+
+  if ((int)duals.size() != n + 1)
+    throw std::runtime_error("the size of the dual vector must be one larger than the first dimension of seed positions (the last entry of duals corresponds to the boundary cell)");
+
+  do_hs_intersect();
+
+  extract_diagram();
+}
+
+template <typename T>
+laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
+                                      const Eigen::Ref<const VecX> &duals,
+                                      const physical_parameters &phys,
+                                      const simulation_parameters &sim,
+                                      const std::vector<int> &hints) :
+  n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(hints) {
 
 #ifdef PROFILING
   setup_timer();
@@ -88,7 +108,7 @@ void laguerre_diagram<T>::do_hs_intersect() {
            1.0,
            phys.Omega * ys(i, 0) + duals(i));
 
-    hs.add_halfspace(H);
+    hints[i] = hs.add_halfspace(H, hints[i]);
   }
 
   // add boundary halfspaces
@@ -101,7 +121,7 @@ void laguerre_diagram<T>::do_hs_intersect() {
            1.0,
            duals(n) + sqr(phys.Omega * phys.a) / z0);
 
-    hs.add_halfspace(H);
+    hints[sim.boundary_res + i] = hs.add_halfspace(H, hints[sim.boundary_res + i]);
   }
 
 #ifdef PROFILING
@@ -135,7 +155,7 @@ void laguerre_diagram<T>::extract_diagram() {
       if (e.pj < 6 || e.pi < e.pj) {
         edglist.push_back({e.pi, e.pj, e.di, e.dj,
             discretized_line_segment(verts.row(e.di), verts.row(e.dj),
-                                     phys, std::numeric_limits<double>::infinity())});
+                                     phys, sim)});
 
         faces[e.pi].push_back(edglist.size() - 1);
         faces[e.pj].push_back(edglist.size() - 1);
@@ -510,9 +530,17 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
          const simulation_parameters&>(),
          py::arg("ys"), py::arg("duals"),
          py::arg("phys"), py::arg("sim"))
+    .def(py::init<const laguerre_diagram<T>::seeds_t&,
+         const Eigen::Ref<const laguerre_diagram<T>::VecX>&,
+         const physical_parameters &,
+         const simulation_parameters&,
+         const std::vector<int>&>(),
+         py::arg("ys"), py::arg("duals"),
+         py::arg("phys"), py::arg("sim"), py::arg("hints"))
     .def_readonly("n", &laguerre_diagram<T>::n)
     .def_readonly("phys", &laguerre_diagram<T>::phys)
     .def_readonly("sim", &laguerre_diagram<T>::sim)
+    .def_readonly("hints", &laguerre_diagram<T>::hints)
     .def_readonly("ys", &laguerre_diagram<T>::ys)
     .def_readonly("duals", &laguerre_diagram<T>::duals)
     .def_readonly("hs", &laguerre_diagram<T>::hs)
@@ -540,5 +568,16 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
         },
         py::arg("ys"), py::arg("duals"),          
         py::arg("phys"), py::arg("sim"));
+
+  m.def("LaguerreDiagram",
+        [](const laguerre_diagram<T>::seeds_t &ys,
+           const Eigen::Ref<const laguerre_diagram<T>::VecX> &duals,
+           const physical_parameters &phys,
+           const simulation_parameters &sim,
+           const std::vector<int> &hints) {
+          return laguerre_diagram<T>(ys, duals, phys, sim, hints);
+        },
+        py::arg("ys"), py::arg("duals"),          
+        py::arg("phys"), py::arg("sim"), py::arg("hints"));
   
 }

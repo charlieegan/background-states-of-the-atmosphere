@@ -23,6 +23,8 @@ namespace py = pybind11;
 #include <list>
 #include <set>
 #include <vector>
+#include <queue>
+#include <deque>
 
 #include <exception>
 #include <functional>
@@ -75,5 +77,13 @@ struct type_name {
   }
 };
 
+template <typename T>
+bool significantly_less(const T &lhs, const T &rhs,
+                        const T &rel = 100 * std::numeric_limits<T>::epsilon(),
+                        const T &abs = 100 * std::numeric_limits<T>::epsilon()) {
+  T mean = 0.5 * (lhs + rhs);
+  T eps = std::max(abs, std::abs(mean) * rel);
+  return lhs < rhs - eps;
+}
 
 #endif

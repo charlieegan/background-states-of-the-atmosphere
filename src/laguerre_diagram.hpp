@@ -42,7 +42,8 @@ public:
 
   // halfspace intersection
   halfspace_intersection<T> hs;
-
+  std::vector<int> hints;
+  
   // diagram:
   // vertices
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> verts;
@@ -75,6 +76,13 @@ public:
                    const physical_parameters &phys,
                    const simulation_parameters &sim);
 
+  laguerre_diagram(const seeds_t &ys,
+                   const Eigen::Ref<const VecX> &duals,
+                   const physical_parameters &phys,
+                   const simulation_parameters &sim,
+                   const std::vector<int> &hints);
+
+  
   void do_hs_intersect();
 
   void extract_diagram();

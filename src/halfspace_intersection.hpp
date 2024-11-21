@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "dvector.hpp"
+#include "reusable_used_array.hpp"
 #include "timer.hpp"
 
 // an (oriented) primal-dual edge represented by primal and dual indices
@@ -169,7 +170,6 @@ struct pdedge {
   }
 };
 
-
 template <typename T = double>
 struct pdmesh {
   typedef Eigen::Vector3<T> Vec3;
@@ -187,6 +187,8 @@ struct pdmesh {
   // dual vertices
   dvector<Vec4> dvert;
 
+  reusable_used_array<> used;
+  
   pdmesh(const int &pcnt = 0, const int &dcnt = 0) :
     padj(pcnt), dadj(dcnt),
     pvert(pcnt), dvert(dcnt) {}
@@ -195,7 +197,7 @@ struct pdmesh {
                      const Eigen::Ref<const Vec3> &ub) {
     pdmesh res(6, 8);
 
-    // a cuboid mesh has 6 prima vertices, 8 dual vertices, 12 edges
+    // a cuboid mesh has 6 primal vertices, 8 dual vertices, 12 edges
 
     /* enumeration of primal and dual vertices is as follows:
      *
@@ -345,7 +347,8 @@ struct pdmesh {
   int add_dual(const Eigen::Ref<const Vec4> &p) {
     dvert.add(p);
     int di = dadj.add(std::vector<pdedge>());
-    // std::cout << "added dual " << di << std::endl;
+    // py::print(FORMAT("add dual {}: ({}, {}, {}, {})",
+    //                  di, p(0), p(1), p(2), p(3)));
     return di;
   }
 
@@ -353,6 +356,8 @@ struct pdmesh {
   int add_primal(const Eigen::Ref<const Vec4> &hs) {
     pvert.push_back(hs);
     padj.push_back(std::vector<pdedge>());
+    // py::print(FORMAT("add primal {}: ({}, {}, {}, {})",
+    //                  padj.size() - 1, hs(0), hs(1), hs(2), hs(3)));
     return (int)pvert.size() - 1;
   }
 
@@ -415,21 +420,71 @@ struct pdmesh {
   }
 
   // find the (index of the) dual point which has largest inner product with d
-  int extremal_dual(const Eigen::Ref<const Vec3> &d) {
+  int extremal_dual(const Eigen::Ref<const Vec3> &d, bool brute_force=true, int hint = -1, bool debug=false) {
+    int res = (hint >= 0 ? hint : *dadj.begin_idx());
+    T maxval = dvert[res].head(3).dot(d) / dvert[res](3), val;
 
-    T maxval = -std::numeric_limits<T>::infinity(), val;
-    int res = -1;
-
-    for (auto it = dadj.begin_idx(); it != dadj.end_idx(); ++it) {
-      int di = *it;
-#ifdef DEBUG_CHECKS
-      if (di >= dadj.capacity())
-        throw std::runtime_error("dvector idx iterator returned index oob");
-#endif
-      if ((val = dvert[di].head(3).dot(d)) > maxval * dvert[di](3)) {
-        res = di;
-        maxval = val / dvert[di](3);
+    if (brute_force) {
+      for (auto it = dadj.begin_idx(); it != dadj.end_idx(); ++it) {
+        int di = *it;
+        val = dvert[di].head(3).dot(d) / dvert[di](3);
+        if (val > maxval) {
+          res = di;
+          maxval = val;
+        }
       }
+    } else {
+      int tcnt = 0;
+
+      // TODO: optimze this value or at least make it accessible
+      const T eps = 1e-5;
+      
+      // traverse mesh to find extremal point
+      used.reset();
+      //std::priority_queue<std::pair<T, int>> q;
+      std::deque<std::pair<T, int>> q;
+      used.mark(res);
+      //q.push({maxval, res});
+      q.push_back({maxval, res});
+      while (!q.empty()) {
+        //auto [v, di] = q.top(); q.pop();
+        auto [v, di] = q.back(); q.pop_back();
+        tcnt++;
+
+        // don't continue from vertices further back
+        // if (significantly_less<T>(v, maxval, eps, eps)) {
+        //   // py::print(FORMAT("break traverse because {} << {}, usedcnt = {}", v, maxval, used.ctr));
+        //   break;
+        // }
+
+        // go over neighbors and push them if they are not too far back and not already visited
+        for (const auto &e : dneigh(di)) {
+          val = dvert[e.dj].head(3).dot(d) / dvert[e.dj](3);
+          if (!significantly_less<T>(val, maxval, eps, eps) && !used.check(e.dj)) {
+            
+            used.mark(e.dj);
+            //q.push({val, e.dj});
+            if (val > maxval)
+              q.push_back({val, e.dj});
+            else
+              q.push_front({val, e.dj});
+            
+            // if we found new max, store it
+            if (val > maxval) {
+              maxval = val;
+              res = e.dj;
+            }
+          }
+        }
+      }
+      if (debug)
+        py::print("tcnt:", tcnt, "pqlen:", q.size());
+    }
+
+    for (const auto &e : dneigh(res)) {
+      val = dvert[e.dj].head(3).dot(d) / dvert[e.dj](3);
+      if (val > maxval)
+        throw std::runtime_error("extremal dual is not locally extremal");
     }
 
     return res;
@@ -542,6 +597,25 @@ struct pdmesh {
       }
     }
 
+    for (int pi = 0; pi < pvert.size(); ++pi)
+      for (auto dit = dvert.begin_idx(); dit != dvert.end_idx(); ++dit) {
+        int di = *dit;
+        auto v = pvert[pi];
+        auto dv = dvert[di];
+
+        bool neigh = false;
+        for (auto &e : padj[pi])
+          if (di == e.di)
+            neigh = true;
+        
+        T dd = v.dot(dv);
+        if (!neigh && dd > 1e-9) {
+          py::print(FORMAT("convexity violation by {} @ primal {} ({}, {}, {}, {}), dual {} ({}, {}, {}, {})",
+                           dd, pi, v(0), v(1), v(2), v(3), di, dv(0), dv(1), dv(2), dv(3)));
+          res = false;
+        }
+      }
+    
     return res;
   }
 
@@ -595,7 +669,9 @@ struct pdmesh {
       .def_readonly("pvert", &pdmesh<T>::pvert)
       .def_property_readonly("dvert",
                              [](const pdmesh<T> *m){ return m->dvert.data;})
-      .def("extremal_dual", &pdmesh<T>::extremal_dual)
+      .def("extremal_dual", &pdmesh<T>::extremal_dual,
+           py::arg("d"), py::arg("brute_force")=false,
+           py::arg("hint")=-1, py::arg("debug")=false)
       .def("closest_primal", &pdmesh<T>::closest_primal)
       .def("write_ply", &pdmesh<T>::write_ply)
       .def("order_all", &pdmesh<T>::order_all);
@@ -612,8 +688,7 @@ public:
 
   pdmesh<T> mesh;
 
-  std::vector<int> used;
-  int used_ctr;
+  reusable_used_array<> used;
 
 #ifdef PROFILING
   std::shared_ptr<timer> time = NULL;
@@ -636,7 +711,7 @@ public:
   // start with cuboid domain defined by lower and upper bounds
   halfspace_intersection(const Eigen::Ref<const Vec3> &lb = Vec3(0,0,0),
                          const Eigen::Ref<const Vec3> &ub = Vec3(1,1,1)) :
-    mesh(pdmesh<T>::cube(lb, ub)), used(8), used_ctr(0) { }
+    mesh(pdmesh<T>::cube(lb, ub)), used(8) { }
 
   halfspace_intersection(const Eigen::Ref<const Vec3> &lb,
                          const Eigen::Ref<const Vec3> &ub,
@@ -650,8 +725,8 @@ public:
       add_halfspace(hs);
   }
 
-  void add_halfspace(const Eigen::Ref<const Vec4> &hs) {
-#ifdef DEBUG_CHECKS
+  int add_halfspace(const Eigen::Ref<const Vec4> &hs, int hint = -1) {
+#ifdef EXPENSIVE_DEBUG_CHECKS
     if (!mesh.check_integrity())
       throw std::runtime_error("mesh integrity broken before adding new halfspace");
 #endif
@@ -666,69 +741,56 @@ public:
     // mesh.write_ply("meshdump_pre.ply");
 
     // increment used_ctr to effectively get fresh used array
-    used_ctr++;
-    // reset used array if necessary (should not really happen with reasonable input sizes)
-    if (used_ctr < 0) {
-      std::fill(used.begin(), used.end(), 0);
-      used_ctr = 1;
-    }
-    // make sure used array is large enough
-    while ((int)used.size() < mesh.dadj.capacity()) used.push_back(0);
+    used.reset();
 
     // add new primal
     int pi = mesh.add_primal(hs);
 
-    // dual vertex that is not contained in hs
-    int di_start = -1;
-
-    // find dual point outside of halfspace
-#if true
-    int di = *mesh.dadj.begin_idx(), steps=0;
-    T err = mesh.hs_error(pi, di);
-    while (true) {
-      ++steps;
-
-      used[di] = used_ctr;
-
-      if (err >= 0 && !mesh.contains(pi, di)) {
-        di_start = di;
-        break;
-      }
-
-      T max_err = -std::numeric_limits<T>::infinity(), nerr;
-      int ndi = -1;
-      for (const auto &e : mesh.dneigh(di))
-        if ((nerr = mesh.hs_error(pi, e.dj)) > max_err && used[e.dj] != used_ctr)
-          max_err = nerr, ndi = e.dj;
-
-      // TODO: this can break due to precision problems -> fix
-      if (std::isinf(max_err)) {
-        // py::print("break: new error", max_err, "cur error", err);
-        di_start = -1;
-        break;
-      }
-
-      di = ndi;
-      err = max_err;
-    }
-    // py::print("for primal", pi,
-    //           "found dual index", di_start,
-    //           "with err", err,
-    //           "contains:", (di_start >= 0 ? mesh.contains(pi, di_start) : false),
-    //           "in", steps, "steps");
-    // std::cout << "found dual index " << di << " with err " << err << " contains: " << (di >= 0 ? mesh.contains(pi, di) : false) << std::endl;
-
-#else
-    for (auto it = mesh.dadj.begin_idx(); it != mesh.dadj.end_idx(); ++it) {
-      int di = *it;
-      // std::cout << "check contains(" << pi << ", " << di << ")" << std::endl;
-      if (!mesh.contains(pi, di)) {
-        di_start = di;
-        break;
+    // find best dual hint from primal hint
+    int dhint = -1;
+    if (hint >= 0 && hint < mesh.padj.size() && mesh.pneigh(hint).size() > 0) {
+      T bval = -std::numeric_limits<T>::infinity();
+      for (auto &e : mesh.pneigh(hint)) {
+        T val = mesh.dvert[e.di].head(3).dot(hs.head(3)) / mesh.dvert[e.di][3];
+        if (val > bval) {
+          bval = val;
+          dhint = e.di;
+        }
       }
     }
+    
+    // find dual vertex furthest in direction of halfspace normal
+    int di_start = mesh.extremal_dual(hs.head(3), false, dhint);
+
+    // find best hint for next time (since there are only 3 dual neighbors but there may be many primal, it makes sense to look for the one with smallest degree)
+    int phint = -1;
+    {
+      int best = 1e9;
+      for (auto &e : mesh.dneigh(di_start)) {
+        if (mesh.pneigh(e.pi).size() < best) {
+          phint = e.pi;
+          best = mesh.pneigh(e.pi).size();
+        }
+      }
+    }
+
+
+#ifdef EXPENSIVE_DEBUG_CHECKS
+    int di_start_brute = mesh.extremal_dual(hs.head(3), true);
+    T v_trav = mesh.dvert[di_start].head(3).dot(hs.head(3)) / mesh.dvert[di_start][3];
+    T v_brute = mesh.dvert[di_start_brute].head(3).dot(hs.head(3)) / mesh.dvert[di_start_brute][3];
+    
+    if (v_trav != v_brute)
+      throw std::runtime_error(FORMAT("extremal_dual incorrect - trav: {} ({}, {}, {}, {}) dist ({}), "
+                                      "brute: {} ({}, {}, {}, {}) dist ({}), integrity: {}",
+                                      di_start, mesh.dvert[di_start](0), mesh.dvert[di_start](1), mesh.dvert[di_start](2), mesh.dvert[di_start](3), v_trav,
+                                      di_start_brute, mesh.dvert[di_start_brute](0), mesh.dvert[di_start_brute](1), mesh.dvert[di_start_brute](2), mesh.dvert[di_start_brute](3), v_brute,
+                                      mesh.check_integrity()));
 #endif
 
+
+    if (mesh.contains(pi, di_start))
+      di_start = -1;
 
 #ifdef PROFILING
     time->end_section();
@@ -737,7 +799,7 @@ public:
     // if there is no point outside, the new halfspace does nothing
     if (di_start < 0) {
       // py::print("halfspace", pi, "completely contains domain");
-      return;
+      return phint;
     }
 
 #ifdef DEBUG_CHECKS
@@ -749,8 +811,8 @@ public:
     time->start_section(idx_time_partition);
 #endif
 
-    used_ctr++;
-    used[di_start] = used_ctr;
+    used.reset();
+    used.mark(di_start);
     std::vector<int> remove_di({di_start});  // dual vertices that are cut off (contains(pi, *) is false)
     std::vector<pdedge> cross_e;             // edges crossing from cut off part to remaining part (e.di is removed, e.dj is remaining)
 
@@ -766,7 +828,7 @@ public:
 
       for (const auto &e : mesh.dneigh(di)) {
         // ignore already visited vertices
-        if (used[e.dj] == used_ctr)
+        if (used.check(e.dj))
           continue;
 
         if (!mesh.contains(pi, e.dj)) {
@@ -774,7 +836,7 @@ public:
           q.push_back(e.dj);
           remove_di.push_back(e.dj);
           // mark used
-          used[e.dj] = used_ctr;
+          used.mark(e.dj);
         } else {
           // e.dj is not cut off -> store the edge
           cross_e.push_back(e);
@@ -856,6 +918,25 @@ public:
                       1.0);
           }
 
+          {
+            // run some iterations of cyclic projections to refine the result
+            int max_its = 100;
+            T max_err = 1e-9;
+            
+            auto na = a.normalized();
+            auto nb = b.normalized();
+            auto nc = c.normalized();
+
+            T err = std::numeric_limits<T>::infinity(), d;
+            for (int i = 0; i < max_its && err > max_err; ++i) {
+              err = 0;
+              d = na.dot(dv); dv -= na * d;  err = std::max(err, d);
+              d = nb.dot(dv); dv -= nb * d;  err = std::max(err, d);
+              d = nc.dot(dv); dv -= nc * d;  err = std::max(err, d);
+              dv /= dv(3);
+            }
+          }
+
           // replace dual start of crossing edge with new vertex
           e.di = mesh.add_dual(dv);
 
@@ -921,6 +1002,8 @@ public:
 #ifdef PROFILING
     time->end_section();
 #endif
+
+    return phint;
   }
 
   static void bind(py::module_ &m) {
@@ -933,7 +1016,7 @@ public:
            const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>>>(),
            py::arg("lb"), py::arg("ub"), py::arg("hss"))
       .def("add_halfspace", &halfspace_intersection<T>::add_halfspace,
-           py::arg("hs"))
+           py::arg("hs"), py::arg("hint")=-1)
       .def("add_halfspaces", &halfspace_intersection<T>::add_halfspaces,
            py::arg("hss"))
 #ifdef PROFILING
