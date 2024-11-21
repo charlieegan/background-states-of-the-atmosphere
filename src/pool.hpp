@@ -3,24 +3,27 @@
 
 #include <vector>
 #include <utility>
+#include <memory>
 
 // a simple class for storing elements (in blocks of size BLOCKSIZE for efficiency) in a way that their addresses do not change and they are deleted when pool goes out of scope
-template <typename T, int BLOCKSIZE=1024>
+template <typename T, int BLOCKSIZE=1024, class Allocator=std::allocator<T>>
 class pool
 {
 protected:
+  Allocator alloc;
   std::vector<T*> data;
   int lcnt; // number of elements in last block
 
 public:
-  pool() : lcnt(BLOCKSIZE) {}
-  pool(pool &&o) : data(o.data), lcnt(o.lcnt) {
+  pool(const Allocator &alloc = Allocator()) : alloc(alloc), lcnt(BLOCKSIZE) {}
+  pool(pool &&o) : alloc(o.alloc), data(o.data), lcnt(o.lcnt) {
     o.data.clear();
   }
 
   ~pool() {
     for (auto &p : data)
-      delete[] p;
+      alloc.deallocate(p, BLOCKSIZE);
+      //delete[] p;
   }
 
   T &operator[](const int &i) {
@@ -31,14 +34,14 @@ public:
   }
   void push_back(const T &t) {
     if (lcnt == BLOCKSIZE) {
-      data.push_back(new T[BLOCKSIZE]);
+      data.push_back(alloc.allocate(BLOCKSIZE)); //new T[BLOCKSIZE]);
       lcnt = 0;
     }
     data.back()[lcnt++] = t;
   }
   void push_back(T &&t) {
     if (lcnt == BLOCKSIZE) {
-      data.push_back(new T[BLOCKSIZE]);
+      data.push_back(alloc.allocate(BLOCKSIZE)); //new T[BLOCKSIZE]);
       lcnt = 0;
     }
     data.back()[lcnt++] = std::move(t);
