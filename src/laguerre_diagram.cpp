@@ -385,7 +385,12 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
   // rasterizer arguments
   std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> seg;
   auto blo = transform(sim.spmin), bhi = transform(sim.spmax);
-  Eigen::Array4d bounds = {blo(0), bhi(0), blo(1), bhi(1)};
+  Eigen::Array4d bounds = {
+    std::min(blo(0), bhi(0)), std::max(blo(0), bhi(0)),
+    std::min(blo(1), bhi(1)), std::max(blo(1), bhi(1))
+  };
+
+  bool flipy = (blo(1) > bhi(1));
 
   // collect segments
   for (int i = 0; i < (int)edglist.size(); ++i) {
@@ -398,7 +403,7 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
     // get (primal) index of cell below:
     // if the edge is oriented left-to-right then pi is below, if it goes right-to-left then pj is below
     // indices >= n (i.e. the top cell) are all combined into n
-    int vidx = std::min(((points.front().x(0) > points.back().x(0)) ? e.pj : e.pi) - 6, n);
+    int vidx = std::min((((points.front().x(0) > points.back().x(0)) ^ flipy) ? e.pj : e.pi) - 6, n);
     if (vidx < 0) vidx = std::min(((points.front().x(0) > points.back().x(0)) ? e.pi : e.pj) - 6, n);
     if (vidx < 0) throw std::runtime_error("in preparing rasterizer, edge has both primal vertices outside: " + e.repr());
 
@@ -416,8 +421,13 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
       transform(Eigen::Vector2d(sim.spmin(0), sim.spmax(1) + 1)),
       transform(Eigen::Vector2d(sim.spmax(0), sim.spmax(1) + 1)),
       n});
-  // seg.push_back({{sim.spmin(0), sim.spmin(1) - 1}, {sim.spmax(0), sim.spmin(1) - 1}, n});
 
+  // add a segment below the bottom
+  seg.push_back({
+      transform(Eigen::Vector2d(sim.spmin(0), sim.spmin(1) - 1)),
+      transform(Eigen::Vector2d(sim.spmax(0), sim.spmin(1) - 1)),
+      n});
+  
   rasterizer rast(seg, bounds);
 
 #ifdef PROFILING
