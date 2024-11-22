@@ -89,7 +89,7 @@ public:
 
   VecX touching_dual(bool randomize);
 
-  rasterizer get_rasterizer();
+  rasterizer get_rasterizer(std::function<Eigen::Vector2d(Eigen::Vector2d)> transform = identity());
 
   std::unordered_map<uint64_t, double> jac();
 
@@ -98,6 +98,10 @@ public:
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> get_poly(const int &pi_t);
 
   static void bind(py::module_ &m);
+
+  static constexpr auto identity() {
+    return std::function<Eigen::Vector2d(Eigen::Vector2d)>([](Eigen::Vector2d t){ return t; });
+  }
 };
 
 #endif

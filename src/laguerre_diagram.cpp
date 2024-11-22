@@ -226,9 +226,9 @@ void laguerre_diagram<T>::extract_diagram() {
     e.dif = 0;
 
     // points and tangents along path
-    std::vector<Eigen::Vector2d> x; //, t;
+    std::vector<Eigen::Vector2d> x, t;
     x.reserve(e.ls.points.size());
-    //t.reserve(e.ls.points.size());
+    // t.reserve(e.ls.points.size());
 
     for (const auto &tp : e.ls.points) {
       x.push_back(tp.x);
@@ -248,7 +248,7 @@ void laguerre_diagram<T>::extract_diagram() {
         // d_x (c(x,yi) - c(x,yj))
         Eigen::Vector2d dc((sqr(yi(0)) - sqr(yj(0))) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))),
                            phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
-        e.dif += (pw + nw) / dc.norm(); // * t[k].norm() / t[k].cross(dc);
+        e.dif += (pw + nw) / dc.norm();
 
         pw = nw;
       }
@@ -262,7 +262,7 @@ void laguerre_diagram<T>::extract_diagram() {
         // d_x (c(x,yi) - c(x,yj))
         Eigen::Vector2d dc(sqr(yi(0)) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))) - sqr(phys.Omega * phys.a) * x[k](0),
                            phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
-        e.dif += (pw + nw) / dc.norm(); //* t[k].norm() / t[k].cross(dc);
+        e.dif += (pw + nw) / dc.norm();
 
         pw = nw;
       }
@@ -363,7 +363,7 @@ laguerre_diagram<T>::VecX laguerre_diagram<T>::touching_dual(bool randomize) {
 
 
 template <typename T>
-rasterizer laguerre_diagram<T>::get_rasterizer() {
+rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eigen::Vector2d)> transform) {
 
 #ifdef PROFILING
   time->start_section(idx_time_prepare_rasterizer);
@@ -384,7 +384,8 @@ rasterizer laguerre_diagram<T>::get_rasterizer() {
 
   // rasterizer arguments
   std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> seg;
-  Eigen::Array4d bounds = {sim.spmin(0), sim.spmax(0), sim.spmin(1), sim.spmax(1)};
+  auto blo = transform(sim.spmin), bhi = transform(sim.spmax);
+  Eigen::Array4d bounds = {blo(0), bhi(0), blo(1), bhi(1)};
 
   // collect segments
   for (int i = 0; i < (int)edglist.size(); ++i) {
@@ -406,12 +407,15 @@ rasterizer laguerre_diagram<T>::get_rasterizer() {
     for (auto it1 = points.begin(), it0 = it1++; it1 != points.end(); it0 = it1++, ++j) {
       if ((int)seg.size() != j)
         throw std::runtime_error(FORMAT("segment index does not match expected: {} instead of {}", seg.size(), j));
-      seg.push_back({it0->x, it1->x, vidx});
+      seg.push_back({transform(it0->x), transform(it1->x), vidx});
     }
   }
 
   // add a segment across the top (for boundary cell)
-  seg.push_back({{sim.spmin(0), sim.spmax(1) + 1}, {sim.spmax(0), sim.spmax(1) + 1}, n});
+  seg.push_back({
+      transform(Eigen::Vector2d(sim.spmin(0), sim.spmax(1) + 1)),
+      transform(Eigen::Vector2d(sim.spmax(0), sim.spmax(1) + 1)),
+      n});
   // seg.push_back({{sim.spmin(0), sim.spmin(1) - 1}, {sim.spmax(0), sim.spmin(1) - 1}, n});
 
   rasterizer rast(seg, bounds);
@@ -556,7 +560,7 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
     .def("touching_dual", &laguerre_diagram<T>::touching_dual,
          py::arg("randomize")=false)
     .def("jac_coo", &laguerre_diagram<T>::jac_coo)
-    .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer)
+    .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer, py::arg("transform") = laguerre_diagram<T>::identity())
     .def("get_poly", &laguerre_diagram<T>::get_poly);
 
   m.def("LaguerreDiagram",
