@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from scipy.ndimage import gaussian_filter
 
-def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, plot_lines = True, line_clr = 'white', title = None, background = False):
+def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, transform = None, invert_yaxis=False, plot_lines = True, line_clr = 'white', title = None, background = False):
     '''
     ld - Laguerre diagram class
     val - value to assign to each cell
@@ -12,9 +12,14 @@ def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, p
     bw - bandwidth of Gaussian blur kernel
     '''    
 
-    if val is not None:
+    rast = None
 
-        rast = ld.get_rasterizer()
+    if val is not None:
+        
+        if transform is not None:
+            rast = ld.get_rasterizer(transform)
+        else:
+            rast = ld.get_rasterizer()
           
         val = np.concatenate([val, [np.nan]])
         rv = rast.rasterize(val, res).copy()
@@ -33,26 +38,29 @@ def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, p
 
     if val is not None:
         im = plt.imshow(rv.T, origin="lower", aspect="auto",
-                   extent=[sp.spmin[0], sp.spmax[0], sp.spmin[1], sp.spmax[1]])
+                   extent=rast.bounds) #[sp.spmin[0], sp.spmax[0], sp.spmin[1], sp.spmax[1]])
 
         if contour_levels > 0:
         
             cs = plt.contour(rv.T, 
                             levels=contour_levels, 
                             colors = ["w"] * (contour_levels//2 + 1) + ["k"] * contour_levels,
-                            extent=[sp.spmin[0], sp.spmax[0], sp.spmin[1], sp.spmax[1]])
+                            extent=rast.bounds)#extent=[sp.spmin[0], sp.spmax[0], sp.spmin[1], sp.spmax[1]])
             plt.clabel(cs, inline=True, fontsize=10)
 
         plt.colorbar(im)
 
     if plot_lines:
-        lc = LineCollection([[p.x for p in e.ls.points] for e in ld.edglist], 
+        lc = LineCollection([[p for p in e.ls.x] for e in ld.edglist], 
                             alpha=0.8, linewidth=0.2, colors=line_clr)
         ax.add_collection(lc)
-        
-    ax.invert_yaxis()
-    ax.set_xlim([sp.spmin[0], sp.spmax[0]])
-    ax.set_ylim([sp.spmin[1], sp.spmax[1]])
+
+    if rast is not None:
+        ax.set_xlim(rast.bounds[:2])
+        ax.set_ylim(rast.bounds[2:])
+
+    if invert_yaxis:
+        ax.invert_yaxis()
     
     if background:
         fig.patch.set_facecolor('xkcd:white')
@@ -61,7 +69,9 @@ def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, p
         plt.title(title)
     
     if val is not None:
-        return rv
+        return rv, ax
+    else:
+        return ax
 
 def plot_pressure_surface(ld,title='Pressure surface'):
     # Get points that are on the pressure surface and delete duplicates
