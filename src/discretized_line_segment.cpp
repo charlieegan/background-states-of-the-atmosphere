@@ -125,7 +125,7 @@ void discretized_line_segment::bind(py::module_ &m) {
   py::class_<discretized_line_segment>(m, "DiscretizedLineSegment")
     .def(py::init<const Eigen::Ref<const Eigen::Vector2d> &,
          const Eigen::Ref<const Eigen::Vector2d> &,
-         const physical_parameters &, const double &>())
+         const physical_parameters &, const simulation_parameters &>())
     .def("__repr__", &discretized_line_segment::repr)
     .def_readonly("area", &discretized_line_segment::area)
     .def("refine", &discretized_line_segment::refine)

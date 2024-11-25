@@ -5,7 +5,7 @@
 
 #include "physical_parameters.hpp"
 #include "simulation_parameters.hpp"
-#include "discretized_line_segment.hpp"
+#include "discretized_line_segment2.hpp"
 #include "halfspace_intersection.hpp"
 #include "rasterizer.hpp"
 
@@ -23,7 +23,7 @@ public:
     int pi, pj;
     int di, dj;
 
-    discretized_line_segment ls;
+    discretized_line_segment<double> ls;
 
     // (approx) differential of area of pi (and negative area of pj) w.r.t. phi_pi - phi_pj
     double dif;

@@ -154,8 +154,7 @@ void laguerre_diagram<T>::extract_diagram() {
     for (const auto &e : hs.mesh.padj[i + 6])
       if (e.pj < 6 || e.pi < e.pj) {
         edglist.push_back({e.pi, e.pj, e.di, e.dj,
-            discretized_line_segment(verts.row(e.di), verts.row(e.dj),
-                                     phys, sim)});
+            discretized_line_segment<double>(verts.row(e.di), verts.row(e.dj), phys, sim)});
 
         faces[e.pi].push_back(edglist.size() - 1);
         faces[e.pj].push_back(edglist.size() - 1);
@@ -225,16 +224,6 @@ void laguerre_diagram<T>::extract_diagram() {
 
     e.dif = 0;
 
-    // points and tangents along path
-    std::vector<Eigen::Vector2d> x, t;
-    x.reserve(e.ls.points.size());
-    // t.reserve(e.ls.points.size());
-
-    for (const auto &tp : e.ls.points) {
-      x.push_back(tp.x);
-      // t.push_back(tp.t);
-    }
-
     auto yi = ys.row(e.pi-6);
 
     if (e.pj >= 6 && e.pj - 6 < n) {
@@ -242,12 +231,12 @@ void laguerre_diagram<T>::extract_diagram() {
       auto yj = ys.row(e.pj-6);
 
       double pw = 0;
-      for (int k = 0; k < (int)x.size(); ++k) {
-        double nw = (k != (int)x.size() - 1 ? (x[k+1] - x[k]).norm() : 0);
+      for (int k = 0; k < e.ls.size(); ++k) {
+        double nw = (k != e.ls.size() - 1 ? (e.ls.x.row(k+1) - e.ls.x.row(k)).norm() : 0);
 
         // d_x (c(x,yi) - c(x,yj))
-        Eigen::Vector2d dc((sqr(yi(0)) - sqr(yj(0))) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))),
-                           phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
+        Eigen::Vector2d dc((sqr(yi(0)) - sqr(yj(0))) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))),
+                           phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
         e.dif += (pw + nw) / dc.norm();
 
         pw = nw;
@@ -256,17 +245,16 @@ void laguerre_diagram<T>::extract_diagram() {
       // (soft) boundary edges
 
       double pw = 0;
-      for (int k = 0; k < (int)x.size(); ++k) {
-        double nw = (k != (int)x.size() - 1 ? (x[k+1] - x[k]).norm() : 0);
+      for (int k = 0; k < e.ls.size(); ++k) {
+        double nw = (k != e.ls.size() - 1 ? (e.ls.x.row(k+1) - e.ls.x.row(k)).norm() : 0);
 
         // d_x (c(x,yi) - c(x,yj))
-        Eigen::Vector2d dc(sqr(yi(0)) * x[k](0) / (sqr(phys.a) * sqr(1 - sqr(x[k](0)))) - sqr(phys.Omega * phys.a) * x[k](0),
-                           phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(x[k](1) / phys.p00, phys.kappa-1));
+        Eigen::Vector2d dc(sqr(yi(0)) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))) - sqr(phys.Omega * phys.a) * e.ls.x(k,0),
+                           phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
         e.dif += (pw + nw) / dc.norm();
 
         pw = nw;
       }
-
     }
   }
 
@@ -379,7 +367,7 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
     if (e.pj == 2 || e.pj == 3) // skip vertical segments on left and right
       sidx[i + 1] = sidx[i];
     else
-      sidx[i + 1] = sidx[i] + e.ls.points.size() - 1;
+      sidx[i + 1] = sidx[i] + e.ls.size() - 1;
   }
 
   // rasterizer arguments
@@ -395,7 +383,6 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
   // collect segments
   for (int i = 0; i < (int)edglist.size(); ++i) {
     const auto &e = edglist[i];
-    const auto &points = e.ls.points;
 
     if (e.pj == 2 || e.pj == 3)
       continue;
@@ -403,16 +390,17 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
     // get (primal) index of cell below:
     // if the edge is oriented left-to-right then pi is below, if it goes right-to-left then pj is below
     // indices >= n (i.e. the top cell) are all combined into n
-    int vidx = std::min((((points.front().x(0) > points.back().x(0)) ^ flipy) ? e.pj : e.pi) - 6, n);
-    if (vidx < 0) vidx = std::min(((points.front().x(0) > points.back().x(0)) ? e.pi : e.pj) - 6, n);
+    int vidx = std::min((((e.ls.x(0,0) > e.ls.x(e.ls.size()-1,0)) ^ flipy) ? e.pj : e.pi) - 6, n);
+    if (vidx < 0) vidx = std::min(((e.ls.x(0,0) > e.ls.x(e.ls.size()-1,0)) ? e.pi : e.pj) - 6, n);
     if (vidx < 0) throw std::runtime_error("in preparing rasterizer, edge has both primal vertices outside: " + e.repr());
 
     // add segments
     int j = sidx[i];
-    for (auto it1 = points.begin(), it0 = it1++; it1 != points.end(); it0 = it1++, ++j) {
+    for (int i = 1; i < e.ls.size(); ++i, ++j) {
       if ((int)seg.size() != j)
         throw std::runtime_error(FORMAT("segment index does not match expected: {} instead of {}", seg.size(), j));
-      seg.push_back({transform(it0->x), transform(it1->x), vidx});
+      
+      seg.push_back({transform(e.ls.x.row(i-1)), transform(e.ls.x.row(i)), vidx});
     }
   }
 
@@ -496,7 +484,7 @@ Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> laguerre_diagram<T>::g
   int len = 0;
   for (const auto &ei : faces[pi]) {
     edg.push_back(&edglist[ei]);
-    len += edglist[ei].ls.points.size() - 1;
+    len += edglist[ei].ls.size() - 1;
   }
 
   if (edg.size() <= 2)
@@ -526,11 +514,11 @@ Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> laguerre_diagram<T>::g
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> res(len, 2);
   for (auto &ep : path)
     if (ep->pi == pi)
-      for (auto pit = ep->ls.points.begin(); pit != std::prev(ep->ls.points.end()); ++pit)
-        res.row(ri++) = pit->x;
+      for (int i = 0; i < ep->ls.size() - 1; ++i)
+        res.row(ri++) = ep->ls.x.row(i);
     else
-      for (auto pit = std::prev(ep->ls.points.end()); pit != ep->ls.points.begin(); --pit)
-        res.row(ri++) = pit->x;
+      for (int i = ep->ls.size() - 1; i > 0; --i)
+        res.row(ri++) = ep->ls.x.row(i);
 
   return res;
 }

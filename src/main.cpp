@@ -30,8 +30,7 @@ PYBIND11_MODULE(_atmosphere_bgs, m) {
   physical_parameters::bind(m);
   simulation_parameters::bind(m);
   
-  tangent_point::bind(m);
-  discretized_line_segment::bind(m);
+  discretized_line_segment<double>::bind(m);
 
   pdedge::bind(m);
   pdmesh<double>::bind(m);

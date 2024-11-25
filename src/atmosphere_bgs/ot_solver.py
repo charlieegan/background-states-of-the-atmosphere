@@ -71,7 +71,8 @@ class OTSolver:
                 use_long_double=False, verbose=False,
                 max_its=1000, descent_accept_thresh=0.01,
                 min_area=0, max_lost_areas=None,
-                lr_up=2.0, lr_down=0.5, lr_max=1.0, lr_min=1e-20, lr_init=1e-5):
+                lr_up=2.0, lr_down=0.5, lr_max=1.0, lr_min=1e-20, lr_init=1e-5,
+                max_loss_fraction=1e-3):
         """
         run the modified damped Newton solver
         
@@ -143,14 +144,14 @@ class OTSolver:
                 err2 = np.abs(self.tmn - ld2.areas)
                 good_areas2 = (ld2.areas > min_area)
 
-                aerr = np.sum((err/self.tmn)[good_areas]**2)**.5
-                aerr2 = np.sum((err2/self.tmn)[good_areas]**2)**.5
+                aerr = np.sum((err/self.tmn)[good_areas])
+                aerr2 = np.sum((err2/self.tmn)[good_areas])
 
                 cnt_lost_areas = np.sum(good_areas & ~good_areas2)
-                areas_good = cnt_lost_areas == 0 or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
+                areas_good = cnt_lost_areas <= max_loss_fraction * self.n or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
                 cnt_lost_areas_prev = cnt_lost_areas
                 
-                descent_good = aerr2 < (1 - descent_accept_thresh * lr) * aerr
+                descent_good = aerr2 < (1 - descent_accept_thresh * min(0.1, lr)) * aerr
 
                 if areas_good and descent_good:
                     self.timer += ld.time
@@ -167,6 +168,7 @@ class OTSolver:
                     if verbose:
                         print(f"failed step at it {it}, lr {lr:.2e}, error {aerr:.10e} -> {aerr2:.10e}, areas_good: {areas_good} ({np.sum(good_areas)}, {np.sum(good_areas2)}, {np.sum(good_areas & ~good_areas2)}), descent_good: {descent_good}")
                     lr *= lr_down
+                    newton_its = 0
                     continue
 
             if not np.all(good_areas):

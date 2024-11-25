@@ -18,8 +18,8 @@ struct physical_parameters
 
   template <typename T>
   Eigen::Vector2<T> itf(const Eigen::Ref<const Eigen::Vector2<T>> &zeta) const {
-    return Eigen::Vector2<T>(std::sqrt(std::max(0., 1. - 1. / zeta(0))),
-                             p00 * std::pow(std::max(0., zeta(1)), ikappa));
+    return Eigen::Vector2<T>(std::sqrt(std::max((T)0., (T)1. - 1. / zeta(0))),
+                             p00 * std::pow(std::max((T)0., zeta(1)), ikappa));
   }
 
   template <typename T>
