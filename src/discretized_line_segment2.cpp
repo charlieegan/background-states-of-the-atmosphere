@@ -13,34 +13,20 @@ DLS::discretized_line_segment(const Eigen::Ref<const DLS::Vector2> &zeta_s,
                               const simulation_parameters &sim) :
   start(zeta_s), end(zeta_e), direction((zeta_e - zeta_s).normalized()),
   phys(phys), sim(sim),
-  z(sim.min_line_resolution, 2),
-  x(sim.min_line_resolution, 2),
-  t(sim.min_line_resolution, 2),
-  s(sim.min_line_resolution - 1, 2),
+  lams(sim.min_line_resolution), x(sim.min_line_resolution, 2),
   errb(0), area(0) {
-  
+
+  // calculate initial positions
   for (int i = 0; i < sim.min_line_resolution; ++i) {
     T lam = i / (T)(sim.min_line_resolution - 1);
-    z.row(i) = get_z(lam);
+    lams(i) = lam;
     x.row(i) = get_x(lam);
-    t.row(i) = get_t(lam);
-  }
-  for (int i = 1; i < sim.min_line_resolution; ++i) {
-    // calculate intersection point
-    // TODO: find a more numerically stable (and maybe faster) way to calculate this [also in refine]
-    T c = t.row(i).cross(t.row(i-1));
-    T l = (c == 0) ? (T)0.5 : std::clamp(t.row(i).cross(x.row(i) - x.row(i-1)) / c, (T)0, (T)1);
-    s.row(i-1) = x.row(i-1) + l * t.row(i-1);
-    
-    // calculate area
-    area += 0.25 * ((x(i,0) - x(i-1,0)) * (x(i,1) + x(i-1,1))
-                    + (s(i-1,0) - x(i-1,0)) * (s(i-1,1) + x(i-1,1))
-                    + (x(i,0) - s(i-1,0)) * (x(i,1) + s(i-1,1)));
-    
-    // calculate error bound
-    errb += 0.25 * std::abs((x.row(i) - x.row(i-1)).cross(s.row(i-1) - x.row(i-1)));
   }
 
+  // refine (this also calculates t and s)
+  refine(sim.min_line_resolution);
+
+  // continue refining while tolerance is not reached
   while (size() < sim.max_line_resolution && errb > sim.line_tolerance)
     refine();
 }
@@ -61,53 +47,64 @@ DLS::Vector2 DLS::get_t(const T &lam) const {
 }
 
 template <typename T>
-void DLS::refine() {
-  // new length: adding a point in the middle of every gap
-  int newlen = size() * 2 - 1;
+void DLS::refine(int newlen) {
+  int oldlen = size();
+  
+  // if no new length is given, double current (split every current segment in half)
+  if (newlen < 2) {
+    newlen = std::min(oldlen * 2 - 1, sim.max_line_resolution);
+    if (newlen <= oldlen)
+      return;
+  }
 
-  // make new arrays, reset values
-  Matrix2X newz(newlen, 2);
-  Matrix2X newx(newlen, 2);
-  Matrix2X newt(newlen, 2);
-  s = Matrix2X(newlen - 1, 2);
+  // calculate path length
+  VectorX lens(oldlen);
+  lens(0) = 0;
+  for (int i = 1; i < oldlen; ++i)
+    lens(i) = lens(i - 1) + (x.row(i) - x.row(i - 1)).norm();
+  T totlen = lens(oldlen - 1);
+
+  // calculate new lam positions to be approx evenly spaced in s-p-coords
+  VectorX oldlams = lams;
+  lams.resize(newlen);
+  for (int i = 0, j = 1; j < newlen - 1; ++j) {
+    T oj = totlen * j / (newlen - 1); // evenly spaced position along length
+    while (i + 2 < oldlen && oj > lens(i + 1)) ++i; // find index i s.t. lens[i] <= oj < lens[i+1]
+    T sl = (oldlams(i + 1) - oldlams(i)) / (lens(i + 1) - lens(i)); // (inverse) slope of length-line-segment
+    lams(j) = (oj - lens(i)) * sl + oldlams(i);
+  }
+  lams(0) = (T)0.0;
+  lams(newlen - 1) = (T)1.0;
+  
+  // make new resized arrays, reset values
+  x.resize(newlen, 2);
+  t.resize(newlen, 2);
+  s.resize(newlen - 1, 2);
   errb = 0;
   area = 0;
 
-  // create new / copy old points
+  // calculate x, t for new points
   for (int i = 0; i < newlen; ++i) {
-    T lam = i / (T)(newlen - 1);
-
-    // calculate new points and copy old ones
-    if ((i & 1)) {
-      newz.row(i) = get_z(lam);
-      newx.row(i) = get_x(lam);
-      newt.row(i) = get_t(lam);
-    } else {
-      newz.row(i) = z.row(i / 2);
-      newx.row(i) = x.row(i / 2);
-      newt.row(i) = t.row(i / 2);
-    }
+    T lam = lams(i);
+    x.row(i) = get_x(lam);
+    t.row(i) = get_t(lam);
   }
-  // recalc area and errb
+  // calculate s, area and errb for new points
   for (int i = 1; i < newlen; ++i) {
       // calculate intersection point
       // TODO: find a more numerically stable way to calculate this
-      T c = newt.row(i).cross(newt.row(i-1));
-      T l = (c == 0) ? (T)0.5 : std::clamp(newt.row(i).cross(newx.row(i) - newx.row(i-1)) / c, (T)0, (T)1);
-      s.row(i-1) = newx.row(i-1) + l * newt.row(i-1);
+      T c = t.row(i).cross(t.row(i-1));
+      T l = (c == 0) ? (T)0.5 : std::clamp(t.row(i).cross(x.row(i) - x.row(i-1)) / c, (T)0, (T)1);
+      s.row(i-1) = x.row(i-1) + l * t.row(i-1);
 
       // calculate area
-      area += 0.25 * ((newx(i,0) - newx(i-1,0)) * (newx(i,1) + newx(i-1,1))
-                      + (s(i-1,0) - newx(i-1,0)) * (s(i-1,1) + newx(i-1,1))
-                      + (newx(i,0) - s(i-1,0)) * (newx(i,1) + s(i-1,1)));
+      area += 0.25 * ((x(i,0) - x(i-1,0)) * (x(i,1) + x(i-1,1))
+                      + (s(i-1,0) - x(i-1,0)) * (s(i-1,1) + x(i-1,1))
+                      + (x(i,0) - s(i-1,0)) * (x(i,1) + s(i-1,1)));
       
       // calculate error bound
-      errb += 0.25 * std::abs((newx.row(i) - newx.row(i-1)).cross(s.row(i-1) - newx.row(i-1)));
+      errb += 0.25 * std::abs((x.row(i) - x.row(i-1)).cross(s.row(i-1) - x.row(i-1)));
   }
-
-  z = std::move(newz);
-  x = std::move(newx);
-  t = std::move(newt);
 }
 
 template <typename T>
@@ -130,7 +127,8 @@ void DLS::bind(py::module_ &m) {
     .def_readonly("start", &DLS::start)
     .def_readonly("end", &DLS::end)
     .def_readonly("direction", &DLS::direction)
-    .def_readonly("z", &DLS::z)
+    // .def_readonly("z", &DLS::z)
+    .def_readonly("lams", &DLS::lams)
     .def_readonly("x", &DLS::x)
     .def_readonly("t", &DLS::t)
     .def_readonly("s", &DLS::s)
