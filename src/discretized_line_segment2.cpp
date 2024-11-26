@@ -12,7 +12,8 @@ DLS::discretized_line_segment(const Eigen::Ref<const DLS::Vector2> &zeta_s,
                               const physical_parameters &phys,
                               const simulation_parameters &sim) :
   start(zeta_s), end(zeta_e), direction((zeta_e - zeta_s).normalized()),
-  phys(phys), sim(sim),
+  phys(&phys), 
+  max_resolution(sim.max_line_resolution), aspect(sim.spmax(1) - sim.spmin(1), sim.spmax(0) - sim.spmin(0)),
   lams(sim.min_line_resolution), x(sim.min_line_resolution, 2),
   errb(0), area(0) {
 
@@ -38,12 +39,12 @@ DLS::Vector2 DLS::get_z(const T &lam) const {
 
 template <typename T>
 DLS::Vector2 DLS::get_x(const T &lam) const {
-  return phys.itf<T>(get_z(lam));
+  return phys->itf<T>(get_z(lam));
 }
 
 template <typename T>
 DLS::Vector2 DLS::get_t(const T &lam) const {
-  return phys.ditf<T>(get_z(lam)).array() * direction.array();
+  return phys->ditf<T>(get_z(lam)).array() * direction.array();
 }
 
 template <typename T>
@@ -52,7 +53,7 @@ void DLS::refine(int newlen) {
   
   // if no new length is given, double current (split every current segment in half)
   if (newlen < 2) {
-    newlen = std::min(oldlen * 2 - 1, sim.max_line_resolution);
+    newlen = std::min(oldlen * 2 - 1, max_resolution);
     if (newlen <= oldlen)
       return;
   }
@@ -60,8 +61,10 @@ void DLS::refine(int newlen) {
   // calculate path length
   VectorX lens(oldlen);
   lens(0) = 0;
-  for (int i = 1; i < oldlen; ++i)
-    lens(i) = lens(i - 1) + (x.row(i) - x.row(i - 1)).norm();
+  for (int i = 1; i < oldlen; ++i) {
+    T len = ((x.row(i) - x.row(i - 1)).transpose().array() * aspect.array()).matrix().norm();
+    lens(i) = lens(i - 1) + len;
+  }
   T totlen = lens(oldlen - 1);
 
   // calculate new lam positions to be approx evenly spaced in s-p-coords

@@ -13,8 +13,9 @@ public:
   typedef Eigen::Vector2<T> Vector2;
   typedef Eigen::VectorX<T> VectorX;
 
-  const physical_parameters phys;
-  const simulation_parameters sim;
+  const physical_parameters *phys;
+  int max_resolution;
+  Vector2 aspect;
 
   // start, end and direction in linear coords
   Vector2 start, end, direction;
