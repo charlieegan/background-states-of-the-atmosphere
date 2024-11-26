@@ -12,11 +12,13 @@ name = "atmosphere_bgs"
 description = "TODO"
 authors = [{"name" = "Charles Peter Egan"}, {"name" = "Thilo Stier"}]
 license = {"file" = "LICENSE"}
-version = "0.12.0"
+version = "0.13.0"
 readme = "README.md"
 dependencies = [
     "numpy",
     "scipy",
+    "shapely",
+    "matplotlib"
 ]
 requires-python = ">=3.7"
 classifiers = [
