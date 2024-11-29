@@ -74,14 +74,30 @@ public:
     return lhs += rhs;
   }
 
+   static py::tuple pickle(std::shared_ptr<timer> s) {
+     return py::make_tuple(s->times, s->names);
+   }
+
+   static std::shared_ptr<timer> unpickle(py::tuple t) {
+     if (t.size() != 2)
+       throw std::runtime_error("invalid state in timer::unpickle");
+     
+     auto res = std::make_shared<timer>(t[1].cast<std::vector<std::string>>());
+     res->times = t[0].cast<std::vector<double>>();
+     return res;
+  }
+ 
+  
   static void bind(py::module_ &m) {
     py::class_<timer, std::shared_ptr<timer>>(m, "Timer")
       .def(py::init<std::vector<std::string>>(), py::arg("names"))
       .def_readonly("names", &timer::names)
+      .def_readonly("times", &timer::times)
       .def("get_index_from_name", &timer::get_index_from_name)
       .def("start_section", &timer::start_section)
       .def("end_section", &timer::end_section)
       .def("format_times", &timer::format_times)
+      .def(py::pickle(&timer::pickle, &timer::unpickle))
       .def(py::self + py::self)
       .def(py::self += py::self)
       .def("__repr__", [](std::shared_ptr<timer> t){ return t->format_times("\n"); });
