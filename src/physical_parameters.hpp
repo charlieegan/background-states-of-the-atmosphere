@@ -50,11 +50,27 @@ struct physical_parameters
     return ss.str();
   }
 
+  static py::tuple pickle(const physical_parameters &s) {
+    return py::make_tuple(s.a, s.Omega, s.p00, s.kappa, s.cp);
+  }
+
+  static physical_parameters unpickle(py::tuple t) {
+    if (t.size() != 5)
+      throw std::runtime_error("invalid state in physical_parameters::unpickle");
+
+    return physical_parameters(t[0].cast<double>(),
+                               t[1].cast<double>(),
+                               t[2].cast<double>(),
+                               t[3].cast<double>(),
+                               t[4].cast<double>());
+  }
+  
   static void bind(py::module_ &m) {
     py::class_<physical_parameters>(m, "PhysicalParameters")
       .def(py::init<double, double, double, double, double>(),
            py::arg("a") = 6371000., py::arg("Omega") = 7.2921e-05,
            py::arg("p00") = 101325., py::arg("kappa") = 2. / 7., py::arg("cp") = 1003.5)
+      .def(py::pickle(&physical_parameters::pickle, &physical_parameters::unpickle))
       .def("__repr__", &physical_parameters::repr)
       .def("itf", &physical_parameters::itf<double>, py::arg("zeta"))
       .def("tf", &physical_parameters::tf<double>, py::arg("x"))
