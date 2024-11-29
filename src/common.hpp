@@ -29,6 +29,7 @@ namespace py = pybind11;
 
 #include <exception>
 #include <functional>
+#include <optional>
 
 #include <random>
 

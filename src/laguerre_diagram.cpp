@@ -396,7 +396,7 @@ laguerre_diagram<T>::VecX laguerre_diagram<T>::touching_dual(bool randomize) {
 
 
 template <typename T>
-rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eigen::Vector2d)> transform) {
+rasterizer laguerre_diagram<T>::get_rasterizer(std::optional<std::function<Eigen::Vector2d(Eigen::Vector2d)>> transform) {
 
 #ifdef PROFILING
   time->start_section(idx_time_prepare_rasterizer);
@@ -417,7 +417,8 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
 
   // rasterizer arguments
   std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, int>> seg;
-  auto blo = transform(sim.spmin), bhi = transform(sim.spmax);
+  auto blo = (transform ? transform.value()(sim.spmin) : sim.spmin);
+  auto bhi = (transform ? transform.value()(sim.spmax) : sim.spmax);
   Eigen::Array4d bounds = {
     std::min(blo(0), bhi(0)), std::max(blo(0), bhi(0)),
     std::min(blo(1), bhi(1)), std::max(blo(1), bhi(1))
@@ -445,20 +446,24 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::function<Eigen::Vector2d(Eig
       if ((int)seg.size() != j)
         throw std::runtime_error(FORMAT("segment index does not match expected: {} instead of {}", seg.size(), j));
       
-      seg.push_back({transform(e.ls.x.row(i-1)), transform(e.ls.x.row(i)), vidx});
+      seg.push_back({
+          (transform ? transform.value()(e.ls.x.row(i-1)) : e.ls.x.row(i-1)),
+          (transform ? transform.value()(e.ls.x.row(i)) : e.ls.x.row(i)),
+          vidx
+        });
     }
   }
 
   // add a segment across the top (for boundary cell)
   seg.push_back({
-      transform(Eigen::Vector2d(sim.spmin(0), sim.spmax(1) + 1)),
-      transform(Eigen::Vector2d(sim.spmax(0), sim.spmax(1) + 1)),
+      transform ? transform.value()(Eigen::Vector2d(sim.spmin(0), sim.spmax(1) + 1)) : Eigen::Vector2d(sim.spmin(0), sim.spmax(1) + 1),
+      transform ? transform.value()(Eigen::Vector2d(sim.spmax(0), sim.spmax(1) + 1)) : Eigen::Vector2d(sim.spmax(0), sim.spmax(1) + 1),
       n});
 
   // add a segment below the bottom
   seg.push_back({
-      transform(Eigen::Vector2d(sim.spmin(0), sim.spmin(1) - 1)),
-      transform(Eigen::Vector2d(sim.spmax(0), sim.spmin(1) - 1)),
+      transform ? transform.value()(Eigen::Vector2d(sim.spmin(0), sim.spmin(1) - 1)) : Eigen::Vector2d(sim.spmin(0), sim.spmin(1) - 1),
+      transform ? transform.value()(Eigen::Vector2d(sim.spmax(0), sim.spmin(1) - 1)) : Eigen::Vector2d(sim.spmax(0), sim.spmin(1) - 1),
       n});
   
   rasterizer rast(seg, bounds);
@@ -617,7 +622,7 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
     .def("touching_dual", &laguerre_diagram<T>::touching_dual,
          py::arg("randomize")=false)
     .def("jac_coo", &laguerre_diagram<T>::jac_coo)
-    .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer, py::arg("transform") = laguerre_diagram<T>::identity())
+    .def("get_rasterizer", &laguerre_diagram<T>::get_rasterizer, py::arg("transform") = std::nullopt)
     .def("get_poly", &laguerre_diagram<T>::get_poly);
 
   m.def("LaguerreDiagram",
