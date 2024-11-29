@@ -420,7 +420,7 @@ struct pdmesh {
   }
 
   // find the (index of the) dual point which has largest inner product with d
-  int extremal_dual(const Eigen::Ref<const Vec3> &d, bool brute_force=true, int hint = -1, bool debug=false) {
+  int extremal_dual(const Eigen::Ref<const Vec3> &d, bool brute_force=false, int hint = -1, bool debug=false) {
     int res = (hint >= 0 ? hint : *dadj.begin_idx());
     T maxval = dvert[res].head(3).dot(d) / dvert[res](3), val;
 
