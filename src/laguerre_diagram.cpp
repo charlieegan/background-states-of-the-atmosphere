@@ -584,7 +584,7 @@ Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> laguerre_diagram<T>::g
 
 template <typename T>
 void laguerre_diagram<T>::bind(py::module_ &m) {
-  py::class_<laguerre_diagram<T>>(m, ("LaguerreDiagram_" + type_name<T>::value()).c_str())
+  py::class_<laguerre_diagram<T>, std::shared_ptr<laguerre_diagram<T>>>(m, ("LaguerreDiagram_" + type_name<T>::value()).c_str())
     .def(py::init<const laguerre_diagram<T>::seeds_t&,
          const Eigen::Ref<const laguerre_diagram<T>::VecX>&,
          const physical_parameters &,

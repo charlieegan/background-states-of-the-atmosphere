@@ -10,7 +10,7 @@
 #include "rasterizer.hpp"
 
 template <typename T> // dual type, used for duals and halfspace intersection (not everything)
-class laguerre_diagram
+class laguerre_diagram : public std::enable_shared_from_this<laguerre_diagram<T>>
 {
 public:
   typedef Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>> seeds_t;
