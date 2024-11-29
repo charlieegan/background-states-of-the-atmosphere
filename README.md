@@ -1,5 +1,7 @@
 # Background states of the atmosphere
 
+![image](cover_picture.png )
+
 This repository contains a python package to solve a 2d semi-discrete optimal transport problem arising in the calculation of background states of the atmosphere. 
 
 ## Installation
@@ -18,7 +20,9 @@ Dependencies: `pip`, `g++` (with support for C++20), `ninja`, `cmake` (possibly 
 
 ## Usage
 
-TODO
+Refer to example.
 
 ## License
 MIT
+
+
