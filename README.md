@@ -20,7 +20,7 @@ Dependencies: `pip`, `g++` (with support for C++20), `ninja`, `cmake` (possibly 
 
 ## Usage
 
-Refer to example.
+We will add proper documentation later, for now there is a jupyter notebook [example](examples/example.ipynb).
 
 ## License
 MIT
