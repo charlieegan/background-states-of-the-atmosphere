@@ -97,17 +97,33 @@ void DLS::refine(int newlen) {
       // calculate intersection point
       // TODO: find a more numerically stable way to calculate this
       T c = t.row(i).cross(t.row(i-1));
-      T l = (c == 0) ? (T)0.5 : std::clamp(t.row(i).cross(x.row(i) - x.row(i-1)) / c, (T)0, (T)1);
+      T u = std::abs(t.row(i).dot(x.row(i) - x.row(i-1)) / t.row(i).dot(t.row(i)));
+      T l = (c == 0) ? (T)0.5 * u : std::clamp(t.row(i).cross(x.row(i) - x.row(i-1)) / c, (T)0, u);
       s.row(i-1) = x.row(i-1) + l * t.row(i-1);
 
+      // auto b = x.row(i) - x.row(i-1);
+      // T tan1 = t.row(i-1).cross(b) / t.row(i-1).dot(b);
+      // T tan2 = -t.row(i).cross(b) / t.row(i).dot(b);
+      // T e2 = 0.5 * b.dot(b) * std::abs(tan1 * tan2 / (tan1 + tan2));
+
+      // area of tangent / point triangle
+      T e = 0.5 * std::abs((x.row(i) - x.row(i-1)).cross(s.row(i-1) - x.row(i-1)));
+
+      // if (std::abs(std::copysign(e2, e) - e) > 1e-9)
+      //   py::print(FORMAT("e = {}, e2 = {}, tan1 = {}, tan2 = {}, x^2 = {}", e, e2, tan1, tan2, b.dot(b)));
+      
       // calculate area
-      area += 0.25 * ((x(i,0) - x(i-1,0)) * (x(i,1) + x(i-1,1))
-                      + (s(i-1,0) - x(i-1,0)) * (s(i-1,1) + x(i-1,1))
-                      + (x(i,0) - s(i-1,0)) * (x(i,1) + s(i-1,1)));
+      area += 0.5 * ((x(i,0) - x(i-1,0)) * (x(i,1) + x(i-1,1))) + 0.5 * e * std::copysign(e, x(i,0) - x(i-1,0));
+      
+      // area += 0.25 * ((x(i,0) - x(i-1,0)) * (x(i,1) + x(i-1,1))
+      //                 + (s(i-1,0) - x(i-1,0)) * (s(i-1,1) + x(i-1,1))
+      //                 + (x(i,0) - s(i-1,0)) * (x(i,1) + s(i-1,1)));
       
       // calculate error bound
-      errb += 0.25 * std::abs((x.row(i) - x.row(i-1)).cross(s.row(i-1) - x.row(i-1)));
+      errb += 0.5 * e;
   }
+
+  //py::print(FORMAT("res {}, area {}, errb {}", newlen, area, errb));
 }
 
 template <typename T>
