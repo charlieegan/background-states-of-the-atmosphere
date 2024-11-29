@@ -44,6 +44,15 @@ struct simulation_parameters
     area_tolerance(area_tolerance), max_refine_steps(max_refine_steps),
     line_tolerance(line_tolerance), min_line_resolution(min_line_resolution), max_line_resolution(max_line_resolution),
     negative_area_scaling(negative_area_scaling) {}
+
+  void set_smin(const double &v) { spmin[0] = v; }
+  void set_smax(const double &v) { spmax[0] = v; }
+  void set_pmin(const double &v) { spmin[1] = v; }
+  void set_pmax(const double &v) { spmax[1] = v; }
+  double get_smin() const { return spmin[0]; }
+  double get_smax() const { return spmax[0]; }
+  double get_pmin() const { return spmin[1]; }
+  double get_pmax() const { return spmax[1]; }
   
   std::string repr() const {
     std::stringstream ss;
@@ -100,6 +109,10 @@ struct simulation_parameters
            py::arg("negative_area_scaling") = 0.0)
       .def_readwrite("spmin", &simulation_parameters::spmin)
       .def_readwrite("spmax", &simulation_parameters::spmax)
+      .def_property("smin", &simulation_parameters::get_smin, &simulation_parameters::set_smin)
+      .def_property("smax", &simulation_parameters::get_smax, &simulation_parameters::set_smax)
+      .def_property("pmin", &simulation_parameters::get_pmin, &simulation_parameters::set_pmin)
+      .def_property("pmax", &simulation_parameters::get_pmax, &simulation_parameters::set_pmax)
       .def_readwrite("boundary_res", &simulation_parameters::boundary_res)
       .def_readwrite("area_tolerance", &simulation_parameters::area_tolerance)
       .def_readwrite("max_refine_steps", &simulation_parameters::max_refine_steps)
