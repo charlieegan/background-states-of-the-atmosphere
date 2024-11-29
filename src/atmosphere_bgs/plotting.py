@@ -21,8 +21,9 @@ def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, t
         else:
             rast = ld.get_rasterizer()
           
-        val = np.concatenate([val, [np.nan]])
         rv = rast.rasterize(val, res).copy()
+        fill = rast.fill
+        rv = np.where(fill > 0.5, np.divide(rv, fill, where=(fill > 0.5)), np.nan)
         
         if bw > 0:
             tmp0 = rv.copy()

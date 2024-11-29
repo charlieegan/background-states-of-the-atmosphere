@@ -691,13 +691,10 @@ void rasterizer::add_area_between(const rasterizer::segment *s0, rasterizer::seg
       double A = (rect_intersect_area(xlo, xhi, ylo, yhi, y1l, y1r)
                   - rect_intersect_area(xlo, xhi, ylo, yhi, y0l, y0r));
 
-#ifdef DEBUG_CHECKS
-      if (s1->idx < 0 || s1->idx >= val.size())
-        throw std::runtime_error(FORMAT("index in rasterizer out of bounds: {}", s1->idx));
-#endif
-
-      out(i, j) += std::clamp(A / pixA, 0.0, 1.0) * val[s1->idx];
-      fill(i, j) += std::clamp(A / pixA, 0.0, 1.0);
+      if (s1->idx >= 0 && s1->idx < val.size()) {
+        out(i, j) += std::clamp(A / pixA, 0.0, 1.0) * val[s1->idx];
+        fill(i, j) += std::clamp(A / pixA, 0.0, 1.0);
+      }
     }
   }
 
