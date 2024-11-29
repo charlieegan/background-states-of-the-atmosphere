@@ -123,9 +123,11 @@ class OTSolver:
         for it in range(max_its):
 
             jac = coo_array(ld.jac_coo(), shape=(self.n+1, self.n+1)).tocsr()[:-1,:-1]
-            jac += dia_array((1.0 - good_areas[None,:], [0]), shape=(self.n, self.n))
+            if self.sp.negative_area_scaling <= 0:
+                jac += dia_array((1.0 - good_areas[None,:], [0]), shape=(self.n, self.n))
             d = spsolve(jac, (self.tmn - ld.areas))
-            d[~good_areas] = np.mean(d[good_areas]) - 1e9
+            if self.sp.negative_area_scaling <= 0:
+                d[~good_areas] = np.mean(d[good_areas]) - 1e9
 
             cnt_lost_areas_prev = self.n
             lr = np.minimum(lr_max, lr_up * lr)
@@ -144,13 +146,25 @@ class OTSolver:
                 err2 = np.abs(self.tmn - ld2.areas)
                 good_areas2 = (ld2.areas > min_area)
 
-                aerr = np.sum((err/self.tmn)[good_areas])
-                aerr2 = np.sum((err2/self.tmn)[good_areas])
+                if self.sp.negative_area_scaling <= 0:
+                    aerr = np.sum((err/self.tmn)[good_areas])
+                    aerr2 = np.sum((err2/self.tmn)[good_areas])
+                else:
+                    aerr = np.sum((err/self.tmn))
+                    aerr2 = np.sum((err2/self.tmn))
 
                 cnt_lost_areas = np.sum(good_areas & ~good_areas2)
-                areas_good = cnt_lost_areas <= max_loss_fraction * self.n or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
+                if self.sp.negative_area_scaling <= 0:
+                    areas_good = cnt_lost_areas <= max_loss_fraction * self.n or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
+                else:
+                    areas_good = True
                 cnt_lost_areas_prev = cnt_lost_areas
-                
+
+                # areas' ~= areas + lr * jac @ d
+                #         = areas + lr * jac @ (jac-1 (tmn - areas))
+                #         = areas + lr * (tmn - areas)
+                #         = (1 - lr) * areas + lr * tmn
+                # => ||areas' - tmn||_1 ~= (1 - lr) ||areas - tmn||_1
                 descent_good = aerr2 < (1 - descent_accept_thresh * min(0.1, lr)) * aerr
 
                 if areas_good and descent_good:
@@ -168,10 +182,9 @@ class OTSolver:
                     if verbose:
                         print(f"failed step at it {it}, lr {lr:.2e}, error {aerr:.10e} -> {aerr2:.10e}, areas_good: {areas_good} ({np.sum(good_areas)}, {np.sum(good_areas2)}, {np.sum(good_areas & ~good_areas2)}), descent_good: {descent_good}")
                     lr *= lr_down
-                    newton_its = 0
                     continue
 
-            if not np.all(good_areas):
+            if self.sp.negative_area_scaling <= 0 and not np.all(good_areas):
                 good_areas_prev = good_areas
                 if verbose:
                     print(f"try to fix {np.sum(~good_areas_prev)} bad area(s)")

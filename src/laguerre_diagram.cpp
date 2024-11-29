@@ -215,6 +215,51 @@ void laguerre_diagram<T>::extract_diagram() {
     // py::print(i, "- error after refining:", areaerrs(i) / areas(i));
   }
 
+  // handle empty / negative areas
+  if (sim.negative_area_scaling > 0) {
+    for (int i = 0; i < n; ++i) {
+      if (areas(i) <= 1e-9) {
+        // halfspace normal vector
+        auto pp = hs.mesh.pvert[i + 6].head(3);
+        // offset = Omega * ys(i, 0) + duals(i)
+        auto os = hs.mesh.pvert[i + 6](3);
+        // find closest dual point
+        int di = hs.mesh.extremal_dual(pp); // TODO: use hint (has to be converted from primal to dual first)
+        auto dp = hs.mesh.dvert[di].head(3) / hs.mesh.dvert[di][3];
+        // distance (in dual) for halfspace to touch
+        auto dist = -pp.dot(dp) - os;
+
+        // py::print(FORMAT("primal {} at dist {} to dual {}", i, dist, di));
+        
+        if (dist <= 0)
+          continue;
+        
+        // go over primals that are neighboring to closest dual point and add areas
+        auto narea = sim.negative_area_scaling * sqr(dist);
+        auto dif = 2 * sim.negative_area_scaling * dist;
+
+        // to just add negative area, take mass from top cell, use the 2 lines below:
+        // areas(i) -= narea;
+        // vedglist.push_back({i + 6, n + 6, dif); 
+
+        // add negative area taken from neighboring cells
+        auto w = hs.mesh.dneigh(di).size();
+        for (auto &e : hs.mesh.dneigh(di)) {
+          // there is only a change for non-simulation-boundary neighbors
+          if (e.pi >= 6) {
+            // subtract area from this, add virtual edge
+            areas(i) -= w * narea;
+            vedglist.push_back({i + 6, e.pi, w * dif});
+
+            // if the other cell is a true cell, add the area there
+            if (e.pi - 6 < n)
+              areas(e.pi - 6) += w * narea;
+          }
+        }
+      }
+    }
+  }
+
 #ifdef PROFILING
   time->start_section(idx_time_calc_integrals);
 #endif
@@ -445,6 +490,20 @@ std::unordered_map<uint64_t, double> laguerre_diagram<T>::jac() {
       res[(j << 32) | i] -= e.dif;
     }
   }
+
+  for (auto &e : vedglist) {
+    if (e.pj >= 6) {
+      uint64_t i = e.pi-6;
+      uint64_t j = std::min(e.pj-6,n);
+
+      res[(i << 32) | i] += e.dif;
+      res[(i << 32) | j] -= e.dif;
+
+      res[(j << 32) | j] += e.dif;
+      res[(j << 32) | i] -= e.dif;
+    }
+  }
+  
 #ifdef PROFILING
   time->end_section();
 #endif

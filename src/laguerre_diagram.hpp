@@ -33,6 +33,11 @@ public:
     static void bind(py::module_ &m);
   };
 
+  struct virtual_diagram_edge {
+    int pi, pj; // pi (with negative area) is connected to pj (with positive area)
+    double dif; // differential
+  };
+
   // input parameters
   int n;
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> ys;
@@ -49,6 +54,8 @@ public:
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> verts;
   // edges
   std::vector<diagram_edge> edglist;
+  // list of 'virtual' edges connecting negative areas with the closest positive ones
+  std::vector<virtual_diagram_edge> vedglist;
   // primal faces (list of edges per face)
   std::vector<std::vector<int>> faces;
   // dual facets (list of edges per vertex)
