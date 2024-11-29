@@ -6,14 +6,6 @@ import re
 class DataLoader:
     
     def __init__(self, path, pmin=10, nextra=0, load_all=False):
-
-# extract input data from the dictionary
-     #   latitudes = self.data_dict['LATITUDES ON GAUSSIAN GRID']
-    #    pv_lev = self.data_dict['TRACER MIXING RATIO CONTOURS']
-   #     th_lev = self.data_dict['ISENTROPIC LEVELS']
-  #      lait_to_pv = self.data_dict['FACTOR TO CONVERT FROM LAIT TO ERTEL PV']
- #       bs_circ = self.data_dict['CIRCULATION INTEGRALS IN PV-THETA COORDINATES']
-#        bs_mass = self.data_dict['MASS INTEGRALS IN PV-THETA COORDINATES']
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:
