@@ -5,7 +5,7 @@ import re
 
 class DataLoader:
     
-    def __init__(self, path, pmin=10, nextra=0):
+    def __init__(self, path, pmin=10, nextra=0, load_all=False):
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:
@@ -14,64 +14,66 @@ class DataLoader:
         self.float_pattern = '[-+]?(\d+([.,]\d*)?|[.,]\d+)([eE][-+]?\d+)?'
         self.path = path
         self.data_dict = {}
-        
-        try:
-            self.data_dict["DATA BASE TIME"] = int(next(re.compile("DATA BASE TIME IS\s+(\d+)").finditer(self.s)).group(1))
-        except StopIteration:
-            print("WARNING: did not find \"DATA BASE TIME\"")
-            
-        try:
-            self.data_dict["TOP BOUNDARY IN ISENTROPIC COORDS"] = float(next(re.compile("(" + self.float_pattern + ")\s+IS TOP BOUNDARY IN ISENTROPIC COORDS").finditer(self.s)).group(1))
-        except StopIteration:
-            print("WARNING: did not find \"TOP BOUNDARY IN ISENTROPIC COORDS\"")
-        
-        try:
-            match = next(re.compile("(" + self.float_pattern + ")\s+(" + self.float_pattern + ")\s+MAX AND MIN VALUES OF SURFACE THETA").finditer(self.s))
-            self.data_dict["MAX VALUE OF SURFACE THETA"] = float(match.group(1))
-            self.data_dict["MIN VALUE OF SURFACE THETA"] = float(match.group(2))
-        except StopIteration:
-            print("WARNING: did not find \"MAX AND MIN VALUES OF SURFACE THETA\"")
 
-        try:
-            self.data_dict["TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile("TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + ")").finditer(self.s)).group(1))
-        except StopIteration:
-            print("WARNING: did not find \"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
-        
-        try:
-            self.data_dict["TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile("TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + ")").finditer(self.s)).group(1))
-        except StopIteration:
-            print("WARNING: did not find \"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
-        
         try:
             self.latitudes_cnt = int(next(re.compile("(\d+)\s+LATITUDES ON GAUSSIAN GRID").finditer(self.s)).group(1))
         except StopIteration:
             raise RuntimeError("did not find number of \"LATITUDES ON GAUSSIAN GRID\"")
         
         try:
-            self.isentropic_level_cnt = int(next(re.compile("(\d+)\s+ISENTROPIC LEVELS").finditer(self.s)).group(1))
-        except StopIteration:
-            raise RuntimeError("did not find number of \"ISENTROPIC LEVELS\"")
-            
-        try:
             self.tracer_mixing_ratio_contour_cnt = int(next(re.compile("(\d+)\s+TRACER MIXING RATIO CONTOURS").finditer(self.s)).group(1))
         except StopIteration:
             raise RuntimeError("did not find number of \"TRACER MIXING RATIO CONTOURS\"")
-        
+
+        try:
+            self.isentropic_level_cnt = int(next(re.compile("(\d+)\s+ISENTROPIC LEVELS").finditer(self.s)).group(1))
+        except StopIteration:
+            raise RuntimeError("did not find number of \"ISENTROPIC LEVELS\"")
+
         self.parse_block(self.latitudes_cnt, "LATITUDES ON GAUSSIAN GRID")
         self.parse_block(self.isentropic_level_cnt, "ISENTROPIC LEVELS")
         self.parse_block(self.tracer_mixing_ratio_contour_cnt, "TRACER MIXING RATIO CONTOURS")
-        self.parse_block(self.isentropic_level_cnt, "MAX PV ON THETA LEVELS")
-        self.parse_block(self.isentropic_level_cnt, "MIN PV ON THETA LEVELS")
         self.parse_block(self.isentropic_level_cnt, "FACTOR TO CONVERT FROM LAIT TO ERTEL PV")
-        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
         self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "MASS INTEGRALS IN PV-THETA COORDINATES")
         self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "CIRCULATION INTEGRALS IN PV-THETA COORDINATES")
-        self.parse_block(self.isentropic_level_cnt, "AREA INTEGRAL OVER POLAR SHELLS THETA COORDINATES")
-        self.parse_block(self.isentropic_level_cnt, "MASS INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
-        self.parse_block(self.isentropic_level_cnt, "CIRCULATION INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
-        self.parse_block(self.latitudes_cnt, "BACKGROUND PRESSURE ON TOP BOUNDARY")
-        self.parse_block(self.latitudes_cnt, "BACKGROUND SURFACE GEOPOTENTIAL")
-        self.parse_block(self.isentropic_level_cnt, "BACKGROUND u\*cos\(phi\) AT EQUATOR ON THETA LEVELS")
+
+        if load_all:
+            try:
+                self.data_dict["DATA BASE TIME"] = int(next(re.compile("DATA BASE TIME IS\s+(\d+)").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"DATA BASE TIME\"")
+                
+            try:
+                self.data_dict["TOP BOUNDARY IN ISENTROPIC COORDS"] = float(next(re.compile("(" + self.float_pattern + ")\s+IS TOP BOUNDARY IN ISENTROPIC COORDS").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"TOP BOUNDARY IN ISENTROPIC COORDS\"")
+            
+            try:
+                match = next(re.compile("(" + self.float_pattern + ")\s+(" + self.float_pattern + ")\s+MAX AND MIN VALUES OF SURFACE THETA").finditer(self.s))
+                self.data_dict["MAX VALUE OF SURFACE THETA"] = float(match.group(1))
+                self.data_dict["MIN VALUE OF SURFACE THETA"] = float(match.group(2))
+            except StopIteration:
+                print("WARNING: did not find \"MAX AND MIN VALUES OF SURFACE THETA\"")
+
+            try:
+                self.data_dict["TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile("TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + ")").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
+            
+            try:
+                self.data_dict["TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile("TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + ")").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
+        
+            self.parse_block(self.isentropic_level_cnt, "MAX PV ON THETA LEVELS")
+            self.parse_block(self.isentropic_level_cnt, "MIN PV ON THETA LEVELS")
+            self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
+            self.parse_block(self.isentropic_level_cnt, "AREA INTEGRAL OVER POLAR SHELLS THETA COORDINATES")
+            self.parse_block(self.isentropic_level_cnt, "MASS INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
+            self.parse_block(self.isentropic_level_cnt, "CIRCULATION INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
+            self.parse_block(self.latitudes_cnt, "BACKGROUND PRESSURE ON TOP BOUNDARY")
+            self.parse_block(self.latitudes_cnt, "BACKGROUND SURFACE GEOPOTENTIAL")
+            self.parse_block(self.isentropic_level_cnt, "BACKGROUND u\*cos\(phi\) AT EQUATOR ON THETA LEVELS")
         
         # get physical parameters
         self.pp = _atmosphere_bgs.PhysicalParameters()
