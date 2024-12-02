@@ -113,7 +113,7 @@ class OTSolver:
 
         psi -= np.mean(psi)
         
-        ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp, ld.hints)
+        ld = _atmosphere_bgs.LaguerreDiagram(ld, psi)
         err = np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
         if verbose:
@@ -142,7 +142,7 @@ class OTSolver:
                     self.timer += ld2.hs.time
                 
                 # calculate ld after step
-                ld2 = _atmosphere_bgs.LaguerreDiagram(self.y, psi2, self.pp, self.sp, ld.hints)
+                ld2 = _atmosphere_bgs.LaguerreDiagram(ld, psi2)
                 err2 = np.abs(self.tmn - ld2.areas)
                 good_areas2 = (ld2.areas > min_area)
 
@@ -173,6 +173,7 @@ class OTSolver:
                     # accept step
                     psi = psi2 - np.mean(psi2)
                     ld = ld2
+                    ld.detach()
                     err = err2
                     good_areas = good_areas2
                     break
@@ -192,7 +193,7 @@ class OTSolver:
                 psi = ld.touching_dual(randomize=True)
                 self.timer += ld.time
                 self.timer += ld.hs.time
-                ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp, ld.hints)
+                ld = _atmosphere_bgs.LaguerreDiagram(ld, psi, False)
                 err = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
 
@@ -226,6 +227,7 @@ class OTSolver:
         self.timer += ld.hs.time
             
         # assign variables to class
+        ld.detach()
         self.ld = ld
         return ld
     
@@ -238,7 +240,7 @@ class OTSolver:
             return
         
         # plot convergence behavior
-        fig, axs = plt.subplots(3, 1, figsize=(10, 2*3), dpi=200, sharex=True, tight_layout=True)
+        fig, axs = plt.subplots(3, 1, figsize=(10, 2*3), dpi=100, sharex=True, tight_layout=True)
 
         pi = 0
         axs[pi].set_yscale("log")

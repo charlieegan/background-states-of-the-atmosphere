@@ -12,7 +12,7 @@ name = "atmosphere_bgs"
 description = "TODO"
 authors = [{"name" = "Charles Peter Egan"}, {"name" = "Thilo Stier"}]
 license = {"file" = "LICENSE"}
-version = "0.14.0"
+version = "0.15.0"
 readme = "README.md"
 dependencies = [
     "numpy",
@@ -22,7 +22,7 @@ dependencies = [
 ]
 requires-python = ">=3.7"
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python",

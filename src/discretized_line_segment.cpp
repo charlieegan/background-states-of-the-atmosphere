@@ -1,136 +1,165 @@
+
 #include "discretized_line_segment.hpp"
 
-// ####################################### tangent_point #################################################
+template class discretized_line_segment<double>;
+template class discretized_line_segment<long double>;
 
-void tangent_point::update_intersect(const tangent_point &next) {
-  double c = next.t.cross(t), lam;
-  if (c == 0) {
-    lam = 0.5;
-  } else {
-    lam = next.t.cross(next.x - x) / c;
-    // double lam = (next.t0 * (next.x1 - x1) - next.t1 * (next.x0 - x0)) / (next.t0 * t1 - next.t1 * t0);
+#define DLS discretized_line_segment<T>
+
+template <typename T>
+DLS::discretized_line_segment(const Eigen::Ref<const DLS::Vector2> &zeta_s,
+                              const Eigen::Ref<const DLS::Vector2> &zeta_e,
+                              const physical_parameters &phys,
+                              const simulation_parameters &sim) :
+  start(zeta_s), end(zeta_e), direction((zeta_e - zeta_s).normalized()),
+  phys(&phys), 
+  max_resolution(sim.max_line_resolution), aspect(sim.spmax(1) - sim.spmin(1), sim.spmax(0) - sim.spmin(0)),
+  lams(sim.min_line_resolution), x(sim.min_line_resolution, 2),
+  errb(0), area(0) {
+
+  // calculate initial positions
+  for (int i = 0; i < sim.min_line_resolution; ++i) {
+    T lam = i / (T)(sim.min_line_resolution - 1);
+    lams(i) = lam;
+    x.row(i) = get_x(lam);
   }
-  s = x + lam * t;
-}
 
-double tangent_point::errb(const tangent_point &next) const {
-  return 0.25 * std::abs((next.x - x).cross(s - x));
-}
+  // refine (this also calculates t and s)
+  refine(sim.min_line_resolution);
 
-double tangent_point::area(const tangent_point &next) const {
-  return 0.25 * ((next.x(0) - x(0)) * (next.x(1) + x(1))
-                 + (s(0) - x(0)) * (s(1) + x(1))
-                 + (next.x(0) - s(0)) * (next.x(1) + s(1)));
-}
-
-tangent_point::tangent_point(const Eigen::Ref<const Eigen::Vector2d> &zeta,
-                             const Eigen::Ref<const Eigen::Vector2d> &dzeta,
-                             const discretized_line_segment *ls) :
-  zeta(zeta), x(ls->phys.itf(zeta)), t(ls->get_tangent(zeta, dzeta)),
-  s(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()) {
-}
-
-std::string tangent_point::repr() const {
-  std::stringstream ss;
-  ss << "TangentPoint("
-     << zeta(0) << ", " << zeta(1) << "; "
-     << x(0) << ", " << x(1) << "; "
-     << t(0) << ", " << t(1) << "; "
-     << s(0) << ", " << s(1) << ")";
-  return ss.str();
-}
-
-void tangent_point::bind(py::module_ &m) {
-  py::class_<tangent_point>(m, "TangentPoint")
-    .def("__repr__", &tangent_point::repr)
-    .def_readonly("zeta", &tangent_point::zeta)
-    .def_readonly("x", &tangent_point::x)
-    .def_readonly("t", &tangent_point::t)
-    .def_readonly("s", &tangent_point::s);
-}
-
-
-// #################################### discretized_line_segment #############################################
-discretized_line_segment::discretized_line_segment(const Eigen::Ref<const Eigen::Vector2d> &zeta_s, // start point in linear coords
-                                                   const Eigen::Ref<const Eigen::Vector2d> &zeta_e, // end point in linear coords
-                                                   const physical_parameters &phys,
-                                                   const simulation_parameters &sim) :
-  phys(phys),
-  dzeta(zeta_e - zeta_s) {
-  
-  tangent_point ts(zeta_s, dzeta, this);
-  tangent_point te(zeta_e, dzeta, this);
-  ts.update_intersect(te);
-      
-  points.push_back(ts);
-  points.push_back(te);
-
-  errb = points.front().errb(points.back());
-  errmap.insert({-errb, points.begin()});
-
-  area = ts.area(te);
-    
-  for (int i = 2; (i < sim.max_line_resolution) && (i < sim.min_line_resolution || errb > sim.line_tolerance); ++i)
+  // continue refining while tolerance is not reached
+  while (size() < sim.max_line_resolution && errb > sim.line_tolerance)
     refine();
 }
 
-void discretized_line_segment::refine() {
-  auto f = *errmap.begin();
-  errmap.erase(errmap.begin());
-    
-  auto it0 = f.second++;
-  auto it2 = f.second;
-
-  // todo: more efficient way to calculate area
-  area -= it0->area(*it2);
-    
-  auto it1 = points.insert(it2, tangent_point(0.5 * (it0->zeta + it2->zeta), dzeta, this));
-    
-  it0->update_intersect(*it1);
-  it1->update_intersect(*it2);
-    
-  double err0 = it0->errb(*it1);
-  double err1 = it1->errb(*it2);
-    
-  errb += f.first + err0 + err1;
-
-  // todo: more efficient way to calculate area (just add new triangle)
-  area += it0->area(*it1) + it1->area(*it2);
-    
-  errmap.insert({-err0, it0});
-  errmap.insert({-err1, it1});
+template <typename T>
+DLS::Vector2 DLS::get_z(const T &lam) const {
+  return start * (1 - lam) + end * lam;
 }
 
-// get (a) tangent at point x on the line
-inline Eigen::Vector2d discretized_line_segment::get_tangent(const Eigen::Ref<const Eigen::Vector2d> &zeta,
-                                                             const Eigen::Ref<const Eigen::Vector2d> &dzeta) const {
-  return phys.ditf(zeta).array() * dzeta.array();
+template <typename T>
+DLS::Vector2 DLS::get_x(const T &lam) const {
+  return phys->itf<T>(get_z(lam));
 }
 
-double discretized_line_segment::length() const {
-  double res = 0;
-  for (auto it = points.begin(), itl = it++; it != points.end(); itl = it++) {
-    res += (it->x - itl->x).norm();
-  }
-  return res;
+template <typename T>
+DLS::Vector2 DLS::get_t(const T &lam) const {
+  return phys->ditf<T>(get_z(lam)).array() * direction.array();
 }
+
+template <typename T>
+void DLS::refine(int newlen) {
+  int oldlen = size();
   
-std::string discretized_line_segment::repr() const {
-  std::stringstream ss;
-  ss << "DiscretizedLineSegment(length = " << points.size() << ")";
-  return ss.str();
+  // if no new length is given, double current (split every current segment in half)
+  if (newlen < 2) {
+    newlen = std::min(oldlen * 2 - 1, max_resolution);
+    if (newlen <= oldlen)
+      return;
+  }
+
+  // calculate path length
+  VectorX lens(oldlen);
+  lens(0) = 0;
+  for (int i = 1; i < oldlen; ++i) {
+    T len = ((x.row(i) - x.row(i - 1)).transpose().array() * aspect.array()).matrix().norm();
+    lens(i) = lens(i - 1) + len;
+  }
+  T totlen = lens(oldlen - 1);
+
+  // calculate new lam positions to be approx evenly spaced in s-p-coords
+  VectorX oldlams = lams;
+  lams.resize(newlen);
+  for (int i = 0, j = 1; j < newlen - 1; ++j) {
+    T oj = totlen * j / (newlen - 1); // evenly spaced position along length
+    while (i + 2 < oldlen && oj > lens(i + 1)) ++i; // find index i s.t. lens[i] <= oj < lens[i+1]
+    T sl = (oldlams(i + 1) - oldlams(i)) / (lens(i + 1) - lens(i)); // (inverse) slope of length-line-segment
+    lams(j) = (oj - lens(i)) * sl + oldlams(i);
+  }
+  lams(0) = (T)0.0;
+  lams(newlen - 1) = (T)1.0;
+  
+  // make new resized arrays, reset values
+  x.resize(newlen, 2);
+  t.resize(newlen, 2);
+  s.resize(newlen - 1, 2);
+  errb = 0;
+  area = 0;
+
+  // calculate x, t for new points
+  for (int i = 0; i < newlen; ++i) {
+    T lam = lams(i);
+    x.row(i) = get_x(lam);
+    t.row(i) = get_t(lam);
+  }
+  // calculate s, area and errb for new points
+  for (int i = 1; i < newlen; ++i) {
+      // calculate intersection point
+      // TODO: find a more numerically stable way to calculate this
+      T c = t.row(i).cross(t.row(i-1));
+      T u = std::abs(t.row(i).dot(x.row(i) - x.row(i-1)) / t.row(i).dot(t.row(i)));
+      T l = (c == 0) ? (T)0.5 * u : std::clamp(t.row(i).cross(x.row(i) - x.row(i-1)) / c, (T)0, u);
+      s.row(i-1) = x.row(i-1) + l * t.row(i-1);
+
+      // auto b = x.row(i) - x.row(i-1);
+      // T tan1 = t.row(i-1).cross(b) / t.row(i-1).dot(b);
+      // T tan2 = -t.row(i).cross(b) / t.row(i).dot(b);
+      // T e2 = 0.5 * b.dot(b) * std::abs(tan1 * tan2 / (tan1 + tan2));
+
+      // area of tangent / point triangle
+      T e = 0.5 * std::abs((x.row(i) - x.row(i-1)).cross(s.row(i-1) - x.row(i-1)));
+
+      // if (std::abs(std::copysign(e2, e) - e) > 1e-9)
+      //   py::print(FORMAT("e = {}, e2 = {}, tan1 = {}, tan2 = {}, x^2 = {}", e, e2, tan1, tan2, b.dot(b)));
+      
+      // calculate area
+      area += 0.5 * ((x(i,0) - x(i-1,0)) * (x(i,1) + x(i-1,1))) + 0.5 * e * std::copysign(e, x(i,0) - x(i-1,0));
+      
+      // area += 0.25 * ((x(i,0) - x(i-1,0)) * (x(i,1) + x(i-1,1))
+      //                 + (s(i-1,0) - x(i-1,0)) * (s(i-1,1) + x(i-1,1))
+      //                 + (x(i,0) - s(i-1,0)) * (x(i,1) + s(i-1,1)));
+      
+      // calculate error bound
+      errb += 0.5 * e;
+  }
+
+  //py::print(FORMAT("res {}, area {}, errb {}", newlen, area, errb));
 }
 
-void discretized_line_segment::bind(py::module_ &m) {
-  py::class_<discretized_line_segment>(m, "DiscretizedLineSegment")
-    .def(py::init<const Eigen::Ref<const Eigen::Vector2d> &,
-         const Eigen::Ref<const Eigen::Vector2d> &,
-         const physical_parameters &, const simulation_parameters &>())
-    .def("__repr__", &discretized_line_segment::repr)
-    .def_readonly("area", &discretized_line_segment::area)
-    .def("refine", &discretized_line_segment::refine)
-    .def_readonly("errb", &discretized_line_segment::errb)
-    .def_readonly("points", &discretized_line_segment::points)
-    .def("length", &discretized_line_segment::length);
+template <typename T>
+int DLS::size() const {
+  return x.rows();
 }
 
+template <typename T>
+std::string DLS::repr() const {
+  return FORMAT("DiscretizedLineSegment(size = {})", size());
+}
+
+template <typename T>
+void DLS::bind(py::module_ &m) {
+  py::class_<DLS>(m, ("DiscretizedLineSegment_" + type_name<T>::value()).c_str())
+    .def(py::init<const Eigen::Ref<const DLS::Vector2> &,
+         const Eigen::Ref<const DLS::Vector2> &,
+         const physical_parameters &,
+         const simulation_parameters &>())
+    .def_readonly("start", &DLS::start)
+    .def_readonly("end", &DLS::end)
+    .def_readonly("direction", &DLS::direction)
+    // .def_readonly("z", &DLS::z)
+    .def_readonly("lams", &DLS::lams)
+    .def_readonly("x", &DLS::x)
+    .def_readonly("t", &DLS::t)
+    .def_readonly("s", &DLS::s)
+    .def("get_z", &DLS::get_z)
+    .def("get_x", &DLS::get_x)
+    .def("get_t", &DLS::get_t)
+    .def("refine", &DLS::refine)
+    .def("size", &DLS::size)
+    .def("__repr__", &DLS::repr)
+    .def_readonly("area", &DLS::area)
+    .def_readonly("errb", &DLS::errb);
+
+}
+
+#undef DLS

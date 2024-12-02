@@ -5,63 +5,43 @@
 #include "physical_parameters.hpp"
 #include "simulation_parameters.hpp"
 
-struct discretized_line_segment;
-
-// a class representing a point on an inner boundary of a laguerre cell
-struct tangent_point
-{
-  // linearized coords (zeta)
-  // original (s-p-) coords (x)
-  // tangent in s-p-coords (t)
-  // intersection of this tangent with next tangent (s)
-  Eigen::Vector2d zeta, x, t, s;
-  
-  tangent_point() {}
-  tangent_point(const tangent_point &o) :
-    zeta(o.zeta), x(o.x), t(o.t), s(o.s) {}
-      
-  // construct given linearized coords zeta0, zeta1 and
-  // intersect will not be calculated in this constructor
-  tangent_point(const Eigen::Ref<const Eigen::Vector2d> &zeta,
-                const Eigen::Ref<const Eigen::Vector2d> &dzeta,
-                const discretized_line_segment *ls);
-
-  // update the tangent intersection point of this with next
-  void update_intersect(const tangent_point &next);
-
-  // find the error bound for segment between this and next (requires this->is* to be up to date)
-  double errb(const tangent_point &next) const;
-
-  double area(const tangent_point &next) const;
-    
-  std::string repr() const;
-
-  static void bind(py::module_ &m);
-};
-
-struct discretized_line_segment
+template <typename T>
+class discretized_line_segment
 {
 public:
-  const physical_parameters &phys;
-  std::list<tangent_point> points;
-  Eigen::Vector2d dzeta;
+  typedef Eigen::Matrix<T, Eigen::Dynamic, 2, Eigen::RowMajor> Matrix2X;
+  typedef Eigen::Vector2<T> Vector2;
+  typedef Eigen::VectorX<T> VectorX;
+
+  const physical_parameters *phys;
+  int max_resolution;
+  Vector2 aspect;
+
+  // start, end and direction in linear coords
+  Vector2 start, end, direction;
   
-  std::multimap<double, typename std::list<tangent_point>::iterator> errmap;
-  double errb;
-  double area;
-    
-  discretized_line_segment(const Eigen::Ref<const Eigen::Vector2d> &zeta_s, // start point in linear coords
-                           const Eigen::Ref<const Eigen::Vector2d> &zeta_e, // end point in linear coords
+  // the coordinate lists are all on the same discretizaion
+  // s is one shorter than the rest, since there is no intersect after the last point
+  VectorX lams; // positions in [0,1] at which discretization points are (linearly spaced in linear domain)
+  Matrix2X x; // coordinates in s-p-coords
+  Matrix2X t; // tangent vectors in s-p-coords
+  Matrix2X s; // intersections between current tangent with next tangent in s-p-coords
+
+  T errb; // area error bound
+  T area; // (approx) area below (discretized) line segment
+  
+  discretized_line_segment(const Eigen::Ref<const Vector2> &zeta_s, // start point in linear coords
+                           const Eigen::Ref<const Vector2> &zeta_e, // end point in linear coords
                            const physical_parameters &phys,
                            const simulation_parameters &sim);
 
-  void refine();
+  Vector2 get_z(const T &lam) const; // get linear coord at position lam in [0,1] along line
+  Vector2 get_x(const T &lam) const; // get s-p-coords at position lam in [0,1] along line
+  Vector2 get_t(const T &lam) const; // get s-p-tangent at position lam in [0,1] along line
 
-  // get (a) tangent at point x on the line
-  Eigen::Vector2d get_tangent(const Eigen::Ref<const Eigen::Vector2d> &zeta,
-                                     const Eigen::Ref<const Eigen::Vector2d> &dzeta) const;
+  void refine(int newlen = -1); // refine resolution to newlen (if newlen < 2, roughly double it)
 
-  double length() const;
+  int size() const; // number of points used for discretization
   
   std::string repr() const;
 

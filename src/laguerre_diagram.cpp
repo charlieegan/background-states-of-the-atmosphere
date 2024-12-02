@@ -54,7 +54,7 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
                                       const Eigen::Ref<const VecX> &duals,
                                       const physical_parameters &phys,
                                       const simulation_parameters &sim) :
-  n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + sim.boundary_res, -1) {
+  parent(NULL), n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + sim.boundary_res, -1) {
 
 #ifdef PROFILING
   setup_timer();
@@ -69,12 +69,10 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
 }
 
 template <typename T>
-laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
+laguerre_diagram<T>::laguerre_diagram(std::shared_ptr<laguerre_diagram<T>> parent,
                                       const Eigen::Ref<const VecX> &duals,
-                                      const physical_parameters &phys,
-                                      const simulation_parameters &sim,
-                                      const std::vector<int> &hints) :
-  n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(hints) {
+                                      const bool &keep_parent) :
+  parent(keep_parent ? parent : NULL), n(parent->n), ys(parent->ys), duals(duals), phys(parent->phys), sim(parent->sim), hints(parent->hints) {
 
 #ifdef PROFILING
   setup_timer();
@@ -86,6 +84,11 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
   do_hs_intersect();
 
   extract_diagram();
+}
+
+template <typename T>
+void laguerre_diagram<T>::detach() {
+  parent = NULL;
 }
 
 template <typename T>
@@ -271,35 +274,42 @@ void laguerre_diagram<T>::extract_diagram() {
 
     auto yi = ys.row(e.pi-6);
 
-    if (e.pj >= 6 && e.pj - 6 < n) {
-      // inner edges
-      auto yj = ys.row(e.pj-6);
+    if (e.pj >= 6) {
 
-      double pw = 0;
+      Eigen::Vector2d dcp, dc;
       for (int k = 0; k < e.ls.size(); ++k) {
-        double nw = (k != e.ls.size() - 1 ? (e.ls.x.row(k+1) - e.ls.x.row(k)).norm() : 0);
-
         // d_x (c(x,yi) - c(x,yj))
-        Eigen::Vector2d dc((sqr(yi(0)) - sqr(yj(0))) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))),
-                           phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
-        e.dif += (pw + nw) / dc.norm();
 
-        pw = nw;
+        if (e.pj - 6 < n) {
+          // inner edge
+          auto yj = ys.row(e.pj-6);
+          dc = Eigen::Vector2d((sqr(yi(0)) - sqr(yj(0))) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))),
+                               phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
+        } else {
+          // top boundary edge
+          dc = Eigen::Vector2d(sqr(yi(0)) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))) - sqr(phys.Omega * phys.a) * e.ls.x(k,0),
+                               phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
+        }
+        
+        if (k > 0) {
+          double xlen = (e.ls.x.row(k) - e.ls.x.row(k - 1)).norm();
+          double hlen = (dcp - dc).norm();
+          double i1 = dcp.dot(dc - dcp);
+          double i2 = dc.dot(dc - dcp);
+          double s = (i1 < 0 ? -1.0 : 1.0);
+  
+          if (hlen < 1e-100) {
+            // if dc is very close to constant, just approximate it as constant
+            e.dif += xlen / dc.norm();
+          } else {
+            // otherwise solve the line integral
+            e.dif += s * (xlen / hlen) * std::log((dc.norm() * hlen + s * i2) / (dcp.norm() * hlen + s * i1));
+          }
+        }
+        
+        dcp = dc;
       }
-    } else if (e.pj - 6 >= n) {
-      // (soft) boundary edges
-
-      double pw = 0;
-      for (int k = 0; k < e.ls.size(); ++k) {
-        double nw = (k != e.ls.size() - 1 ? (e.ls.x.row(k+1) - e.ls.x.row(k)).norm() : 0);
-
-        // d_x (c(x,yi) - c(x,yj))
-        Eigen::Vector2d dc(sqr(yi(0)) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))) - sqr(phys.Omega * phys.a) * e.ls.x(k,0),
-                           phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
-        e.dif += (pw + nw) / dc.norm();
-
-        pw = nw;
-      }
+      
     }
   }
 
@@ -596,13 +606,12 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
          const simulation_parameters&>(),
          py::arg("ys"), py::arg("duals"),
          py::arg("phys"), py::arg("sim"))
-    .def(py::init<const laguerre_diagram<T>::seeds_t&,
+    .def(py::init<std::shared_ptr<laguerre_diagram<T>>,
          const Eigen::Ref<const laguerre_diagram<T>::VecX>&,
-         const physical_parameters &,
-         const simulation_parameters&,
-         const std::vector<int>&>(),
-         py::arg("ys"), py::arg("duals"),
-         py::arg("phys"), py::arg("sim"), py::arg("hints"))
+         const bool&>(),
+         py::arg("parent"), py::arg("duals"), py::arg("keep_parent")=true)
+    .def("detach", &laguerre_diagram<T>::detach)
+    .def_readwrite("parent", &laguerre_diagram<T>::parent)
     .def_readonly("n", &laguerre_diagram<T>::n)
     .def_readonly("phys", &laguerre_diagram<T>::phys)
     .def_readonly("sim", &laguerre_diagram<T>::sim)
@@ -636,14 +645,11 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
         py::arg("phys"), py::arg("sim"));
 
   m.def("LaguerreDiagram",
-        [](const laguerre_diagram<T>::seeds_t &ys,
+        [](std::shared_ptr<laguerre_diagram<T>> parent,
            const Eigen::Ref<const laguerre_diagram<T>::VecX> &duals,
-           const physical_parameters &phys,
-           const simulation_parameters &sim,
-           const std::vector<int> &hints) {
-          return laguerre_diagram<T>(ys, duals, phys, sim, hints);
+           const bool &keep_parent) {
+          return laguerre_diagram<T>(parent, duals, keep_parent);
         },
-        py::arg("ys"), py::arg("duals"),          
-        py::arg("phys"), py::arg("sim"), py::arg("hints"));
+        py::arg("parent"), py::arg("duals"), py::arg("keep_parent")=true);
   
 }

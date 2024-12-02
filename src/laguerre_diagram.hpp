@@ -5,7 +5,7 @@
 
 #include "physical_parameters.hpp"
 #include "simulation_parameters.hpp"
-#include "discretized_line_segment2.hpp"
+#include "discretized_line_segment.hpp"
 #include "halfspace_intersection.hpp"
 #include "rasterizer.hpp"
 
@@ -38,6 +38,8 @@ public:
     double dif; // differential
   };
 
+  std::shared_ptr<laguerre_diagram<T>> parent;
+  
   // input parameters
   int n;
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> ys;
@@ -83,12 +85,11 @@ public:
                    const physical_parameters &phys,
                    const simulation_parameters &sim);
 
-  laguerre_diagram(const seeds_t &ys,
+  laguerre_diagram(std::shared_ptr<laguerre_diagram<T>> parent,
                    const Eigen::Ref<const VecX> &duals,
-                   const physical_parameters &phys,
-                   const simulation_parameters &sim,
-                   const std::vector<int> &hints);
+                   const bool &keep_parent=true);
 
+  void detach();
   
   void do_hs_intersect();
 
