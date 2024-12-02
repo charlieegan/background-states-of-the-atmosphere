@@ -18,7 +18,7 @@ For an editable install (python files are linked instead of copied), use `pip in
 
 Dependencies: `pip`, `g++` (with support for C++20), `ninja`, `cmake` (possibly more, to be filled in)
 
-To update an existing installation, go to the directory `background-states-of-the-atmosphere` directory and run
+To update an existing installation, go to the directory `background-states-of-the-atmosphere` and run
 
 ```
 git pull
