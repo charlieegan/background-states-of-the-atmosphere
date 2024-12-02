@@ -18,6 +18,16 @@ For an editable install (python files are linked instead of copied), use `pip in
 
 Dependencies: `pip`, `g++` (with support for C++20), `ninja`, `cmake` (possibly more, to be filled in)
 
+To update an existing installation, go to the directory `background-states-of-the-atmosphere` directory and run
+
+```
+git pull
+pip install .
+```
+
+If you installed originally in a virtual environment, make sure to have the same configuration when updating.
+If you modified any files in the repository (e.g. by executing the notebook), the command `git pull` may fail. To resolve this, you can use `git stash` to stash your changes or simply rename the modified file before pulling.
+
 ## Usage
 
 We will add proper documentation later, for now there is a jupyter notebook [example](examples/example.ipynb).
