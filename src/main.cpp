@@ -1,3 +1,9 @@
+/*! \mainpage Background states of the atmosphere
+ *
+ * This page contains documentation for the code generated with doxygen.
+ * Currently the documentation is very bare-bones but this will hopefully improve in the future.
+ */
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
