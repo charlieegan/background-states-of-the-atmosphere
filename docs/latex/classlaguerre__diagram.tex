@@ -1,0 +1,513 @@
+\doxysection{laguerre\+\_\+diagram\texorpdfstring{$<$}{<} T \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classlaguerre__diagram}{}\label{classlaguerre__diagram}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+
+
+{\ttfamily \#include $<$laguerre\+\_\+diagram.\+hpp$>$}
+
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge}{diagram\+\_\+edge}}
+\item 
+struct \mbox{\hyperlink{structlaguerre__diagram_1_1virtual__diagram__edge}{virtual\+\_\+diagram\+\_\+edge}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef Eigen\+::\+Ref$<$ const Eigen\+::\+Matrix$<$ double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major $>$ $>$ \mbox{\hyperlink{classlaguerre__diagram_a27983c087acadb57f4d0956bcaabb073}{seeds\+\_\+t}}
+\item 
+typedef Eigen\+::\+Vector3$<$ T $>$ \mbox{\hyperlink{classlaguerre__diagram_ab2ccea5fdf9939eb365e158d9e4ada60}{Vec3}}
+\item 
+typedef Eigen\+::\+Vector4$<$ T $>$ \mbox{\hyperlink{classlaguerre__diagram_ae8fbcffea8c7251c2373827819a349bd}{Vec4}}
+\item 
+typedef Eigen\+::\+VectorX$<$ T $>$ \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classlaguerre__diagram_ad8598b5ad79a22c77e268cc582b159ec}{setup\+\_\+timer}} ()
+\item 
+\mbox{\hyperlink{classlaguerre__diagram_a187bc57674d2c554366f1ced5a9a2efa}{laguerre\+\_\+diagram}} (const \mbox{\hyperlink{classlaguerre__diagram_a27983c087acadb57f4d0956bcaabb073}{seeds\+\_\+t}} \&\mbox{\hyperlink{classlaguerre__diagram_afd5497b2aa55bcab8897858e5335cd6c}{ys}}, const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}} $>$ \&\mbox{\hyperlink{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967}{duals}}, const \mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} \&\mbox{\hyperlink{classlaguerre__diagram_af417a220ab9030ac5f1b0218d9527d6b}{phys}}, const \mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} \&\mbox{\hyperlink{classlaguerre__diagram_a6a4c4711b5e8ec10eaf6284d313a82ff}{sim}})
+\item 
+\mbox{\hyperlink{classlaguerre__diagram_a8dfb8056751393fadfb847cded5f6bed}{laguerre\+\_\+diagram}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$ $>$ \mbox{\hyperlink{classlaguerre__diagram_a319b61af0ff9d08a035958b1ec819d45}{parent}}, const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}} $>$ \&\mbox{\hyperlink{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967}{duals}}, const bool \&keep\+\_\+parent=true)
+\item 
+void \mbox{\hyperlink{classlaguerre__diagram_a4918478cc280c3528fce6ee7e4416707}{detach}} ()
+\item 
+\mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}} \mbox{\hyperlink{classlaguerre__diagram_ad91faa979c837a29b39107d872bb50f4}{touching\+\_\+dual}} (bool randomize)
+\item 
+\mbox{\hyperlink{classrasterizer}{rasterizer}} \mbox{\hyperlink{classlaguerre__diagram_a96cfc954bbe95a1ccbe6046332610bba}{get\+\_\+rasterizer}} (std\+::optional$<$ std\+::function$<$ Eigen\+::\+Vector2d(Eigen\+::\+Vector2d)$>$ $>$ transform=std\+::nullopt)
+\item 
+std\+::pair$<$ Eigen\+::\+Vector\+Xd, std\+::pair$<$ Eigen\+::\+Vector\+Xi, Eigen\+::\+Vector\+Xi $>$ $>$ \mbox{\hyperlink{classlaguerre__diagram_afb2094172714ba40cb5b4d10a20f102d}{jac\+\_\+coo}} ()
+\item 
+Eigen\+::\+Matrix$<$ double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major $>$ \mbox{\hyperlink{classlaguerre__diagram_ad096feb5b0f2538936476bd6c2681058}{get\+\_\+poly}} (const int \&pi\+\_\+t)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \mbox{\hyperlink{classlaguerre__diagram_abaf0dd950651c5794716bddaf936b036}{bind}} (py\+::module\+\_\+ \&m)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$ $>$ \mbox{\hyperlink{classlaguerre__diagram_a319b61af0ff9d08a035958b1ec819d45}{parent}}
+\begin{DoxyCompactList}\small\item\em parent diagram; when not NULL, negative areas will be kept consistent with parent \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classlaguerre__diagram_a5f263a8e0a61637da057eeef740bfff9}{n}}
+\begin{DoxyCompactList}\small\item\em number of seeds \end{DoxyCompactList}\item 
+Eigen\+::\+Matrix$<$ double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major $>$ \mbox{\hyperlink{classlaguerre__diagram_afd5497b2aa55bcab8897858e5335cd6c}{ys}}
+\begin{DoxyCompactList}\small\item\em seed positions \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}} \mbox{\hyperlink{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967}{duals}}
+\begin{DoxyCompactList}\small\item\em duals corresponding to seeds \end{DoxyCompactList}\item 
+\mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} \mbox{\hyperlink{classlaguerre__diagram_af417a220ab9030ac5f1b0218d9527d6b}{phys}}
+\begin{DoxyCompactList}\small\item\em physical parameters defining cost / coordinate transform \end{DoxyCompactList}\item 
+\mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} \mbox{\hyperlink{classlaguerre__diagram_a6a4c4711b5e8ec10eaf6284d313a82ff}{sim}}
+\begin{DoxyCompactList}\small\item\em simulation parameters defining boundaries, resolutions, etc. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$ \mbox{\hyperlink{classlaguerre__diagram_ae9ae6e859c52caf0cfa2cc5f2ebc3fa5}{hs}}
+\begin{DoxyCompactList}\small\item\em halfspace intersection solver used to calculate diagram topology \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classlaguerre__diagram_a44a337b05e6db0ef2ad749910f812891}{hints}}
+\begin{DoxyCompactList}\small\item\em hints for \doxylink{classhalfspace__intersection}{halfspace\+\_\+intersection} (primal indices close to the intersection for each halfspace) \end{DoxyCompactList}\item 
+Eigen\+::\+Matrix$<$ double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major $>$ \mbox{\hyperlink{classlaguerre__diagram_a1c15826418c629499e9c8f0bcb5ac3a9}{verts}}
+\begin{DoxyCompactList}\small\item\em geometric diagram vertices \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge}{diagram\+\_\+edge}} $>$ \mbox{\hyperlink{classlaguerre__diagram_a32b599ef6a6b94d67ed45cc00ac142de}{edglist}}
+\begin{DoxyCompactList}\small\item\em diagram edges (primal-\/dual with geometry) \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{structlaguerre__diagram_1_1virtual__diagram__edge}{virtual\+\_\+diagram\+\_\+edge}} $>$ \mbox{\hyperlink{classlaguerre__diagram_a16ab7210ea2161972211d524f0964231}{vedglist}}
+\begin{DoxyCompactList}\small\item\em non-\/geometrical diagram edges (only primal with differential) \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ int $>$ $>$ \mbox{\hyperlink{classlaguerre__diagram_afe2990d93fb04d78e30a07bb5017da93}{faces}}
+\begin{DoxyCompactList}\small\item\em diagram faces (each face being represented by a list of edge indices) \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ int $>$ $>$ \mbox{\hyperlink{classlaguerre__diagram_a3c4cad4d3271a3ca025e22066bdf3ff5}{dfacets}}
+\begin{DoxyCompactList}\small\item\em dual facets, i.\+e. geometric vertices (each dual facet being represented by list of edge indices) \end{DoxyCompactList}\item 
+Eigen\+::\+Vector\+Xd \mbox{\hyperlink{classlaguerre__diagram_a238894548200c1019fed0d9c7d32e7b0}{areas}}
+\begin{DoxyCompactList}\small\item\em diagram face areas \end{DoxyCompactList}\item 
+Eigen\+::\+Vector\+Xd \mbox{\hyperlink{classlaguerre__diagram_aca48ff29958d53de5b51163bc673e084}{areaerrs}}
+\begin{DoxyCompactList}\small\item\em diagram face area error bounds (based on discretization) \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classtimer}{timer}} $>$ \mbox{\hyperlink{classlaguerre__diagram_a35fc2bd21a8bd481d8bcbe3e61ef6d23}{time}} = NULL
+\begin{DoxyCompactList}\small\item\em timer used for profiling \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classlaguerre__diagram_ad6070b7e06e2ee96897665aeb585121b}{idx\+\_\+time\+\_\+halfspace\+\_\+intersection}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_a9432e060c10c42818018df3b42da53d6}{idx\+\_\+time\+\_\+extract\+\_\+vertices}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_a351bdadf547d9ca07ed6d78008966b65}{idx\+\_\+time\+\_\+extract\+\_\+edges}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_aa59c79fb2427bdb42d1abeb1a716b28c}{idx\+\_\+time\+\_\+calc\+\_\+areas}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_adc47f18c096ce9cdc0a44b8b40b1bfa5}{idx\+\_\+time\+\_\+calc\+\_\+integrals}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_a731fd483a207cc21bc694074837afe81}{idx\+\_\+time\+\_\+prepare\+\_\+rasterizer}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_a62c260f78d62cb3173e3a54a9355585a}{idx\+\_\+time\+\_\+jacobian}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_a1cb7ace206dfdf6d7a758cd7878b660c}{idx\+\_\+time\+\_\+touching\+\_\+dual}} = -\/1
+\item 
+int \mbox{\hyperlink{classlaguerre__diagram_aa239457787da5934aa432a3035f7350f}{idx\+\_\+time\+\_\+touching\+\_\+dual\+\_\+n}} = -\/1
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename T$>$\newline
+class laguerre\+\_\+diagram$<$ T $>$}
+A class to calculate Laguerre diagrams.
+
+Given seed positions, dual values, physical parameters (defining the cost function) and simulation parameters (defining among others the diagram boundaries and resolution), this class allows calculating the Laguerre diagram including the geometry, cell areas and Jacobian of cell areas w.\+r.\+t. the duals. 
+
+\doxysubsection{Member Typedef Documentation}
+\Hypertarget{classlaguerre__diagram_a27983c087acadb57f4d0956bcaabb073}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!seeds\_t@{seeds\_t}}
+\index{seeds\_t@{seeds\_t}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{seeds\_t}{seeds\_t}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a27983c087acadb57f4d0956bcaabb073} 
+template$<$typename T $>$ \\
+Eigen\+::\+Ref$<$const Eigen\+::\+Matrix$<$double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major$>$ $>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::seeds\+\_\+t}
+
+\Hypertarget{classlaguerre__diagram_ab2ccea5fdf9939eb365e158d9e4ada60}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!Vec3@{Vec3}}
+\index{Vec3@{Vec3}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Vec3}{Vec3}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_ab2ccea5fdf9939eb365e158d9e4ada60} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector3$<$T$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::\+Vec3}
+
+\Hypertarget{classlaguerre__diagram_ae8fbcffea8c7251c2373827819a349bd}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!Vec4@{Vec4}}
+\index{Vec4@{Vec4}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Vec4}{Vec4}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_ae8fbcffea8c7251c2373827819a349bd} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector4$<$T$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::\+Vec4}
+
+\Hypertarget{classlaguerre__diagram_a15da86a351001930daa63713fe988985}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!VecX@{VecX}}
+\index{VecX@{VecX}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{VecX}{VecX}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a15da86a351001930daa63713fe988985} 
+template$<$typename T $>$ \\
+Eigen\+::\+VectorX$<$T$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::\+VecX}
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classlaguerre__diagram_a187bc57674d2c554366f1ced5a9a2efa}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!laguerre\_diagram@{laguerre\_diagram}}
+\index{laguerre\_diagram@{laguerre\_diagram}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{laguerre\_diagram()}{laguerre\_diagram()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a187bc57674d2c554366f1ced5a9a2efa} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\mbox{\hyperlink{classlaguerre__diagram}{\+::laguerre\+\_\+diagram}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classlaguerre__diagram_a27983c087acadb57f4d0956bcaabb073}{seeds\+\_\+t}} \&}]{ys}{, }\item[{const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}} $>$ \&}]{duals}{, }\item[{const \mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} \&}]{phys}{, }\item[{const \mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} \&}]{sim}{}\end{DoxyParamCaption})}
+
+Construct Laguerre diagram based on seed positions, dual values, physical-\/ and simulation parameters. 
+\begin{DoxyParams}{Parameters}
+{\em ys} & seed positions \\
+\hline
+{\em duals} & dual values (including top cell, should be one longer than ys) \\
+\hline
+{\em phys} & physical parameters, defining cost function / coordinate transform \\
+\hline
+{\em sim} & simulation parameters, defining boundaries, resolution, etc. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classlaguerre__diagram_a8dfb8056751393fadfb847cded5f6bed}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!laguerre\_diagram@{laguerre\_diagram}}
+\index{laguerre\_diagram@{laguerre\_diagram}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{laguerre\_diagram()}{laguerre\_diagram()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a8dfb8056751393fadfb847cded5f6bed} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\mbox{\hyperlink{classlaguerre__diagram}{\+::laguerre\+\_\+diagram}} (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$ $>$}]{parent}{, }\item[{const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}} $>$ \&}]{duals}{, }\item[{const bool \&}]{keep\+\_\+parent}{ = {\ttfamily true}}\end{DoxyParamCaption})}
+
+Construct Laguerre diagram based on parent diagram with new duals 
+\begin{DoxyParams}{Parameters}
+{\em parent} & diagram to take values from \\
+\hline
+{\em duals} & new dual values (should be of the same length as for parent) \\
+\hline
+{\em keep\+\_\+parent} & if true, store the parent; if false only take values from the parent but do not keep the link \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classlaguerre__diagram_abaf0dd950651c5794716bddaf936b036}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!bind@{bind}}
+\index{bind@{bind}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{bind()}{bind()}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_abaf0dd950651c5794716bddaf936b036} 
+template$<$typename T $>$ \\
+void \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::bind (\begin{DoxyParamCaption}\item[{py\+::module\+\_\+ \&}]{m}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Bind class to pybind11 module 
+\begin{DoxyParams}{Parameters}
+{\em m} & module to bind to \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classlaguerre__diagram_a4918478cc280c3528fce6ee7e4416707}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!detach@{detach}}
+\index{detach@{detach}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{detach()}{detach()}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a4918478cc280c3528fce6ee7e4416707} 
+template$<$typename T $>$ \\
+void \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::detach (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+Detach from parent (set parent to NULL) \Hypertarget{classlaguerre__diagram_ad096feb5b0f2538936476bd6c2681058}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!get\_poly@{get\_poly}}
+\index{get\_poly@{get\_poly}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{get\_poly()}{get\_poly()}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_ad096feb5b0f2538936476bd6c2681058} 
+template$<$typename T $>$ \\
+Eigen\+::\+Matrix$<$ double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major $>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::get\+\_\+poly (\begin{DoxyParamCaption}\item[{const int \&}]{pi\+\_\+t}{}\end{DoxyParamCaption})}
+
+Get a polygon representing a diagram cell.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pi\+\_\+t} & index (corresponding to seeds / duals) of cell to get polygon for \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+n x 2 matrix with vertex coordinates 
+\end{DoxyReturn}
+\Hypertarget{classlaguerre__diagram_a96cfc954bbe95a1ccbe6046332610bba}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!get\_rasterizer@{get\_rasterizer}}
+\index{get\_rasterizer@{get\_rasterizer}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{get\_rasterizer()}{get\_rasterizer()}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a96cfc954bbe95a1ccbe6046332610bba} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{classrasterizer}{rasterizer}} \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::get\+\_\+rasterizer (\begin{DoxyParamCaption}\item[{std\+::optional$<$ std\+::function$<$ Eigen\+::\+Vector2d(Eigen\+::\+Vector2d)$>$ $>$}]{transform}{ = {\ttfamily std\+:\+:nullopt}}\end{DoxyParamCaption})}
+
+Get a rasterizer corresponding to the diagram.
+
+The rasterizer allows approximating functions defined piecewise constant over the diagram cells on a regular grid. Optionally a transform can be given, which is applied to the points of the diagram before passing them to the rasterizer. 
+\begin{DoxyParams}{Parameters}
+{\em transform} & function to apply to points; this should act on the two dimensions independently and monotonously. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+rasterizer instance corresponding to (transformed) diagram 
+\end{DoxyReturn}
+\Hypertarget{classlaguerre__diagram_afb2094172714ba40cb5b4d10a20f102d}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!jac\_coo@{jac\_coo}}
+\index{jac\_coo@{jac\_coo}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{jac\_coo()}{jac\_coo()}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_afb2094172714ba40cb5b4d10a20f102d} 
+template$<$typename T $>$ \\
+std\+::pair$<$ Eigen\+::\+Vector\+Xd, std\+::pair$<$ Eigen\+::\+Vector\+Xi, Eigen\+::\+Vector\+Xi $>$ $>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::jac\+\_\+coo (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+Get the Jacobian of areas w.\+r.\+t. duals.
+
+This returns the Jacobian in coo-\/format as expected by scipy coo\+\_\+array. \begin{DoxyReturn}{Returns}
+\{v, \{i, j\}\} such that J\mbox{[}i\mbox{[}k\mbox{]}, j\mbox{[}k\mbox{]}\mbox{]} = v\mbox{[}k\mbox{]} represents the Jacobian 
+\end{DoxyReturn}
+\Hypertarget{classlaguerre__diagram_ad8598b5ad79a22c77e268cc582b159ec}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!setup\_timer@{setup\_timer}}
+\index{setup\_timer@{setup\_timer}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{setup\_timer()}{setup\_timer()}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_ad8598b5ad79a22c77e268cc582b159ec} 
+template$<$typename T $>$ \\
+void \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::setup\+\_\+timer (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+Setup the profiling timer \Hypertarget{classlaguerre__diagram_ad91faa979c837a29b39107d872bb50f4}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!touching\_dual@{touching\_dual}}
+\index{touching\_dual@{touching\_dual}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{touching\_dual()}{touching\_dual()}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_ad91faa979c837a29b39107d872bb50f4} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{\+::\+VecX}} \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::touching\+\_\+dual (\begin{DoxyParamCaption}\item[{bool}]{randomize}{}\end{DoxyParamCaption})}
+
+Calculate a dual vector where for each primal cell, if it was the only one changed, it is non-\/empty.
+
+For each primal index with an empty area, calculate the values of the corresponding dual at which the area becomes non-\/negative and the value at which a neighboring area becomes 0. Return either the mean of these two values (if randomize == False) or a random value between 25\% and 75\% of this interval. 
+\begin{DoxyParams}{Parameters}
+{\em randomize} & whether to return a random result \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classlaguerre__diagram_aca48ff29958d53de5b51163bc673e084}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!areaerrs@{areaerrs}}
+\index{areaerrs@{areaerrs}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{areaerrs}{areaerrs}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_aca48ff29958d53de5b51163bc673e084} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector\+Xd \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::areaerrs}
+
+
+
+diagram face area error bounds (based on discretization) 
+
+\Hypertarget{classlaguerre__diagram_a238894548200c1019fed0d9c7d32e7b0}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!areas@{areas}}
+\index{areas@{areas}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{areas}{areas}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a238894548200c1019fed0d9c7d32e7b0} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector\+Xd \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::areas}
+
+
+
+diagram face areas 
+
+\Hypertarget{classlaguerre__diagram_a3c4cad4d3271a3ca025e22066bdf3ff5}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!dfacets@{dfacets}}
+\index{dfacets@{dfacets}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{dfacets}{dfacets}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a3c4cad4d3271a3ca025e22066bdf3ff5} 
+template$<$typename T $>$ \\
+std\+::vector$<$std\+::vector$<$int$>$ $>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::dfacets}
+
+
+
+dual facets, i.\+e. geometric vertices (each dual facet being represented by list of edge indices) 
+
+\Hypertarget{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!duals@{duals}}
+\index{duals@{duals}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{duals}{duals}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}} \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::duals}
+
+
+
+duals corresponding to seeds 
+
+\Hypertarget{classlaguerre__diagram_a32b599ef6a6b94d67ed45cc00ac142de}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!edglist@{edglist}}
+\index{edglist@{edglist}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{edglist}{edglist}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a32b599ef6a6b94d67ed45cc00ac142de} 
+template$<$typename T $>$ \\
+std\+::vector$<$\mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge}{diagram\+\_\+edge}}$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::edglist}
+
+
+
+diagram edges (primal-\/dual with geometry) 
+
+\Hypertarget{classlaguerre__diagram_afe2990d93fb04d78e30a07bb5017da93}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!faces@{faces}}
+\index{faces@{faces}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{faces}{faces}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_afe2990d93fb04d78e30a07bb5017da93} 
+template$<$typename T $>$ \\
+std\+::vector$<$std\+::vector$<$int$>$ $>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::faces}
+
+
+
+diagram faces (each face being represented by a list of edge indices) 
+
+\Hypertarget{classlaguerre__diagram_a44a337b05e6db0ef2ad749910f812891}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!hints@{hints}}
+\index{hints@{hints}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{hints}{hints}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a44a337b05e6db0ef2ad749910f812891} 
+template$<$typename T $>$ \\
+std\+::vector$<$int$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::hints}
+
+
+
+hints for \doxylink{classhalfspace__intersection}{halfspace\+\_\+intersection} (primal indices close to the intersection for each halfspace) 
+
+\Hypertarget{classlaguerre__diagram_ae9ae6e859c52caf0cfa2cc5f2ebc3fa5}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!hs@{hs}}
+\index{hs@{hs}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{hs}{hs}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_ae9ae6e859c52caf0cfa2cc5f2ebc3fa5} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$T$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::hs}
+
+
+
+halfspace intersection solver used to calculate diagram topology 
+
+\Hypertarget{classlaguerre__diagram_aa59c79fb2427bdb42d1abeb1a716b28c}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_calc\_areas@{idx\_time\_calc\_areas}}
+\index{idx\_time\_calc\_areas@{idx\_time\_calc\_areas}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_calc\_areas}{idx\_time\_calc\_areas}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_aa59c79fb2427bdb42d1abeb1a716b28c} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+calc\+\_\+areas = -\/1}
+
+\Hypertarget{classlaguerre__diagram_adc47f18c096ce9cdc0a44b8b40b1bfa5}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_calc\_integrals@{idx\_time\_calc\_integrals}}
+\index{idx\_time\_calc\_integrals@{idx\_time\_calc\_integrals}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_calc\_integrals}{idx\_time\_calc\_integrals}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_adc47f18c096ce9cdc0a44b8b40b1bfa5} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+calc\+\_\+integrals = -\/1}
+
+\Hypertarget{classlaguerre__diagram_a351bdadf547d9ca07ed6d78008966b65}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_extract\_edges@{idx\_time\_extract\_edges}}
+\index{idx\_time\_extract\_edges@{idx\_time\_extract\_edges}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_extract\_edges}{idx\_time\_extract\_edges}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a351bdadf547d9ca07ed6d78008966b65} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+extract\+\_\+edges = -\/1}
+
+\Hypertarget{classlaguerre__diagram_a9432e060c10c42818018df3b42da53d6}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_extract\_vertices@{idx\_time\_extract\_vertices}}
+\index{idx\_time\_extract\_vertices@{idx\_time\_extract\_vertices}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_extract\_vertices}{idx\_time\_extract\_vertices}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a9432e060c10c42818018df3b42da53d6} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+extract\+\_\+vertices = -\/1}
+
+\Hypertarget{classlaguerre__diagram_ad6070b7e06e2ee96897665aeb585121b}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_halfspace\_intersection@{idx\_time\_halfspace\_intersection}}
+\index{idx\_time\_halfspace\_intersection@{idx\_time\_halfspace\_intersection}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_halfspace\_intersection}{idx\_time\_halfspace\_intersection}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_ad6070b7e06e2ee96897665aeb585121b} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+halfspace\+\_\+intersection = -\/1}
+
+\Hypertarget{classlaguerre__diagram_a62c260f78d62cb3173e3a54a9355585a}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_jacobian@{idx\_time\_jacobian}}
+\index{idx\_time\_jacobian@{idx\_time\_jacobian}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_jacobian}{idx\_time\_jacobian}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a62c260f78d62cb3173e3a54a9355585a} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+jacobian = -\/1}
+
+\Hypertarget{classlaguerre__diagram_a731fd483a207cc21bc694074837afe81}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_prepare\_rasterizer@{idx\_time\_prepare\_rasterizer}}
+\index{idx\_time\_prepare\_rasterizer@{idx\_time\_prepare\_rasterizer}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_prepare\_rasterizer}{idx\_time\_prepare\_rasterizer}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a731fd483a207cc21bc694074837afe81} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+prepare\+\_\+rasterizer = -\/1}
+
+\Hypertarget{classlaguerre__diagram_a1cb7ace206dfdf6d7a758cd7878b660c}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_touching\_dual@{idx\_time\_touching\_dual}}
+\index{idx\_time\_touching\_dual@{idx\_time\_touching\_dual}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_touching\_dual}{idx\_time\_touching\_dual}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a1cb7ace206dfdf6d7a758cd7878b660c} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+touching\+\_\+dual = -\/1}
+
+\Hypertarget{classlaguerre__diagram_aa239457787da5934aa432a3035f7350f}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!idx\_time\_touching\_dual\_n@{idx\_time\_touching\_dual\_n}}
+\index{idx\_time\_touching\_dual\_n@{idx\_time\_touching\_dual\_n}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{idx\_time\_touching\_dual\_n}{idx\_time\_touching\_dual\_n}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_aa239457787da5934aa432a3035f7350f} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::idx\+\_\+time\+\_\+touching\+\_\+dual\+\_\+n = -\/1}
+
+\Hypertarget{classlaguerre__diagram_a5f263a8e0a61637da057eeef740bfff9}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!n@{n}}
+\index{n@{n}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{n}{n}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a5f263a8e0a61637da057eeef740bfff9} 
+template$<$typename T $>$ \\
+int \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::n}
+
+
+
+number of seeds 
+
+\Hypertarget{classlaguerre__diagram_a319b61af0ff9d08a035958b1ec819d45}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!parent@{parent}}
+\index{parent@{parent}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{parent}{parent}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a319b61af0ff9d08a035958b1ec819d45} 
+template$<$typename T $>$ \\
+std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$T$>$ $>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::parent}
+
+
+
+parent diagram; when not NULL, negative areas will be kept consistent with parent 
+
+\Hypertarget{classlaguerre__diagram_af417a220ab9030ac5f1b0218d9527d6b}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!phys@{phys}}
+\index{phys@{phys}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{phys}{phys}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_af417a220ab9030ac5f1b0218d9527d6b} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::phys}
+
+
+
+physical parameters defining cost / coordinate transform 
+
+\Hypertarget{classlaguerre__diagram_a6a4c4711b5e8ec10eaf6284d313a82ff}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!sim@{sim}}
+\index{sim@{sim}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{sim}{sim}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a6a4c4711b5e8ec10eaf6284d313a82ff} 
+template$<$typename T $>$ \\
+\mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::sim}
+
+
+
+simulation parameters defining boundaries, resolutions, etc. 
+
+\Hypertarget{classlaguerre__diagram_a35fc2bd21a8bd481d8bcbe3e61ef6d23}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!time@{time}}
+\index{time@{time}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{time}{time}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a35fc2bd21a8bd481d8bcbe3e61ef6d23} 
+template$<$typename T $>$ \\
+std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classtimer}{timer}}$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::time = NULL}
+
+
+
+timer used for profiling 
+
+\Hypertarget{classlaguerre__diagram_a16ab7210ea2161972211d524f0964231}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!vedglist@{vedglist}}
+\index{vedglist@{vedglist}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{vedglist}{vedglist}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a16ab7210ea2161972211d524f0964231} 
+template$<$typename T $>$ \\
+std\+::vector$<$\mbox{\hyperlink{structlaguerre__diagram_1_1virtual__diagram__edge}{virtual\+\_\+diagram\+\_\+edge}}$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::vedglist}
+
+
+
+non-\/geometrical diagram edges (only primal with differential) 
+
+\Hypertarget{classlaguerre__diagram_a1c15826418c629499e9c8f0bcb5ac3a9}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!verts@{verts}}
+\index{verts@{verts}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{verts}{verts}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_a1c15826418c629499e9c8f0bcb5ac3a9} 
+template$<$typename T $>$ \\
+Eigen\+::\+Matrix$<$double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::verts}
+
+
+
+geometric diagram vertices 
+
+\Hypertarget{classlaguerre__diagram_afd5497b2aa55bcab8897858e5335cd6c}\index{laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}!ys@{ys}}
+\index{ys@{ys}!laguerre\_diagram$<$ T $>$@{laguerre\_diagram$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{ys}{ys}}
+{\footnotesize\ttfamily \label{classlaguerre__diagram_afd5497b2aa55bcab8897858e5335cd6c} 
+template$<$typename T $>$ \\
+Eigen\+::\+Matrix$<$double, Eigen\+::\+Dynamic, 2, Eigen\+::\+Row\+Major$>$ \mbox{\hyperlink{classlaguerre__diagram}{laguerre\+\_\+diagram}}$<$ T $>$\+::ys}
+
+
+
+seed positions 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{laguerre__diagram_8hpp}{laguerre\+\_\+diagram.\+hpp}}\item 
+src/\mbox{\hyperlink{laguerre__diagram_8cpp}{laguerre\+\_\+diagram.\+cpp}}\end{DoxyCompactItemize}
