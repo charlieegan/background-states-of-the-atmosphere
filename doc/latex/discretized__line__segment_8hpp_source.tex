@@ -1,0 +1,57 @@
+\doxysection{discretized\+\_\+line\+\_\+segment.\+hpp}
+\hypertarget{discretized__line__segment_8hpp_source}{}\label{discretized__line__segment_8hpp_source}\index{src/discretized\_line\_segment.hpp@{src/discretized\_line\_segment.hpp}}
+\mbox{\hyperlink{discretized__line__segment_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ DISCRETIZED\_LINE\_SEGMENT}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ DISCRETIZED\_LINE\_SEGMENT}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{common_8hpp}{common.hpp}}"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{physical__parameters_8hpp}{physical\_parameters.hpp}}"{}}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{simulation__parameters_8hpp}{simulation\_parameters.hpp}}"{}}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00009\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classdiscretized__line__segment}{discretized\_line\_segment}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00012\ \ \ \textcolor{keyword}{typedef}\ Eigen::Matrix<T,\ Eigen::Dynamic,\ 2,\ Eigen::RowMajor>\ \mbox{\hyperlink{classdiscretized__line__segment_a79afe23dff5201b427b1a8b3d50b66cd}{Matrix2X}};}
+\DoxyCodeLine{00013\ \ \ \textcolor{keyword}{typedef}\ Eigen::Vector2<T>\ \mbox{\hyperlink{classdiscretized__line__segment_a0ffa9bc43ca7776bd644fb1763e2cfc3}{Vector2}};}
+\DoxyCodeLine{00014\ \ \ \textcolor{keyword}{typedef}\ Eigen::VectorX<T>\ \mbox{\hyperlink{classdiscretized__line__segment_a1f72cf59269d58b648e3bb29ad6f5136}{VectorX}};}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{structphysical__parameters}{physical\_parameters}}\ *\mbox{\hyperlink{classdiscretized__line__segment_aad4b6b5d3bbd84feeeaf278dfe1495c0}{phys}};}
+\DoxyCodeLine{00017\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classdiscretized__line__segment_abdf1b07fc44ea16f55be6034d1a7d249}{max\_resolution}};}
+\DoxyCodeLine{00018\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a0ffa9bc43ca7776bd644fb1763e2cfc3}{Vector2}}\ \mbox{\hyperlink{classdiscretized__line__segment_a0b838217a0787adb20c6fcfcb6004420}{aspect}};}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \textcolor{comment}{//\ start,\ end\ and\ direction\ in\ linear\ coords}}
+\DoxyCodeLine{00021\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a0ffa9bc43ca7776bd644fb1763e2cfc3}{Vector2}}\ \mbox{\hyperlink{classdiscretized__line__segment_ac58e9703b2cfbdfa4942716aabba44e0}{start}},\ \mbox{\hyperlink{classdiscretized__line__segment_ad9f86923823d2ab24d536ba0900190c7}{end}},\ \mbox{\hyperlink{classdiscretized__line__segment_a512a749963c08e299ab0474468a521e7}{direction}};}
+\DoxyCodeLine{00022\ \ \ }
+\DoxyCodeLine{00023\ \ \ \textcolor{comment}{//\ the\ coordinate\ lists\ are\ all\ on\ the\ same\ discretizaion}}
+\DoxyCodeLine{00024\ \ \ \textcolor{comment}{//\ s\ is\ one\ shorter\ than\ the\ rest,\ since\ there\ is\ no\ intersect\ after\ the\ last\ point}}
+\DoxyCodeLine{00025\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a1f72cf59269d58b648e3bb29ad6f5136}{VectorX}}\ \mbox{\hyperlink{classdiscretized__line__segment_abb09228608565a6e7d73ffdc54ad28f9}{lams}};\ \textcolor{comment}{//\ positions\ in\ [0,1]\ at\ which\ discretization\ points\ are\ (linearly\ spaced\ in\ linear\ domain)}}
+\DoxyCodeLine{00026\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a79afe23dff5201b427b1a8b3d50b66cd}{Matrix2X}}\ \mbox{\hyperlink{classdiscretized__line__segment_a06c76a97811107adab6e1bdc21fad5a9}{x}};\ \textcolor{comment}{//\ coordinates\ in\ s-\/p-\/coords}}
+\DoxyCodeLine{00027\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a79afe23dff5201b427b1a8b3d50b66cd}{Matrix2X}}\ \mbox{\hyperlink{classdiscretized__line__segment_a588eeea6a8541735656af8ea539c37b1}{t}};\ \textcolor{comment}{//\ tangent\ vectors\ in\ s-\/p-\/coords}}
+\DoxyCodeLine{00028\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a79afe23dff5201b427b1a8b3d50b66cd}{Matrix2X}}\ \mbox{\hyperlink{classdiscretized__line__segment_aacc4c8f650b05bf1ef6fb60b9c2b35f2}{s}};\ \textcolor{comment}{//\ intersections\ between\ current\ tangent\ with\ next\ tangent\ in\ s-\/p-\/coords}}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ T\ \mbox{\hyperlink{classdiscretized__line__segment_ae9fd6421d6186fafbc8ef2220db300f0}{errb}};\ \textcolor{comment}{//\ area\ error\ bound}}
+\DoxyCodeLine{00031\ \ \ T\ \mbox{\hyperlink{classdiscretized__line__segment_a70ca01fd9707fedc47d72e0f37f91b63}{area}};\ \textcolor{comment}{//\ (approx)\ area\ below\ (discretized)\ line\ segment}}
+\DoxyCodeLine{00032\ \ \ }
+\DoxyCodeLine{00033\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_aafe39ab654bb89eb66e31f93a6caf3ae}{discretized\_line\_segment}}(\textcolor{keyword}{const}\ Eigen::Ref<const\ Vector2>\ \&zeta\_s,\ \textcolor{comment}{//\ start\ point\ in\ linear\ coords}}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ Eigen::Ref<const\ Vector2>\ \&zeta\_e,\ \textcolor{comment}{//\ end\ point\ in\ linear\ coords}}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{structphysical__parameters}{physical\_parameters}}\ \&\mbox{\hyperlink{classdiscretized__line__segment_aad4b6b5d3bbd84feeeaf278dfe1495c0}{phys}},}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{structsimulation__parameters}{simulation\_parameters}}\ \&sim);}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a0ffa9bc43ca7776bd644fb1763e2cfc3}{Vector2}}\ \mbox{\hyperlink{classdiscretized__line__segment_a56b6de5de24fe1d3da598a13e652cbaf}{get\_z}}(\textcolor{keyword}{const}\ T\ \&lam)\ \textcolor{keyword}{const};\ \textcolor{comment}{//\ get\ linear\ coord\ at\ position\ lam\ in\ [0,1]\ along\ line}}
+\DoxyCodeLine{00039\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a0ffa9bc43ca7776bd644fb1763e2cfc3}{Vector2}}\ \mbox{\hyperlink{classdiscretized__line__segment_a7286ba3ebb2ab7c276932caa5f3d728c}{get\_x}}(\textcolor{keyword}{const}\ T\ \&lam)\ \textcolor{keyword}{const};\ \textcolor{comment}{//\ get\ s-\/p-\/coords\ at\ position\ lam\ in\ [0,1]\ along\ line}}
+\DoxyCodeLine{00040\ \ \ \mbox{\hyperlink{classdiscretized__line__segment_a0ffa9bc43ca7776bd644fb1763e2cfc3}{Vector2}}\ \mbox{\hyperlink{classdiscretized__line__segment_a7b57f891cb70c09e6a1837ad61437235}{get\_t}}(\textcolor{keyword}{const}\ T\ \&lam)\ \textcolor{keyword}{const};\ \textcolor{comment}{//\ get\ s-\/p-\/tangent\ at\ position\ lam\ in\ [0,1]\ along\ line}}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classdiscretized__line__segment_a8d1c92f276c45921ac9896b2635d4a2d}{refine}}(\textcolor{keywordtype}{int}\ newlen\ =\ -\/1);\ \textcolor{comment}{//\ refine\ resolution\ to\ newlen\ (if\ newlen\ <\ 2,\ roughly\ double\ it)}}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classdiscretized__line__segment_a97df72f10e5ca27bdcbd74a2dbdcbdd9}{size}}()\ \textcolor{keyword}{const};\ \textcolor{comment}{//\ number\ of\ points\ used\ for\ discretization}}
+\DoxyCodeLine{00045\ \ \ }
+\DoxyCodeLine{00046\ \ \ std::string\ \mbox{\hyperlink{classdiscretized__line__segment_a85dc96be0db9b5bed739cae319fff5df}{repr}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00048\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classdiscretized__line__segment_ae7d413d5d7e84fcb3d92e3797c4e6b86}{bind}}(py::module\_\ \&m);}
+\DoxyCodeLine{00049\ \};}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

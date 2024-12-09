@@ -1,0 +1,205 @@
+\doxysection{simulation\+\_\+parameters Struct Reference}
+\hypertarget{structsimulation__parameters}{}\label{structsimulation__parameters}\index{simulation\_parameters@{simulation\_parameters}}
+
+
+{\ttfamily \#include $<$simulation\+\_\+parameters.\+hpp$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structsimulation__parameters_a0553b6cf211945c46365ff405077f565}{simulation\+\_\+parameters}} (double smin=0.\+1747087883522576, double smax=0.\+9809294113733709, double pmin=7300, double pmax=141855, int \mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\+\_\+res}}=1000, double \mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\+\_\+tolerance}}=1e-\/4, int \mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\+\_\+refine\+\_\+steps}}=1000, double \mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\+\_\+tolerance}}=1e-\/3, int \mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\+\_\+line\+\_\+resolution}}=4, int \mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\+\_\+line\+\_\+resolution}}=100, double \mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\+\_\+area\+\_\+scaling}}=0.\+0)
+\item 
+void \mbox{\hyperlink{structsimulation__parameters_abcbe7ad0850e5a6bf94792ede2b0c974}{set\+\_\+smin}} (const double \&v)
+\item 
+void \mbox{\hyperlink{structsimulation__parameters_a831025655d254e48db5adb577379436e}{set\+\_\+smax}} (const double \&v)
+\item 
+void \mbox{\hyperlink{structsimulation__parameters_ae0209b59e558dddf30e7c24a2535fe49}{set\+\_\+pmin}} (const double \&v)
+\item 
+void \mbox{\hyperlink{structsimulation__parameters_a7defaa4b7fe1228268d454302ff6169a}{set\+\_\+pmax}} (const double \&v)
+\item 
+double \mbox{\hyperlink{structsimulation__parameters_a22b35619d6ef8ad2bd078baf37b82ff6}{get\+\_\+smin}} () const
+\item 
+double \mbox{\hyperlink{structsimulation__parameters_ab484747750ebae0ac3e6ba3fdf1467af}{get\+\_\+smax}} () const
+\item 
+double \mbox{\hyperlink{structsimulation__parameters_a1c1bbddee8cd74d48b4a8cb1c8e2971f}{get\+\_\+pmin}} () const
+\item 
+double \mbox{\hyperlink{structsimulation__parameters_ac8c96ef2dee203f1c5d758780a042bdd}{get\+\_\+pmax}} () const
+\item 
+std\+::string \mbox{\hyperlink{structsimulation__parameters_a003ea8aabef4b2b0f505923178a137db}{repr}} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static py\+::tuple \mbox{\hyperlink{structsimulation__parameters_a03c54f739cb00a17e4940aa256fef718}{pickle}} (const \mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} \&s)
+\item 
+static \mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} \mbox{\hyperlink{structsimulation__parameters_a7bfa04677eedba8169b276b74abf1994}{unpickle}} (py\+::tuple t)
+\item 
+static void \mbox{\hyperlink{structsimulation__parameters_a83d5779bb7a4d431afe79f42281398a5}{bind}} (py\+::module\+\_\+ \&m)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+Eigen\+::\+Vector2d \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}
+\item 
+Eigen\+::\+Vector2d \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}
+\item 
+int \mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\+\_\+res}}
+\item 
+double \mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\+\_\+tolerance}}
+\item 
+int \mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\+\_\+refine\+\_\+steps}}
+\item 
+double \mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\+\_\+tolerance}}
+\item 
+int \mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\+\_\+line\+\_\+resolution}}
+\item 
+int \mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\+\_\+line\+\_\+resolution}}
+\item 
+double \mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\+\_\+area\+\_\+scaling}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{structsimulation__parameters_a0553b6cf211945c46365ff405077f565}\index{simulation\_parameters@{simulation\_parameters}!simulation\_parameters@{simulation\_parameters}}
+\index{simulation\_parameters@{simulation\_parameters}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{simulation\_parameters()}{simulation\_parameters()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a0553b6cf211945c46365ff405077f565} 
+simulation\+\_\+parameters\+::simulation\+\_\+parameters (\begin{DoxyParamCaption}\item[{double}]{smin}{ = {\ttfamily 0.1747087883522576}, }\item[{double}]{smax}{ = {\ttfamily 0.9809294113733709}, }\item[{double}]{pmin}{ = {\ttfamily 7300}, }\item[{double}]{pmax}{ = {\ttfamily 141855}, }\item[{int}]{boundary\+\_\+res}{ = {\ttfamily 1000}, }\item[{double}]{area\+\_\+tolerance}{ = {\ttfamily 1e-\/4}, }\item[{int}]{max\+\_\+refine\+\_\+steps}{ = {\ttfamily 1000}, }\item[{double}]{line\+\_\+tolerance}{ = {\ttfamily 1e-\/3}, }\item[{int}]{min\+\_\+line\+\_\+resolution}{ = {\ttfamily 4}, }\item[{int}]{max\+\_\+line\+\_\+resolution}{ = {\ttfamily 100}, }\item[{double}]{negative\+\_\+area\+\_\+scaling}{ = {\ttfamily 0.0}}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structsimulation__parameters_a83d5779bb7a4d431afe79f42281398a5}\index{simulation\_parameters@{simulation\_parameters}!bind@{bind}}
+\index{bind@{bind}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{bind()}{bind()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a83d5779bb7a4d431afe79f42281398a5} 
+static void simulation\+\_\+parameters\+::bind (\begin{DoxyParamCaption}\item[{py\+::module\+\_\+ \&}]{m}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{structsimulation__parameters_ac8c96ef2dee203f1c5d758780a042bdd}\index{simulation\_parameters@{simulation\_parameters}!get\_pmax@{get\_pmax}}
+\index{get\_pmax@{get\_pmax}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{get\_pmax()}{get\_pmax()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_ac8c96ef2dee203f1c5d758780a042bdd} 
+double simulation\+\_\+parameters\+::get\+\_\+pmax (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_a1c1bbddee8cd74d48b4a8cb1c8e2971f}\index{simulation\_parameters@{simulation\_parameters}!get\_pmin@{get\_pmin}}
+\index{get\_pmin@{get\_pmin}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{get\_pmin()}{get\_pmin()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a1c1bbddee8cd74d48b4a8cb1c8e2971f} 
+double simulation\+\_\+parameters\+::get\+\_\+pmin (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_ab484747750ebae0ac3e6ba3fdf1467af}\index{simulation\_parameters@{simulation\_parameters}!get\_smax@{get\_smax}}
+\index{get\_smax@{get\_smax}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{get\_smax()}{get\_smax()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_ab484747750ebae0ac3e6ba3fdf1467af} 
+double simulation\+\_\+parameters\+::get\+\_\+smax (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_a22b35619d6ef8ad2bd078baf37b82ff6}\index{simulation\_parameters@{simulation\_parameters}!get\_smin@{get\_smin}}
+\index{get\_smin@{get\_smin}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{get\_smin()}{get\_smin()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a22b35619d6ef8ad2bd078baf37b82ff6} 
+double simulation\+\_\+parameters\+::get\+\_\+smin (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_a03c54f739cb00a17e4940aa256fef718}\index{simulation\_parameters@{simulation\_parameters}!pickle@{pickle}}
+\index{pickle@{pickle}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{pickle()}{pickle()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a03c54f739cb00a17e4940aa256fef718} 
+static py\+::tuple simulation\+\_\+parameters\+::pickle (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} \&}]{s}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{structsimulation__parameters_a003ea8aabef4b2b0f505923178a137db}\index{simulation\_parameters@{simulation\_parameters}!repr@{repr}}
+\index{repr@{repr}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{repr()}{repr()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a003ea8aabef4b2b0f505923178a137db} 
+std\+::string simulation\+\_\+parameters\+::repr (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_a7defaa4b7fe1228268d454302ff6169a}\index{simulation\_parameters@{simulation\_parameters}!set\_pmax@{set\_pmax}}
+\index{set\_pmax@{set\_pmax}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{set\_pmax()}{set\_pmax()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a7defaa4b7fe1228268d454302ff6169a} 
+void simulation\+\_\+parameters\+::set\+\_\+pmax (\begin{DoxyParamCaption}\item[{const double \&}]{v}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_ae0209b59e558dddf30e7c24a2535fe49}\index{simulation\_parameters@{simulation\_parameters}!set\_pmin@{set\_pmin}}
+\index{set\_pmin@{set\_pmin}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{set\_pmin()}{set\_pmin()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_ae0209b59e558dddf30e7c24a2535fe49} 
+void simulation\+\_\+parameters\+::set\+\_\+pmin (\begin{DoxyParamCaption}\item[{const double \&}]{v}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_a831025655d254e48db5adb577379436e}\index{simulation\_parameters@{simulation\_parameters}!set\_smax@{set\_smax}}
+\index{set\_smax@{set\_smax}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{set\_smax()}{set\_smax()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a831025655d254e48db5adb577379436e} 
+void simulation\+\_\+parameters\+::set\+\_\+smax (\begin{DoxyParamCaption}\item[{const double \&}]{v}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_abcbe7ad0850e5a6bf94792ede2b0c974}\index{simulation\_parameters@{simulation\_parameters}!set\_smin@{set\_smin}}
+\index{set\_smin@{set\_smin}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{set\_smin()}{set\_smin()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_abcbe7ad0850e5a6bf94792ede2b0c974} 
+void simulation\+\_\+parameters\+::set\+\_\+smin (\begin{DoxyParamCaption}\item[{const double \&}]{v}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structsimulation__parameters_a7bfa04677eedba8169b276b74abf1994}\index{simulation\_parameters@{simulation\_parameters}!unpickle@{unpickle}}
+\index{unpickle@{unpickle}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{unpickle()}{unpickle()}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a7bfa04677eedba8169b276b74abf1994} 
+static \mbox{\hyperlink{structsimulation__parameters}{simulation\+\_\+parameters}} simulation\+\_\+parameters\+::unpickle (\begin{DoxyParamCaption}\item[{py\+::tuple}]{t}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}\index{simulation\_parameters@{simulation\_parameters}!area\_tolerance@{area\_tolerance}}
+\index{area\_tolerance@{area\_tolerance}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{area\_tolerance}{area\_tolerance}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153} 
+double simulation\+\_\+parameters\+::area\+\_\+tolerance}
+
+\Hypertarget{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}\index{simulation\_parameters@{simulation\_parameters}!boundary\_res@{boundary\_res}}
+\index{boundary\_res@{boundary\_res}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{boundary\_res}{boundary\_res}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5} 
+int simulation\+\_\+parameters\+::boundary\+\_\+res}
+
+\Hypertarget{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}\index{simulation\_parameters@{simulation\_parameters}!line\_tolerance@{line\_tolerance}}
+\index{line\_tolerance@{line\_tolerance}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{line\_tolerance}{line\_tolerance}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62} 
+double simulation\+\_\+parameters\+::line\+\_\+tolerance}
+
+\Hypertarget{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}\index{simulation\_parameters@{simulation\_parameters}!max\_line\_resolution@{max\_line\_resolution}}
+\index{max\_line\_resolution@{max\_line\_resolution}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{max\_line\_resolution}{max\_line\_resolution}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242} 
+int simulation\+\_\+parameters\+::max\+\_\+line\+\_\+resolution}
+
+\Hypertarget{structsimulation__parameters_a522047e365fd284a500316163b0c311f}\index{simulation\_parameters@{simulation\_parameters}!max\_refine\_steps@{max\_refine\_steps}}
+\index{max\_refine\_steps@{max\_refine\_steps}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{max\_refine\_steps}{max\_refine\_steps}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a522047e365fd284a500316163b0c311f} 
+int simulation\+\_\+parameters\+::max\+\_\+refine\+\_\+steps}
+
+\Hypertarget{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}\index{simulation\_parameters@{simulation\_parameters}!min\_line\_resolution@{min\_line\_resolution}}
+\index{min\_line\_resolution@{min\_line\_resolution}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{min\_line\_resolution}{min\_line\_resolution}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6} 
+int simulation\+\_\+parameters\+::min\+\_\+line\+\_\+resolution}
+
+\Hypertarget{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}\index{simulation\_parameters@{simulation\_parameters}!negative\_area\_scaling@{negative\_area\_scaling}}
+\index{negative\_area\_scaling@{negative\_area\_scaling}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{negative\_area\_scaling}{negative\_area\_scaling}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc} 
+double simulation\+\_\+parameters\+::negative\+\_\+area\+\_\+scaling}
+
+\Hypertarget{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}\index{simulation\_parameters@{simulation\_parameters}!spmax@{spmax}}
+\index{spmax@{spmax}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{spmax}{spmax}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658} 
+Eigen\+::\+Vector2d simulation\+\_\+parameters\+::spmax}
+
+\Hypertarget{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}\index{simulation\_parameters@{simulation\_parameters}!spmin@{spmin}}
+\index{spmin@{spmin}!simulation\_parameters@{simulation\_parameters}}
+\doxysubsubsection{\texorpdfstring{spmin}{spmin}}
+{\footnotesize\ttfamily \label{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1} 
+Eigen\+::\+Vector2d simulation\+\_\+parameters\+::spmin}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{simulation__parameters_8hpp}{simulation\+\_\+parameters.\+hpp}}\end{DoxyCompactItemize}

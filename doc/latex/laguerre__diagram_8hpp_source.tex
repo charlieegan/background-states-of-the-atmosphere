@@ -1,0 +1,111 @@
+\doxysection{laguerre\+\_\+diagram.\+hpp}
+\hypertarget{laguerre__diagram_8hpp_source}{}\label{laguerre__diagram_8hpp_source}\index{src/laguerre\_diagram.hpp@{src/laguerre\_diagram.hpp}}
+\mbox{\hyperlink{laguerre__diagram_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ LAGUERRE\_DIAGRAM\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ LAGUERRE\_DIAGRAM\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{common_8hpp}{common.hpp}}"{}}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{physical__parameters_8hpp}{physical\_parameters.hpp}}"{}}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{simulation__parameters_8hpp}{simulation\_parameters.hpp}}"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{discretized__line__segment_8hpp}{discretized\_line\_segment.hpp}}"{}}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{halfspace__intersection_8hpp}{halfspace\_intersection.hpp}}"{}}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{rasterizer_8hpp}{rasterizer.hpp}}"{}}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00020\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>\ \textcolor{comment}{//\ dual\ type,\ used\ for\ duals\ and\ halfspace\ intersection\ (not\ everything)}}
+\DoxyCodeLine{00021\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlaguerre__diagram}{laguerre\_diagram}}\ :\ \textcolor{keyword}{public}\ std::enable\_shared\_from\_this<laguerre\_diagram<T>>}
+\DoxyCodeLine{00022\ \{}
+\DoxyCodeLine{00023\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00024\ \ \ \textcolor{keyword}{typedef}\ Eigen::Ref<const\ Eigen::Matrix<double,\ Eigen::Dynamic,\ 2,\ Eigen::RowMajor>>\ \mbox{\hyperlink{classlaguerre__diagram_a27983c087acadb57f4d0956bcaabb073}{seeds\_t}};}
+\DoxyCodeLine{00025\ \ \ \textcolor{keyword}{typedef}\ Eigen::Vector3<T>\ \mbox{\hyperlink{classlaguerre__diagram_ab2ccea5fdf9939eb365e158d9e4ada60}{Vec3}};}
+\DoxyCodeLine{00026\ \ \ \textcolor{keyword}{typedef}\ Eigen::Vector4<T>\ \mbox{\hyperlink{classlaguerre__diagram_ae8fbcffea8c7251c2373827819a349bd}{Vec4}};}
+\DoxyCodeLine{00027\ \ \ \textcolor{keyword}{typedef}\ Eigen::VectorX<T>\ \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}};}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00033\ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge}{diagram\_edge}}\ \{}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_af09dcdc30daded36270202a4b6a3fd3f}{pi}};\ }
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_ad0cec785f2caa679375ff749c2a0a48f}{pj}};\ }
+\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_a4edf79f626ae712448154ecc79b19150}{di}};\ }
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_aeabdee92f502ab8fded018734f8aa2a4}{dj}};\ }
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \ \ \ \ \mbox{\hyperlink{classdiscretized__line__segment}{discretized\_line\_segment<double>}}\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_afd163d8181ce8255e26f81c78a58e687}{ls}};\ }
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_ac8575635957c3498508b399e4f5a5c9f}{dif}};\ }
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00046\ \ \ \ \ std::string\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_aeecc1474e3e3aa914c052630bce4a819}{repr}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlaguerre__diagram_1_1diagram__edge_aee1b1d6302044d6ff2dd6401ac9885d4}{bind}}(py::module\_\ \&m);}
+\DoxyCodeLine{00053\ \ \ \};}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00058\ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlaguerre__diagram_1_1virtual__diagram__edge}{virtual\_diagram\_edge}}\ \{}
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structlaguerre__diagram_1_1virtual__diagram__edge_ad509f1bb200a705705c04ce824a1e087}{pi}};\ }
+\DoxyCodeLine{00060\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structlaguerre__diagram_1_1virtual__diagram__edge_a5d2e8ef1e6765bd771af65da830b1085}{pj}};\ }
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structlaguerre__diagram_1_1virtual__diagram__edge_a595e0ed25013fe46edf7393ff5ecebcf}{dif}};\ }
+\DoxyCodeLine{00062\ \ \ \};}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \ \ std::shared\_ptr<laguerre\_diagram<T>>\ \mbox{\hyperlink{classlaguerre__diagram_a319b61af0ff9d08a035958b1ec819d45}{parent}};\ }
+\DoxyCodeLine{00065\ \ \ }
+\DoxyCodeLine{00066\ \ \ Eigen::Matrix<double,\ Eigen::Dynamic,\ 2,\ Eigen::RowMajor>\ \mbox{\hyperlink{classlaguerre__diagram_afd5497b2aa55bcab8897858e5335cd6c}{ys}};\ }
+\DoxyCodeLine{00067\ \ \ \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}}\ \mbox{\hyperlink{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967}{duals}};\ }
+\DoxyCodeLine{00068\ \ \ \mbox{\hyperlink{structphysical__parameters}{physical\_parameters}}\ \mbox{\hyperlink{classlaguerre__diagram_af417a220ab9030ac5f1b0218d9527d6b}{phys}};\ }
+\DoxyCodeLine{00069\ \ \ \mbox{\hyperlink{structsimulation__parameters}{simulation\_parameters}}\ \mbox{\hyperlink{classlaguerre__diagram_a6a4c4711b5e8ec10eaf6284d313a82ff}{sim}};\ }
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \ \ \mbox{\hyperlink{classhalfspace__intersection}{halfspace\_intersection<T>}}\ \mbox{\hyperlink{classlaguerre__diagram_ae9ae6e859c52caf0cfa2cc5f2ebc3fa5}{hs}};\ }
+\DoxyCodeLine{00072\ \ \ std::vector<int>\ \mbox{\hyperlink{classlaguerre__diagram_a44a337b05e6db0ef2ad749910f812891}{hints}};\ }
+\DoxyCodeLine{00073\ \ \ }
+\DoxyCodeLine{00074\ \ \ Eigen::Matrix<double,\ Eigen::Dynamic,\ 2,\ Eigen::RowMajor>\ \mbox{\hyperlink{classlaguerre__diagram_a1c15826418c629499e9c8f0bcb5ac3a9}{verts}};\ }
+\DoxyCodeLine{00075\ \ \ std::vector<diagram\_edge>\ \mbox{\hyperlink{classlaguerre__diagram_a32b599ef6a6b94d67ed45cc00ac142de}{edglist}};\ }
+\DoxyCodeLine{00076\ \ \ std::vector<virtual\_diagram\_edge>\ \mbox{\hyperlink{classlaguerre__diagram_a16ab7210ea2161972211d524f0964231}{vedglist}};\ }
+\DoxyCodeLine{00077\ \ \ std::vector<std::vector<int>>\ \mbox{\hyperlink{classlaguerre__diagram_afe2990d93fb04d78e30a07bb5017da93}{faces}};\ }
+\DoxyCodeLine{00078\ \ \ std::vector<std::vector<int>>\ \mbox{\hyperlink{classlaguerre__diagram_a3c4cad4d3271a3ca025e22066bdf3ff5}{dfacets}};\ }
+\DoxyCodeLine{00079\ \ \ Eigen::VectorXd\ \mbox{\hyperlink{classlaguerre__diagram_a238894548200c1019fed0d9c7d32e7b0}{areas}};\ }
+\DoxyCodeLine{00080\ \ \ Eigen::VectorXd\ \mbox{\hyperlink{classlaguerre__diagram_aca48ff29958d53de5b51163bc673e084}{areaerrs}};\ }
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \textcolor{preprocessor}{\#ifdef\ PROFILING}}
+\DoxyCodeLine{00083\ \ \ std::shared\_ptr<timer>\ time\ =\ NULL;\ }
+\DoxyCodeLine{00084\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classlaguerre__diagram_ad6070b7e06e2ee96897665aeb585121b}{idx\_time\_halfspace\_intersection}}\ =\ -\/1,}
+\DoxyCodeLine{00085\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_a9432e060c10c42818018df3b42da53d6}{idx\_time\_extract\_vertices}}\ =\ -\/1,}
+\DoxyCodeLine{00086\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_a351bdadf547d9ca07ed6d78008966b65}{idx\_time\_extract\_edges}}\ =\ -\/1,}
+\DoxyCodeLine{00087\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_aa59c79fb2427bdb42d1abeb1a716b28c}{idx\_time\_calc\_areas}}\ =\ -\/1,}
+\DoxyCodeLine{00088\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_adc47f18c096ce9cdc0a44b8b40b1bfa5}{idx\_time\_calc\_integrals}}\ =\ -\/1,}
+\DoxyCodeLine{00089\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_a731fd483a207cc21bc694074837afe81}{idx\_time\_prepare\_rasterizer}}\ =\ -\/1,}
+\DoxyCodeLine{00090\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_a62c260f78d62cb3173e3a54a9355585a}{idx\_time\_jacobian}}\ =\ -\/1,}
+\DoxyCodeLine{00091\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_a1cb7ace206dfdf6d7a758cd7878b660c}{idx\_time\_touching\_dual}}\ =\ -\/1,}
+\DoxyCodeLine{00092\ \ \ \ \ \mbox{\hyperlink{classlaguerre__diagram_aa239457787da5934aa432a3035f7350f}{idx\_time\_touching\_dual\_n}}\ =\ -\/1;}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00095\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlaguerre__diagram_ad8598b5ad79a22c77e268cc582b159ec}{setup\_timer}}();}
+\DoxyCodeLine{00096\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00105\ \ \ \mbox{\hyperlink{classlaguerre__diagram_a187bc57674d2c554366f1ced5a9a2efa}{laguerre\_diagram}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classlaguerre__diagram_a27983c087acadb57f4d0956bcaabb073}{seeds\_t}}\ \&\mbox{\hyperlink{classlaguerre__diagram_afd5497b2aa55bcab8897858e5335cd6c}{ys}},}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ Eigen::Ref<const\ VecX>\ \&\mbox{\hyperlink{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967}{duals}},}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{structphysical__parameters}{physical\_parameters}}\ \&\mbox{\hyperlink{classlaguerre__diagram_af417a220ab9030ac5f1b0218d9527d6b}{phys}},}
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{structsimulation__parameters}{simulation\_parameters}}\ \&\mbox{\hyperlink{classlaguerre__diagram_a6a4c4711b5e8ec10eaf6284d313a82ff}{sim}});}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00116\ \ \ \mbox{\hyperlink{classlaguerre__diagram_a187bc57674d2c554366f1ced5a9a2efa}{laguerre\_diagram}}(std::shared\_ptr<\mbox{\hyperlink{classlaguerre__diagram}{laguerre\_diagram<T>}}>\ \mbox{\hyperlink{classlaguerre__diagram_a319b61af0ff9d08a035958b1ec819d45}{parent}},}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ Eigen::Ref<const\ VecX>\ \&\mbox{\hyperlink{classlaguerre__diagram_a04f1a00efe9726e7d6beab06bcdd3967}{duals}},}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{bool}\ \&keep\_parent=\textcolor{keyword}{true});}
+\DoxyCodeLine{00119\ }
+\DoxyCodeLine{00121\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlaguerre__diagram_a4918478cc280c3528fce6ee7e4416707}{detach}}();}
+\DoxyCodeLine{00122\ }
+\DoxyCodeLine{00124\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlaguerre__diagram_a1cc60226849125ebd561c4310a97856b}{do\_hs\_intersect}}();}
+\DoxyCodeLine{00125\ }
+\DoxyCodeLine{00127\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlaguerre__diagram_a3b1f0f18c6670759790df560d4926e7c}{extract\_diagram}}();}
+\DoxyCodeLine{00128\ }
+\DoxyCodeLine{00137\ \ \ \mbox{\hyperlink{classlaguerre__diagram_a15da86a351001930daa63713fe988985}{VecX}}\ \mbox{\hyperlink{classlaguerre__diagram_ad91faa979c837a29b39107d872bb50f4}{touching\_dual}}(\textcolor{keywordtype}{bool}\ randomize);}
+\DoxyCodeLine{00138\ }
+\DoxyCodeLine{00147\ \ \ \mbox{\hyperlink{classrasterizer}{rasterizer}}\ \mbox{\hyperlink{classlaguerre__diagram_a96cfc954bbe95a1ccbe6046332610bba}{get\_rasterizer}}(std::optional<std::function<Eigen::Vector2d(Eigen::Vector2d)>>\ transform\ =\ std::nullopt);}
+\DoxyCodeLine{00148\ }
+\DoxyCodeLine{00153\ \ \ std::unordered\_map<uint64\_t,\ double>\ \mbox{\hyperlink{classlaguerre__diagram_a5d5800e5be8a8f1da57702b343873965}{jac}}();}
+\DoxyCodeLine{00154\ }
+\DoxyCodeLine{00161\ \ \ std::pair<Eigen::VectorXd,\ std::pair<Eigen::VectorXi,\ Eigen::VectorXi>>\ \mbox{\hyperlink{classlaguerre__diagram_afb2094172714ba40cb5b4d10a20f102d}{jac\_coo}}();}
+\DoxyCodeLine{00162\ }
+\DoxyCodeLine{00169\ \ \ Eigen::Matrix<double,\ Eigen::Dynamic,\ 2,\ Eigen::RowMajor>\ \mbox{\hyperlink{classlaguerre__diagram_ad096feb5b0f2538936476bd6c2681058}{get\_poly}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&pi\_t);}
+\DoxyCodeLine{00170\ }
+\DoxyCodeLine{00175\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlaguerre__diagram_abaf0dd950651c5794716bddaf936b036}{bind}}(py::module\_\ \&m);}
+\DoxyCodeLine{00176\ \};}
+\DoxyCodeLine{00177\ }
+\DoxyCodeLine{00178\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00179\ }
+
+\end{DoxyCode}

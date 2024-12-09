@@ -1,0 +1,92 @@
+\doxysection{src/rasterizer\+\_\+old.hpp File Reference}
+\hypertarget{rasterizer__old_8hpp}{}\label{rasterizer__old_8hpp}\index{src/rasterizer\_old.hpp@{src/rasterizer\_old.hpp}}
+{\ttfamily \#include "{}common.\+hpp"{}}\newline
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classrasterizer}{rasterizer}}
+\item 
+struct \mbox{\hyperlink{structrasterizer_1_1segment}{rasterizer\+::segment}}
+\item 
+struct \mbox{\hyperlink{structrasterizer_1_1event}{rasterizer\+::event}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{rasterizer__old_8hpp_a3a725155348b8e6bc82f64d29273e29d}{BIND\+\_\+\+RASTERIZER\+\_\+\+SEGMENT}}(m)
+\item 
+\#define \mbox{\hyperlink{rasterizer__old_8hpp_ad7a41fb96d6392ca916f3bddb29fd72b}{BIND\+\_\+\+RASTERIZER\+\_\+\+EVENT}}(m)
+\item 
+\#define \mbox{\hyperlink{rasterizer__old_8hpp_a725ff8919a2ec253f38ad2db6014354c}{BIND\+\_\+\+RASTERIZER}}(m)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{rasterizer__old_8hpp_a725ff8919a2ec253f38ad2db6014354c}\index{rasterizer\_old.hpp@{rasterizer\_old.hpp}!BIND\_RASTERIZER@{BIND\_RASTERIZER}}
+\index{BIND\_RASTERIZER@{BIND\_RASTERIZER}!rasterizer\_old.hpp@{rasterizer\_old.hpp}}
+\doxysubsubsection{\texorpdfstring{BIND\_RASTERIZER}{BIND\_RASTERIZER}}
+{\footnotesize\ttfamily \label{rasterizer__old_8hpp_a725ff8919a2ec253f38ad2db6014354c} 
+\#define BIND\+\_\+\+RASTERIZER(\begin{DoxyParamCaption}\item[{}]{m}{}\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\ \ py::class\_<rasterizer>(m,\ \textcolor{stringliteral}{"{}Rasterizer"{}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(py::init<\textcolor{keyword}{const}\ std::vector<std::tuple<Eigen::Vector2d,\ Eigen::Vector2d,\ int>>\ \&,\ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::vector<std::vector<int>>\ \&,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::vector<int>\ \&,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ \textcolor{keyword}{const}\ Eigen::Ref<const\ Eigen::Array4d>\ \&,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&>(),\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}seg"{}}),\ py::arg(\textcolor{stringliteral}{"{}con"{}}),\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}start"{}}),\ py::arg(\textcolor{stringliteral}{"{}bounds"{}}),\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}merge\_epsi"{}}))\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(\textcolor{stringliteral}{"{}rasterize"{}},\ \&\mbox{\hyperlink{classrasterizer_a44372b47724338f399d78e3489c70be7}{rasterizer::rasterize}},\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}val"{}}),\ py::arg(\textcolor{stringliteral}{"{}res"{}}))\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}pool"{}},\ \&\mbox{\hyperlink{classrasterizer_af01f2b5b602ae070826606dd5a4daa30}{rasterizer::pool}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}events"{}},\ \&\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{rasterizer::events}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_property\_readonly(\textcolor{stringliteral}{"{}pline"{}},\ [](\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer}{rasterizer}}\ \&rast)\ \{\ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ std::vector<rasterizer::segment>\ res;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ for\ (\textcolor{keyword}{auto}\ \&it\ :\ rast.\mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ res.push\_back(*it);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{return}\ res;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}line"{}},\ \&\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{rasterizer::line}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}out"{}},\ \&\mbox{\hyperlink{classrasterizer_aaab7780b554dc64d72da10b810eded71}{rasterizer::out}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}fill"{}},\ \&\mbox{\hyperlink{classrasterizer_a731d0fe1fc2cd3c771a254e67b08a176}{rasterizer::fill}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}bounds"{}},\ \&\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{rasterizer::bounds}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}lb"{}},\ \&\mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{rasterizer::lb}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}step"{}},\ \&\mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{rasterizer::step}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}pixA"{}},\ \&\mbox{\hyperlink{classrasterizer_ab657ada7becc1d81811c25d4a39ed729}{rasterizer::pixA}});}
+
+\end{DoxyCode}
+\Hypertarget{rasterizer__old_8hpp_ad7a41fb96d6392ca916f3bddb29fd72b}\index{rasterizer\_old.hpp@{rasterizer\_old.hpp}!BIND\_RASTERIZER\_EVENT@{BIND\_RASTERIZER\_EVENT}}
+\index{BIND\_RASTERIZER\_EVENT@{BIND\_RASTERIZER\_EVENT}!rasterizer\_old.hpp@{rasterizer\_old.hpp}}
+\doxysubsubsection{\texorpdfstring{BIND\_RASTERIZER\_EVENT}{BIND\_RASTERIZER\_EVENT}}
+{\footnotesize\ttfamily \label{rasterizer__old_8hpp_ad7a41fb96d6392ca916f3bddb29fd72b} 
+\#define BIND\+\_\+\+RASTERIZER\+\_\+\+EVENT(\begin{DoxyParamCaption}\item[{}]{m}{}\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\ \ py::class\_<rasterizer::event>(m,\ \textcolor{stringliteral}{"{}RasterizerEvent"{}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}pos"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{rasterizer::event::pos}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_property\_readonly(\textcolor{stringliteral}{"{}n\_in"{}},\ [](\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1event}{rasterizer::event}}\ \&e)\{\ \textcolor{keywordflow}{return}\ e.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}}.size();\ \})\ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_property\_readonly(\textcolor{stringliteral}{"{}n\_out"{}},\ [](\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1event}{rasterizer::event}}\ \&e)\{\ \textcolor{keywordflow}{return}\ e.\mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}}.size();\ \})\ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(\textcolor{stringliteral}{"{}\_\_repr\_\_"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1event_aa5ba6c489d8954ca0fd7d4c9555afa45}{rasterizer::event::repr}},\ py::arg(\textcolor{stringliteral}{"{}precision"{}})=-\/1);}
+
+\end{DoxyCode}
+\Hypertarget{rasterizer__old_8hpp_a3a725155348b8e6bc82f64d29273e29d}\index{rasterizer\_old.hpp@{rasterizer\_old.hpp}!BIND\_RASTERIZER\_SEGMENT@{BIND\_RASTERIZER\_SEGMENT}}
+\index{BIND\_RASTERIZER\_SEGMENT@{BIND\_RASTERIZER\_SEGMENT}!rasterizer\_old.hpp@{rasterizer\_old.hpp}}
+\doxysubsubsection{\texorpdfstring{BIND\_RASTERIZER\_SEGMENT}{BIND\_RASTERIZER\_SEGMENT}}
+{\footnotesize\ttfamily \label{rasterizer__old_8hpp_a3a725155348b8e6bc82f64d29273e29d} 
+\#define BIND\+\_\+\+RASTERIZER\+\_\+\+SEGMENT(\begin{DoxyParamCaption}\item[{}]{m}{}\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\ \ py::class\_<rasterizer::segment>(m,\ \textcolor{stringliteral}{"{}RasterizerSegment"{}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}s"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{rasterizer::segment::s}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}e"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{rasterizer::segment::e}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}idx"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1segment_af3953e17bf0135bc5135ca52e607aba3}{rasterizer::segment::idx}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}sidx"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1segment_aa2069628b306ad39a398bfd5045ca8dc}{rasterizer::segment::sidx}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def\_readonly(\textcolor{stringliteral}{"{}x0"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1segment_a5cfdf490f52e67c5822409c3cd651415}{rasterizer::segment::x0}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(\textcolor{stringliteral}{"{}\_\_repr\_\_"{}},\ \&\mbox{\hyperlink{structrasterizer_1_1segment_a95ad1ab28765684cf5fa55156300ac1f}{rasterizer::segment::repr}},\ py::arg(\textcolor{stringliteral}{"{}precision"{}})=-\/1);}
+
+\end{DoxyCode}

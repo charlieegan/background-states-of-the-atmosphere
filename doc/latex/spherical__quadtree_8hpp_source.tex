@@ -1,0 +1,48 @@
+\doxysection{spherical\+\_\+quadtree.\+hpp}
+\hypertarget{spherical__quadtree_8hpp_source}{}\label{spherical__quadtree_8hpp_source}\index{src/spherical\_quadtree.hpp@{src/spherical\_quadtree.hpp}}
+\mbox{\hyperlink{spherical__quadtree_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ SPHERICAL\_QUADTREE}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ SPHERICAL\_QUADTREE}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{common_8hpp}{common.hpp}}"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{pool_8hpp}{pool.hpp}}"{}}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{template}\ <std::\textcolor{keywordtype}{float}ing\_po\textcolor{keywordtype}{int}\ T>}
+\DoxyCodeLine{00008\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structspherical__triangle}{spherical\_triangle}}\ \{}
+\DoxyCodeLine{00009\ \ \ Eigen::Vector3<T>\ \mbox{\hyperlink{structspherical__triangle_a7e23fe9968c24617a45233099561fd11}{n0}},\ \mbox{\hyperlink{structspherical__triangle_ad72aebb9d6f4c9b5304a120e0e1c7da0}{n1}},\ \mbox{\hyperlink{structspherical__triangle_a9c47d8cf884214722859ad6ec64d52a6}{n2}};\ \textcolor{comment}{//\ normal\ vectors\ pointing\ out,\ ordered}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structspherical__triangle_a3d5ef4bc9283a841d5288cec3ec37cf0}{contains}}(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector3<T>>\ \&b)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00012\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structspherical__triangle_a896e6dadc77131f488ab0001403862c2}{intersects}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structspherical__triangle}{spherical\_triangle}}\ \&t)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00013\ \};}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keyword}{template}\ <std::\textcolor{keywordtype}{float}ing\_po\textcolor{keywordtype}{int}\ T>}
+\DoxyCodeLine{00016\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classspherical__quadtree}{spherical\_quadtree}}\ \{}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \ \ \textcolor{keyword}{struct\ }node\ \{}
+\DoxyCodeLine{00019\ \ \ \ \ \mbox{\hyperlink{structspherical__triangle}{spherical\_triangle<T>}}\ t;\ \textcolor{comment}{//\ represented\ area}}
+\DoxyCodeLine{00020\ \ \ \ \ node\ *ch[4];\ \textcolor{comment}{//\ children}}
+\DoxyCodeLine{00021\ \ \ \ \ std::vector<spherical\_triangle<O>*>\ c;\ \textcolor{comment}{//\ content}}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{comment}{//\ get\ the\ index\ (in\ [0,\ 3])\ that\ contains\ the\ given\ direction\ (assuming\ it\ is\ contained)}}
+\DoxyCodeLine{00024\ \ \ \ \ \textcolor{keywordtype}{int}\ child\_idx(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector3<T>>\ \&v);}
+\DoxyCodeLine{00025\ \ \ \};}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \textcolor{comment}{//\ find\ the\ triangle\ containing\ the\ given\ direction}}
+\DoxyCodeLine{00028\ \ \ \mbox{\hyperlink{structspherical__triangle}{spherical\_triangle<T>}}*\ find(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector3<T>>\ \&v);}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \textcolor{comment}{//\ split\ the\ triangle\ containing\ v\ at\ v\ into\ 3\ parts}}
+\DoxyCodeLine{00031\ \ \ \textcolor{keywordtype}{void}\ split(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector3<T>>\ \&v);}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00034\ \ \ node\ *\mbox{\hyperlink{classspherical__quadtree_ac74980b83750fab07efd680d3623e2dc}{roots}}[8];}
+\DoxyCodeLine{00035\ \ \ \mbox{\hyperlink{classpool}{pool<node>}}\ \mbox{\hyperlink{classspherical__quadtree_aaf451f947fdbd8e87cfd9593f88840e0}{p}};}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \ \ \textcolor{comment}{//\ get\ the\ index\ (in\ [0,\ 7])\ which\ contains\ the\ given\ direction}}
+\DoxyCodeLine{00038\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classspherical__quadtree_a3d7d71472d714d43265e40b46517e545}{child\_idx}}(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector3<T>>\ \&v);}
+\DoxyCodeLine{00039\ \};}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

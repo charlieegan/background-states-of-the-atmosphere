@@ -1,0 +1,169 @@
+\doxysection{physical\+\_\+parameters Struct Reference}
+\hypertarget{structphysical__parameters}{}\label{structphysical__parameters}\index{physical\_parameters@{physical\_parameters}}
+
+
+{\ttfamily \#include $<$physical\+\_\+parameters.\+hpp$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structphysical__parameters_ae999b3b9e1387c0bb46613c727077e57}{physical\+\_\+parameters}} (double \mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}}=6371000., double \mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}}=7.\+2921e-\/05, double \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}=101325., double \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}=2./7., double \mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}}=1003.\+5)
+\item 
+{\footnotesize template$<$typename T $>$ }\\Eigen\+::\+Vector2$<$ T $>$ \mbox{\hyperlink{structphysical__parameters_ae99186dc98c62d93d736151b5d5ac800}{itf}} (const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&zeta) const
+\item 
+{\footnotesize template$<$typename T $>$ }\\Eigen\+::\+Vector2$<$ T $>$ \mbox{\hyperlink{structphysical__parameters_af61dfb4af3c5ce8151109bb078fd8994}{ditf}} (const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&zeta) const
+\item 
+{\footnotesize template$<$typename T $>$ }\\Eigen\+::\+Vector2$<$ T $>$ \mbox{\hyperlink{structphysical__parameters_ac815052e126669331b8abbf059ccbdc3}{tf}} (const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&x) const
+\item 
+{\footnotesize template$<$typename T $>$ }\\Eigen\+::\+Vector2$<$ T $>$ \mbox{\hyperlink{structphysical__parameters_a2748ef42ad1e2dbee417c79f76b5f5f0}{dtf}} (const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&x) const
+\item 
+std\+::string \mbox{\hyperlink{structphysical__parameters_a55c9b1bc11addceb80affabc7dc358d2}{repr}} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static py\+::tuple \mbox{\hyperlink{structphysical__parameters_ab65f8eb8b64614af058ff12e5cdc1eef}{pickle}} (const \mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} \&s)
+\item 
+static \mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} \mbox{\hyperlink{structphysical__parameters_abc20f06993ee5ab0f4413a30a9840d65}{unpickle}} (py\+::tuple t)
+\item 
+static void \mbox{\hyperlink{structphysical__parameters_adfcc7d2db51ed15af81fd1117a8259f3}{bind}} (py\+::module\+\_\+ \&m)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a}{ikappa}}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_af1cbe39779b1d24db236ce13c4e341ad}{tc0p}}
+\item 
+double \mbox{\hyperlink{structphysical__parameters_a23ad5e2590c25b9ab56b2cce6ea5ee30}{tc1p}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{structphysical__parameters_ae999b3b9e1387c0bb46613c727077e57}\index{physical\_parameters@{physical\_parameters}!physical\_parameters@{physical\_parameters}}
+\index{physical\_parameters@{physical\_parameters}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{physical\_parameters()}{physical\_parameters()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_ae999b3b9e1387c0bb46613c727077e57} 
+physical\+\_\+parameters\+::physical\+\_\+parameters (\begin{DoxyParamCaption}\item[{double}]{a}{ = {\ttfamily 6371000.}, }\item[{double}]{Omega}{ = {\ttfamily 7.2921e-\/05}, }\item[{double}]{p00}{ = {\ttfamily 101325.}, }\item[{double}]{kappa}{ = {\ttfamily 2.~/~7.}, }\item[{double}]{cp}{ = {\ttfamily 1003.5}}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structphysical__parameters_adfcc7d2db51ed15af81fd1117a8259f3}\index{physical\_parameters@{physical\_parameters}!bind@{bind}}
+\index{bind@{bind}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{bind()}{bind()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_adfcc7d2db51ed15af81fd1117a8259f3} 
+static void physical\+\_\+parameters\+::bind (\begin{DoxyParamCaption}\item[{py\+::module\+\_\+ \&}]{m}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{structphysical__parameters_af61dfb4af3c5ce8151109bb078fd8994}\index{physical\_parameters@{physical\_parameters}!ditf@{ditf}}
+\index{ditf@{ditf}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{ditf()}{ditf()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_af61dfb4af3c5ce8151109bb078fd8994} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector2$<$ T $>$ physical\+\_\+parameters\+::ditf (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&}]{zeta}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structphysical__parameters_a2748ef42ad1e2dbee417c79f76b5f5f0}\index{physical\_parameters@{physical\_parameters}!dtf@{dtf}}
+\index{dtf@{dtf}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{dtf()}{dtf()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_a2748ef42ad1e2dbee417c79f76b5f5f0} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector2$<$ T $>$ physical\+\_\+parameters\+::dtf (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&}]{x}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structphysical__parameters_ae99186dc98c62d93d736151b5d5ac800}\index{physical\_parameters@{physical\_parameters}!itf@{itf}}
+\index{itf@{itf}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{itf()}{itf()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_ae99186dc98c62d93d736151b5d5ac800} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector2$<$ T $>$ physical\+\_\+parameters\+::itf (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&}]{zeta}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structphysical__parameters_ab65f8eb8b64614af058ff12e5cdc1eef}\index{physical\_parameters@{physical\_parameters}!pickle@{pickle}}
+\index{pickle@{pickle}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{pickle()}{pickle()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_ab65f8eb8b64614af058ff12e5cdc1eef} 
+static py\+::tuple physical\+\_\+parameters\+::pickle (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} \&}]{s}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{structphysical__parameters_a55c9b1bc11addceb80affabc7dc358d2}\index{physical\_parameters@{physical\_parameters}!repr@{repr}}
+\index{repr@{repr}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{repr()}{repr()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_a55c9b1bc11addceb80affabc7dc358d2} 
+std\+::string physical\+\_\+parameters\+::repr (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structphysical__parameters_ac815052e126669331b8abbf059ccbdc3}\index{physical\_parameters@{physical\_parameters}!tf@{tf}}
+\index{tf@{tf}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{tf()}{tf()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_ac815052e126669331b8abbf059ccbdc3} 
+template$<$typename T $>$ \\
+Eigen\+::\+Vector2$<$ T $>$ physical\+\_\+parameters\+::tf (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const Eigen\+::\+Vector2$<$ T $>$ $>$ \&}]{x}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structphysical__parameters_abc20f06993ee5ab0f4413a30a9840d65}\index{physical\_parameters@{physical\_parameters}!unpickle@{unpickle}}
+\index{unpickle@{unpickle}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{unpickle()}{unpickle()}}
+{\footnotesize\ttfamily \label{structphysical__parameters_abc20f06993ee5ab0f4413a30a9840d65} 
+static \mbox{\hyperlink{structphysical__parameters}{physical\+\_\+parameters}} physical\+\_\+parameters\+::unpickle (\begin{DoxyParamCaption}\item[{py\+::tuple}]{t}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}\index{physical\_parameters@{physical\_parameters}!a@{a}}
+\index{a@{a}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{a}{a}}
+{\footnotesize\ttfamily \label{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a} 
+double physical\+\_\+parameters\+::a}
+
+\Hypertarget{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}\index{physical\_parameters@{physical\_parameters}!cp@{cp}}
+\index{cp@{cp}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{cp}{cp}}
+{\footnotesize\ttfamily \label{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835} 
+double physical\+\_\+parameters\+::cp}
+
+\Hypertarget{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a}\index{physical\_parameters@{physical\_parameters}!ikappa@{ikappa}}
+\index{ikappa@{ikappa}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{ikappa}{ikappa}}
+{\footnotesize\ttfamily \label{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a} 
+double physical\+\_\+parameters\+::ikappa}
+
+\Hypertarget{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}\index{physical\_parameters@{physical\_parameters}!kappa@{kappa}}
+\index{kappa@{kappa}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{kappa}{kappa}}
+{\footnotesize\ttfamily \label{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414} 
+double physical\+\_\+parameters\+::kappa}
+
+\Hypertarget{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}\index{physical\_parameters@{physical\_parameters}!Omega@{Omega}}
+\index{Omega@{Omega}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{Omega}{Omega}}
+{\footnotesize\ttfamily \label{structphysical__parameters_af4c676c452882f69cc9148dadba91c52} 
+double physical\+\_\+parameters\+::\+Omega}
+
+\Hypertarget{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}\index{physical\_parameters@{physical\_parameters}!p00@{p00}}
+\index{p00@{p00}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{p00}{p00}}
+{\footnotesize\ttfamily \label{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5} 
+double physical\+\_\+parameters\+::p00}
+
+\Hypertarget{structphysical__parameters_af1cbe39779b1d24db236ce13c4e341ad}\index{physical\_parameters@{physical\_parameters}!tc0p@{tc0p}}
+\index{tc0p@{tc0p}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{tc0p}{tc0p}}
+{\footnotesize\ttfamily \label{structphysical__parameters_af1cbe39779b1d24db236ce13c4e341ad} 
+double physical\+\_\+parameters\+::tc0p}
+
+\Hypertarget{structphysical__parameters_a23ad5e2590c25b9ab56b2cce6ea5ee30}\index{physical\_parameters@{physical\_parameters}!tc1p@{tc1p}}
+\index{tc1p@{tc1p}!physical\_parameters@{physical\_parameters}}
+\doxysubsubsection{\texorpdfstring{tc1p}{tc1p}}
+{\footnotesize\ttfamily \label{structphysical__parameters_a23ad5e2590c25b9ab56b2cce6ea5ee30} 
+double physical\+\_\+parameters\+::tc1p}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{physical__parameters_8hpp}{physical\+\_\+parameters.\+hpp}}\end{DoxyCompactItemize}

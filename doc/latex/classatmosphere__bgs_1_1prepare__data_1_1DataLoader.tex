@@ -1,0 +1,181 @@
+\doxysection{atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader Class Reference}
+\hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader}{}\label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a31d72ad52b6786971c882db35832ff2f}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, \mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ac6032cea3a0c470f85cbd9aaa9d406ea}{path}}, \mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_add7cbdcd0dcaf973fb6ac1b4cf3ef162}{pmin}}=10, \mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_abda6493f8a6a86b90e8a57398ba20ff5}{nextra}}=0, load\+\_\+all=False)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a4f16be12d9da2e826f362b36358d55d2}{parse\+\_\+block}} (self, cnt, title)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a15665e61febcf332625e2fa75c48cfe6}{get\+\_\+bgs\+\_\+target\+\_\+measure}} (self, \mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_abda6493f8a6a86b90e8a57398ba20ff5}{nextra}}=0)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}{s}} = f.\+read()
+\item 
+str \mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_afbaed77875d887f09afc8c1121f88527}{float\+\_\+pattern}} = \textquotesingle{}\mbox{[}-\/+\mbox{]}?(\textbackslash{}d+(\mbox{[}.,\mbox{]}\textbackslash{}d\texorpdfstring{$\ast$}{*})?\texorpdfstring{$\vert$}{|}\mbox{[}.,\mbox{]}\textbackslash{}d+)(\mbox{[}eE\mbox{]}\mbox{[}-\/+\mbox{]}?\textbackslash{}d+)?\textquotesingle{}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ac6032cea3a0c470f85cbd9aaa9d406ea}{path}} = path
+\item 
+dict \mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a9f5a46695cbf9c7974c2070592bb6ee8}{data\+\_\+dict}} = \{\}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a32104c7a3529b90a94984327deae62d2}{latitudes\+\_\+cnt}} = int(next(re.\+compile("{}(\textbackslash{}d+)\textbackslash{}\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}{s}}+LATITUDES ON GAUSSIAN GRID"{}).finditer(self.\+s)).group(1))
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aacf5cddac2f9204acb760831d3666dd2}{tracer\+\_\+mixing\+\_\+ratio\+\_\+contour\+\_\+cnt}} = int(next(re.\+compile("{}(\textbackslash{}d+)\textbackslash{}\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}{s}}+TRACER MIXING RATIO CONTOURS"{}).finditer(self.\+s)).group(1))
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ac5e6110d30ada233053f4382b051caad}{isentropic\+\_\+level\+\_\+cnt}} = int(next(re.\+compile("{}(\textbackslash{}d+)\textbackslash{}\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}{s}}+ISENTROPIC LEVELS"{}).finditer(self.\+s)).group(1))
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a2ee1eea6771108d27b9bf2f2ac21f121}{pp}} = \+\_\+atmosphere\+\_\+bgs.\+Physical\+Parameters()
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a66477f790a784e0ae79f33fd61839ab0}{smax}} = np.\+sin(2\texorpdfstring{$\ast$}{*}np.\+pi\texorpdfstring{$\ast$}{*}np.\+max(self.\+data\+\_\+dict\mbox{[}\textquotesingle{}LATITUDES ON GAUSSIAN GRID\textquotesingle{}\mbox{]})/360)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a673931a4f40fe7bc20268006b40a96dc}{smin}} = np.\+sin(2\texorpdfstring{$\ast$}{*}np.\+pi\texorpdfstring{$\ast$}{*}np.\+min(self.\+data\+\_\+dict\mbox{[}\textquotesingle{}LATITUDES ON GAUSSIAN GRID\textquotesingle{}\mbox{]})/360)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_add7cbdcd0dcaf973fb6ac1b4cf3ef162}{pmin}} = pmin
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_abda6493f8a6a86b90e8a57398ba20ff5}{nextra}} = nextra
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_af0b9408268badfe6653099cda3937588}{y}} = y
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a92043514b1d05409a10e358955f4bdf1}{tm}} = tm
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a007a2b77f7d903e85766b4dea124cbbe}{tmn}} = tmn
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ad7de40c593fc4627152f880745a8db9a}{\+\_\+multifloat\+\_\+pattern}} (self, mincnt, maxcnt=None)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a31d72ad52b6786971c882db35832ff2f}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a31d72ad52b6786971c882db35832ff2f} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{path}{, }\item[{}]{pmin}{ = {\ttfamily 10}, }\item[{}]{nextra}{ = {\ttfamily 0}, }\item[{}]{load\+\_\+all}{ = {\ttfamily False}}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ad7de40c593fc4627152f880745a8db9a}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!\_multifloat\_pattern@{\_multifloat\_pattern}}
+\index{\_multifloat\_pattern@{\_multifloat\_pattern}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{\_multifloat\_pattern()}{\_multifloat\_pattern()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ad7de40c593fc4627152f880745a8db9a} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+\_\+multifloat\+\_\+pattern (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{mincnt}{, }\item[{}]{maxcnt}{ = {\ttfamily None}}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a15665e61febcf332625e2fa75c48cfe6}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!get\_bgs\_target\_measure@{get\_bgs\_target\_measure}}
+\index{get\_bgs\_target\_measure@{get\_bgs\_target\_measure}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{get\_bgs\_target\_measure()}{get\_bgs\_target\_measure()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a15665e61febcf332625e2fa75c48cfe6} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+get\+\_\+bgs\+\_\+target\+\_\+measure (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{nextra}{ = {\ttfamily 0}}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This function returns seed locations and target masses given input data, physical parameters, and simulation parameters.
+\end{DoxyVerb}
+ \Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a4f16be12d9da2e826f362b36358d55d2}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!parse\_block@{parse\_block}}
+\index{parse\_block@{parse\_block}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{parse\_block()}{parse\_block()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a4f16be12d9da2e826f362b36358d55d2} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+parse\+\_\+block (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{cnt}{, }\item[{}]{title}{}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}find block of `cnt` floats starting with title `title`
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a9f5a46695cbf9c7974c2070592bb6ee8}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!data\_dict@{data\_dict}}
+\index{data\_dict@{data\_dict}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{data\_dict}{data\_dict}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a9f5a46695cbf9c7974c2070592bb6ee8} 
+dict atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+data\+\_\+dict = \{\}}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_afbaed77875d887f09afc8c1121f88527}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!float\_pattern@{float\_pattern}}
+\index{float\_pattern@{float\_pattern}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{float\_pattern}{float\_pattern}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_afbaed77875d887f09afc8c1121f88527} 
+str atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+float\+\_\+pattern = \textquotesingle{}\mbox{[}-\/+\mbox{]}?(\textbackslash{}d+(\mbox{[}.,\mbox{]}\textbackslash{}d\texorpdfstring{$\ast$}{*})?\texorpdfstring{$\vert$}{|}\mbox{[}.,\mbox{]}\textbackslash{}d+)(\mbox{[}eE\mbox{]}\mbox{[}-\/+\mbox{]}?\textbackslash{}d+)?\textquotesingle{}}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ac5e6110d30ada233053f4382b051caad}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!isentropic\_level\_cnt@{isentropic\_level\_cnt}}
+\index{isentropic\_level\_cnt@{isentropic\_level\_cnt}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{isentropic\_level\_cnt}{isentropic\_level\_cnt}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ac5e6110d30ada233053f4382b051caad} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+isentropic\+\_\+level\+\_\+cnt = int(next(re.\+compile("{}(\textbackslash{}d+)\textbackslash{}\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}{s}}+ISENTROPIC LEVELS"{}).finditer(self.\+s)).group(1))}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a32104c7a3529b90a94984327deae62d2}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!latitudes\_cnt@{latitudes\_cnt}}
+\index{latitudes\_cnt@{latitudes\_cnt}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{latitudes\_cnt}{latitudes\_cnt}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a32104c7a3529b90a94984327deae62d2} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+latitudes\+\_\+cnt = int(next(re.\+compile("{}(\textbackslash{}d+)\textbackslash{}\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}{s}}+LATITUDES ON GAUSSIAN GRID"{}).finditer(self.\+s)).group(1))}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_abda6493f8a6a86b90e8a57398ba20ff5}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!nextra@{nextra}}
+\index{nextra@{nextra}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{nextra}{nextra}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_abda6493f8a6a86b90e8a57398ba20ff5} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+nextra = nextra}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ac6032cea3a0c470f85cbd9aaa9d406ea}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!path@{path}}
+\index{path@{path}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{path}{path}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_ac6032cea3a0c470f85cbd9aaa9d406ea} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+path = path}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_add7cbdcd0dcaf973fb6ac1b4cf3ef162}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!pmin@{pmin}}
+\index{pmin@{pmin}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{pmin}{pmin}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_add7cbdcd0dcaf973fb6ac1b4cf3ef162} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+pmin = pmin}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a2ee1eea6771108d27b9bf2f2ac21f121}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!pp@{pp}}
+\index{pp@{pp}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{pp}{pp}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a2ee1eea6771108d27b9bf2f2ac21f121} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+pp = \+\_\+atmosphere\+\_\+bgs.\+Physical\+Parameters()}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!s@{s}}
+\index{s@{s}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{s}{s}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+s = f.\+read()}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a66477f790a784e0ae79f33fd61839ab0}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!smax@{smax}}
+\index{smax@{smax}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{smax}{smax}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a66477f790a784e0ae79f33fd61839ab0} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+smax = np.\+sin(2\texorpdfstring{$\ast$}{*}np.\+pi\texorpdfstring{$\ast$}{*}np.\+max(self.\+data\+\_\+dict\mbox{[}\textquotesingle{}LATITUDES ON GAUSSIAN GRID\textquotesingle{}\mbox{]})/360)}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a673931a4f40fe7bc20268006b40a96dc}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!smin@{smin}}
+\index{smin@{smin}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{smin}{smin}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a673931a4f40fe7bc20268006b40a96dc} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+smin = np.\+sin(2\texorpdfstring{$\ast$}{*}np.\+pi\texorpdfstring{$\ast$}{*}np.\+min(self.\+data\+\_\+dict\mbox{[}\textquotesingle{}LATITUDES ON GAUSSIAN GRID\textquotesingle{}\mbox{]})/360)}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a92043514b1d05409a10e358955f4bdf1}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!tm@{tm}}
+\index{tm@{tm}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{tm}{tm}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a92043514b1d05409a10e358955f4bdf1} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+tm = tm}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a007a2b77f7d903e85766b4dea124cbbe}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!tmn@{tmn}}
+\index{tmn@{tmn}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{tmn}{tmn}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_a007a2b77f7d903e85766b4dea124cbbe} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+tmn = tmn}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aacf5cddac2f9204acb760831d3666dd2}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!tracer\_mixing\_ratio\_contour\_cnt@{tracer\_mixing\_ratio\_contour\_cnt}}
+\index{tracer\_mixing\_ratio\_contour\_cnt@{tracer\_mixing\_ratio\_contour\_cnt}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{tracer\_mixing\_ratio\_contour\_cnt}{tracer\_mixing\_ratio\_contour\_cnt}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aacf5cddac2f9204acb760831d3666dd2} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+tracer\+\_\+mixing\+\_\+ratio\+\_\+contour\+\_\+cnt = int(next(re.\+compile("{}(\textbackslash{}d+)\textbackslash{}\mbox{\hyperlink{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_aae98fd5aabd6f3642e100ebbfa77e89e}{s}}+TRACER MIXING RATIO CONTOURS"{}).finditer(self.\+s)).group(1))}
+
+\Hypertarget{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_af0b9408268badfe6653099cda3937588}\index{atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}!y@{y}}
+\index{y@{y}!atmosphere\_bgs.prepare\_data.DataLoader@{atmosphere\_bgs.prepare\_data.DataLoader}}
+\doxysubsubsection{\texorpdfstring{y}{y}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1prepare__data_1_1DataLoader_af0b9408268badfe6653099cda3937588} 
+atmosphere\+\_\+bgs.\+prepare\+\_\+data.\+Data\+Loader.\+y = y}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/atmosphere\+\_\+bgs/\mbox{\hyperlink{prepare__data_8py}{prepare\+\_\+data.\+py}}\end{DoxyCompactItemize}

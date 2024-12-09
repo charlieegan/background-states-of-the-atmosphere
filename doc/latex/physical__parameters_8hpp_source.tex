@@ -1,0 +1,91 @@
+\doxysection{physical\+\_\+parameters.\+hpp}
+\hypertarget{physical__parameters_8hpp_source}{}\label{physical__parameters_8hpp_source}\index{src/physical\_parameters.hpp@{src/physical\_parameters.hpp}}
+\mbox{\hyperlink{physical__parameters_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ PHYSICAL\_PARAMETERS\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ PHYSICAL\_PARAMETERS\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{common_8hpp}{common.hpp}}"{}}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structphysical__parameters}{physical\_parameters}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00008\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}},\ \mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}},\ \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}},\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}},\ \mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}};}
+\DoxyCodeLine{00009\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a}{ikappa}},\ \mbox{\hyperlink{structphysical__parameters_af1cbe39779b1d24db236ce13c4e341ad}{tc0p}},\ \mbox{\hyperlink{structphysical__parameters_a23ad5e2590c25b9ab56b2cce6ea5ee30}{tc1p}};}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \ \ \mbox{\hyperlink{structphysical__parameters_ae999b3b9e1387c0bb46613c727077e57}{physical\_parameters}}(\textcolor{keywordtype}{double}\ \mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}}\ =\ 6371000.,}
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}}\ =\ 7.2921e-\/05,}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}\ =\ 101325.,}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}\ =\ 2.\ /\ 7.,}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}}\ =\ 1003.5)\ :}
+\DoxyCodeLine{00016\ \ \ \ \ \mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}}(\mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}}),\ \mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}}(\mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}}),\ \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}(\mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}),\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}(\mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}),\ \mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}}(\mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}}),}
+\DoxyCodeLine{00017\ \ \ \ \ \mbox{\hyperlink{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a}{ikappa}}(1.\ /\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}),\ \mbox{\hyperlink{structphysical__parameters_af1cbe39779b1d24db236ce13c4e341ad}{tc0p}}(1.\ /\ (\mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}}\ *\ \mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}})),\ \mbox{\hyperlink{structphysical__parameters_a23ad5e2590c25b9ab56b2cce6ea5ee30}{tc1p}}(\mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}\ *\ \mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}}\ *\ std::pow(\mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}},\ -\/\mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}))\ \{\}}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00020\ \ \ Eigen::Vector2<T>\ \mbox{\hyperlink{structphysical__parameters_ae99186dc98c62d93d736151b5d5ac800}{itf}}(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector2<T>>\ \&zeta)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00021\ \ \ \ \ \textcolor{keywordflow}{return}\ Eigen::Vector2<T>(std::sqrt(std::max((T)0.,\ (T)1.\ -\/\ 1.\ /\ zeta(0))),}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}\ *\ std::pow(std::max((T)0.,\ zeta(1)),\ \mbox{\hyperlink{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a}{ikappa}}));}
+\DoxyCodeLine{00023\ \ \ \}}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00026\ \ \ Eigen::Vector2<T>\ \mbox{\hyperlink{structphysical__parameters_af61dfb4af3c5ce8151109bb078fd8994}{ditf}}(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector2<T>>\ \&zeta)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keywordflow}{return}\ Eigen::Vector2<T>(0.5\ /\ (std::sqrt(std::max((T)0.,\ (T)1.\ -\/\ 1.\ /\ zeta(0)))\ *\ zeta(0)\ *\ zeta(0)),}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}\ *\ \mbox{\hyperlink{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a}{ikappa}}\ *\ std::pow(std::max((T)0.,\ (T)zeta(1)),\ \mbox{\hyperlink{structphysical__parameters_abc8a7459d98a047021da86e8ea35629a}{ikappa}}\ -\/\ 1));}
+\DoxyCodeLine{00029\ \ \ \}}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00032\ \ \ Eigen::Vector2<T>\ \mbox{\hyperlink{structphysical__parameters_ac815052e126669331b8abbf059ccbdc3}{tf}}(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector2<T>>\ \&x)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordflow}{return}\ Eigen::Vector2<T>(1.\ /\ (1.\ -\/\ x[0]\ *\ x[0]),}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::pow(x[1]\ /\ \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}},\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}));}
+\DoxyCodeLine{00035\ \ \ \}}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00038\ \ \ Eigen::Vector2<T>\ \mbox{\hyperlink{structphysical__parameters_a2748ef42ad1e2dbee417c79f76b5f5f0}{dtf}}(\textcolor{keyword}{const}\ Eigen::Ref<\textcolor{keyword}{const}\ Eigen::Vector2<T>>\ \&x)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00039\ \ \ \ \ \textcolor{keywordflow}{return}\ Eigen::Vector2<T>(2.\ *\ x[0]\ /\ ((1.\ -\/\ x[0]\ *\ x[0])\ *\ (1.\ -\/\ x[0]\ *\ x[0])),}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}\ /\ std::pow(\mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}},\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}})\ *\ std::pow(x[1],\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}\ -\/\ 1));}
+\DoxyCodeLine{00041\ \ \ \}}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00043\ \ \ std::string\ \mbox{\hyperlink{structphysical__parameters_a55c9b1bc11addceb80affabc7dc358d2}{repr}}()\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00044\ \ \ \ \ std::stringstream\ ss;}
+\DoxyCodeLine{00045\ \ \ \ \ ss\ <<\ \textcolor{stringliteral}{"{}a\ =\ "{}}\ <<\ \mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}}}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ Omega\ =\ "{}}\ <<\ \mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}}}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ p00\ =\ "{}}\ <<\ \mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}}}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ kappa\ =\ "{}}\ <<\ \mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}}}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ cp\ =\ "{}}\ <<\ \mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}};}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keywordflow}{return}\ ss.str();}
+\DoxyCodeLine{00051\ \ \ \}}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \ \ \textcolor{keyword}{static}\ py::tuple\ \mbox{\hyperlink{structphysical__parameters_ab65f8eb8b64614af058ff12e5cdc1eef}{pickle}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structphysical__parameters}{physical\_parameters}}\ \&s)\ \{}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordflow}{return}\ py::make\_tuple(s.\mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{a}},\ s.\mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{Omega}},\ s.\mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{p00}},\ s.\mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{kappa}},\ s.\mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{cp}});}
+\DoxyCodeLine{00055\ \ \ \}}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{structphysical__parameters}{physical\_parameters}}\ \mbox{\hyperlink{structphysical__parameters_abc20f06993ee5ab0f4413a30a9840d65}{unpickle}}(py::tuple\ t)\ \{}
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keywordflow}{if}\ (t.size()\ !=\ 5)}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}invalid\ state\ in\ physical\_parameters::unpickle"{}});}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{structphysical__parameters_ae999b3b9e1387c0bb46613c727077e57}{physical\_parameters}}(t[0].cast<double>(),}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[1].cast<double>(),}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[2].cast<double>(),}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[3].cast<double>(),}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[4].cast<double>());}
+\DoxyCodeLine{00066\ \ \ \}}
+\DoxyCodeLine{00067\ \ \ }
+\DoxyCodeLine{00068\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structphysical__parameters_adfcc7d2db51ed15af81fd1117a8259f3}{bind}}(py::module\_\ \&m)\ \{}
+\DoxyCodeLine{00069\ \ \ \ \ py::class\_<physical\_parameters>(m,\ \textcolor{stringliteral}{"{}PhysicalParameters"{}})}
+\DoxyCodeLine{00070\ \ \ \ \ \ \ .def(py::init<double,\ double,\ double,\ double,\ double>(),}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}a"{}})\ =\ 6371000.,\ py::arg(\textcolor{stringliteral}{"{}Omega"{}})\ =\ 7.2921e-\/05,}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}p00"{}})\ =\ 101325.,\ py::arg(\textcolor{stringliteral}{"{}kappa"{}})\ =\ 2.\ /\ 7.,\ py::arg(\textcolor{stringliteral}{"{}cp"{}})\ =\ 1003.5)}
+\DoxyCodeLine{00073\ \ \ \ \ \ \ .def(py::pickle(\&\mbox{\hyperlink{structphysical__parameters_ab65f8eb8b64614af058ff12e5cdc1eef}{physical\_parameters::pickle}},\ \&\mbox{\hyperlink{structphysical__parameters_abc20f06993ee5ab0f4413a30a9840d65}{physical\_parameters::unpickle}}))}
+\DoxyCodeLine{00074\ \ \ \ \ \ \ .def(\textcolor{stringliteral}{"{}\_\_repr\_\_"{}},\ \&\mbox{\hyperlink{structphysical__parameters_a55c9b1bc11addceb80affabc7dc358d2}{physical\_parameters::repr}})}
+\DoxyCodeLine{00075\ \ \ \ \ \ \ .def(\textcolor{stringliteral}{"{}itf"{}},\ \&\mbox{\hyperlink{structphysical__parameters_ae99186dc98c62d93d736151b5d5ac800}{physical\_parameters::itf<double>}},\ py::arg(\textcolor{stringliteral}{"{}zeta"{}}))}
+\DoxyCodeLine{00076\ \ \ \ \ \ \ .def(\textcolor{stringliteral}{"{}tf"{}},\ \&\mbox{\hyperlink{structphysical__parameters_ac815052e126669331b8abbf059ccbdc3}{physical\_parameters::tf<double>}},\ py::arg(\textcolor{stringliteral}{"{}x"{}}))}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ .def\_readonly(\textcolor{stringliteral}{"{}a"{}},\ \&\mbox{\hyperlink{structphysical__parameters_ad8b802cfd7fd04f5b3c62ed1c9c9395a}{physical\_parameters::a}})}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ .def\_readonly(\textcolor{stringliteral}{"{}Omega"{}},\ \&\mbox{\hyperlink{structphysical__parameters_af4c676c452882f69cc9148dadba91c52}{physical\_parameters::Omega}})}
+\DoxyCodeLine{00079\ \ \ \ \ \ \ .def\_readonly(\textcolor{stringliteral}{"{}p00"{}},\ \&\mbox{\hyperlink{structphysical__parameters_a3301bcb0f7991bc8733141e08e73c0d5}{physical\_parameters::p00}})}
+\DoxyCodeLine{00080\ \ \ \ \ \ \ .def\_readonly(\textcolor{stringliteral}{"{}kappa"{}},\ \&\mbox{\hyperlink{structphysical__parameters_a1485cb28649caa99fda0ce0797dc1414}{physical\_parameters::kappa}})}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ .def\_readonly(\textcolor{stringliteral}{"{}cp"{}},\ \&\mbox{\hyperlink{structphysical__parameters_aee09f7ef496b0d2165d7c7aab5a91835}{physical\_parameters::cp}});}
+\DoxyCodeLine{00082\ \ \ \}}
+\DoxyCodeLine{00083\ \};}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

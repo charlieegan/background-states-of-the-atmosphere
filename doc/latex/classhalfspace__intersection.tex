@@ -1,0 +1,116 @@
+\doxysection{halfspace\+\_\+intersection\texorpdfstring{$<$}{<} T \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classhalfspace__intersection}{}\label{classhalfspace__intersection}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+
+
+{\ttfamily \#include $<$halfspace\+\_\+intersection.\+hpp$>$}
+
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef Eigen\+::\+Vector3$<$ T $>$ \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}}
+\item 
+typedef Eigen\+::\+Vector4$<$ T $>$ \mbox{\hyperlink{classhalfspace__intersection_acc2fa1fb9fff3e52ad403ee1155c93a7}{Vec4}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classhalfspace__intersection_a2f620008924b955858f8ad4978e71447}{halfspace\+\_\+intersection}} (const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&lb=\mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}}(0, 0, 0), const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&ub=\mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}}(1, 1, 1))
+\item 
+\mbox{\hyperlink{classhalfspace__intersection_a7d5bf007b9a888fefde4183174657b55}{halfspace\+\_\+intersection}} (const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&lb, const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&ub, const Eigen\+::\+Ref$<$ const Eigen\+::\+Matrix$<$ T, Eigen\+::\+Dynamic, 4, Eigen\+::\+Row\+Major $>$ $>$ \&hss)
+\item 
+void \mbox{\hyperlink{classhalfspace__intersection_a3fbfe1baad6f2ab33338b1030d3ea645}{add\+\_\+halfspaces}} (const Eigen\+::\+Ref$<$ const Eigen\+::\+Matrix$<$ T, Eigen\+::\+Dynamic, 4, Eigen\+::\+Row\+Major $>$ $>$ \&hss)
+\item 
+int \mbox{\hyperlink{classhalfspace__intersection_a8974ffe52c0d11ba961beb782c85eb8f}{add\+\_\+halfspace}} (const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_acc2fa1fb9fff3e52ad403ee1155c93a7}{Vec4}} $>$ \&hs, int hint=-\/1)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \mbox{\hyperlink{classhalfspace__intersection_ac1525e9a9d66d359556e2630c5984e63}{bind}} (py\+::module\+\_\+ \&m)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structpdmesh}{pdmesh}}$<$ T $>$ \mbox{\hyperlink{classhalfspace__intersection_a8bb4f7925926d712ff86e0e9f668ef3f}{mesh}}
+\item 
+\mbox{\hyperlink{classreusable__used__array}{reusable\+\_\+used\+\_\+array}} \mbox{\hyperlink{classhalfspace__intersection_ac443fb7d9fb7f66953fc7c277babe35b}{used}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Typedef Documentation}
+\Hypertarget{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!Vec3@{Vec3}}
+\index{Vec3@{Vec3}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Vec3}{Vec3}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747} 
+template$<$typename T  = double$>$ \\
+Eigen\+::\+Vector3$<$T$>$ \mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\+::\+Vec3}
+
+\Hypertarget{classhalfspace__intersection_acc2fa1fb9fff3e52ad403ee1155c93a7}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!Vec4@{Vec4}}
+\index{Vec4@{Vec4}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Vec4}{Vec4}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_acc2fa1fb9fff3e52ad403ee1155c93a7} 
+template$<$typename T  = double$>$ \\
+Eigen\+::\+Vector4$<$T$>$ \mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\+::\+Vec4}
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classhalfspace__intersection_a2f620008924b955858f8ad4978e71447}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!halfspace\_intersection@{halfspace\_intersection}}
+\index{halfspace\_intersection@{halfspace\_intersection}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{halfspace\_intersection()}{halfspace\_intersection()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_a2f620008924b955858f8ad4978e71447} 
+template$<$typename T  = double$>$ \\
+\mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\mbox{\hyperlink{classhalfspace__intersection}{\+::halfspace\+\_\+intersection}} (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&}]{lb}{ = {\ttfamily \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}}(0,0,0)}, }\item[{const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&}]{ub}{ = {\ttfamily \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}}(1,1,1)}}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{classhalfspace__intersection_a7d5bf007b9a888fefde4183174657b55}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!halfspace\_intersection@{halfspace\_intersection}}
+\index{halfspace\_intersection@{halfspace\_intersection}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{halfspace\_intersection()}{halfspace\_intersection()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_a7d5bf007b9a888fefde4183174657b55} 
+template$<$typename T  = double$>$ \\
+\mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\mbox{\hyperlink{classhalfspace__intersection}{\+::halfspace\+\_\+intersection}} (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&}]{lb}{, }\item[{const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_a1f42560747048ee440fd8fd6ec63d747}{Vec3}} $>$ \&}]{ub}{, }\item[{const Eigen\+::\+Ref$<$ const Eigen\+::\+Matrix$<$ T, Eigen\+::\+Dynamic, 4, Eigen\+::\+Row\+Major $>$ $>$ \&}]{hss}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classhalfspace__intersection_a8974ffe52c0d11ba961beb782c85eb8f}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!add\_halfspace@{add\_halfspace}}
+\index{add\_halfspace@{add\_halfspace}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{add\_halfspace()}{add\_halfspace()}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_a8974ffe52c0d11ba961beb782c85eb8f} 
+template$<$typename T  = double$>$ \\
+int \mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\+::add\+\_\+halfspace (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const \mbox{\hyperlink{classhalfspace__intersection_acc2fa1fb9fff3e52ad403ee1155c93a7}{Vec4}} $>$ \&}]{hs}{, }\item[{int}]{hint}{ = {\ttfamily -\/1}}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{classhalfspace__intersection_a3fbfe1baad6f2ab33338b1030d3ea645}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!add\_halfspaces@{add\_halfspaces}}
+\index{add\_halfspaces@{add\_halfspaces}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{add\_halfspaces()}{add\_halfspaces()}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_a3fbfe1baad6f2ab33338b1030d3ea645} 
+template$<$typename T  = double$>$ \\
+void \mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\+::add\+\_\+halfspaces (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Ref$<$ const Eigen\+::\+Matrix$<$ T, Eigen\+::\+Dynamic, 4, Eigen\+::\+Row\+Major $>$ $>$ \&}]{hss}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{classhalfspace__intersection_ac1525e9a9d66d359556e2630c5984e63}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!bind@{bind}}
+\index{bind@{bind}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{bind()}{bind()}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_ac1525e9a9d66d359556e2630c5984e63} 
+template$<$typename T  = double$>$ \\
+static void \mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\+::bind (\begin{DoxyParamCaption}\item[{py\+::module\+\_\+ \&}]{m}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classhalfspace__intersection_a8bb4f7925926d712ff86e0e9f668ef3f}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!mesh@{mesh}}
+\index{mesh@{mesh}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{mesh}{mesh}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_a8bb4f7925926d712ff86e0e9f668ef3f} 
+template$<$typename T  = double$>$ \\
+\mbox{\hyperlink{structpdmesh}{pdmesh}}$<$T$>$ \mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\+::mesh}
+
+\Hypertarget{classhalfspace__intersection_ac443fb7d9fb7f66953fc7c277babe35b}\index{halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}!used@{used}}
+\index{used@{used}!halfspace\_intersection$<$ T $>$@{halfspace\_intersection$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{used}{used}}
+{\footnotesize\ttfamily \label{classhalfspace__intersection_ac443fb7d9fb7f66953fc7c277babe35b} 
+template$<$typename T  = double$>$ \\
+\mbox{\hyperlink{classreusable__used__array}{reusable\+\_\+used\+\_\+array}} \mbox{\hyperlink{classhalfspace__intersection}{halfspace\+\_\+intersection}}$<$ T $>$\+::used}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{halfspace__intersection_8hpp}{halfspace\+\_\+intersection.\+hpp}}\end{DoxyCompactItemize}

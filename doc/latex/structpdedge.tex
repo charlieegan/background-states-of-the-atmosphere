@@ -1,0 +1,139 @@
+\doxysection{pdedge Struct Reference}
+\hypertarget{structpdedge}{}\label{structpdedge}\index{pdedge@{pdedge}}
+
+
+{\ttfamily \#include $<$halfspace\+\_\+intersection.\+hpp$>$}
+
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structpdedge_1_1cmp__dj}{cmp\+\_\+dj}}
+\item 
+struct \mbox{\hyperlink{structpdedge_1_1cmp__pj}{cmp\+\_\+pj}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+const int \& \mbox{\hyperlink{structpdedge_ad86f08eac97ea1507613fc88e0e03353}{dstart}} (const int \&p) const
+\item 
+const int \& \mbox{\hyperlink{structpdedge_a0f63e8859be7e43c3bfcbd79faaf9295}{dend}} (const int \&p) const
+\item 
+const int \& \mbox{\hyperlink{structpdedge_ad900081a76a1a19e258ee17f41d1b101}{pstart}} (const int \&d) const
+\item 
+const int \& \mbox{\hyperlink{structpdedge_a8013d76f05594ff8fdad27fc75cd590b}{pend}} (const int \&d) const
+\item 
+std\+::string \mbox{\hyperlink{structpdedge_ad42940686343e06476e0964c91529e3b}{repr}} () const
+\item 
+\mbox{\hyperlink{structpdedge}{pdedge}} \mbox{\hyperlink{structpdedge_a5ded78a869d97ebf4eb7a0d5ab0e5d78}{mirrored}} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$bool primal = true$>$ }\\static std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ \mbox{\hyperlink{structpdedge_acd41f3afab4bfdbdf041ac363fa21860}{order\+\_\+cycle}} (const std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ \&edg)
+\item 
+{\footnotesize template$<$bool primal = true$>$ }\\static std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ $>$ \mbox{\hyperlink{structpdedge_a9002d65afab23cff6089ac414470f29a}{cycle\+\_\+decomposition}} (const std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ \&edg)
+\item 
+static void \mbox{\hyperlink{structpdedge_a4a0e60d5b30737a64504e647e8a7a925}{bind}} (py\+::module\+\_\+ \&m)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{structpdedge_a13dbb678e2808fb85fa46af223b9babd}{pi}}
+\item 
+int \mbox{\hyperlink{structpdedge_a6b68f249d42781148be9e3aa9802ae6f}{pj}}
+\item 
+int \mbox{\hyperlink{structpdedge_afb6f9263b5218b817b7a5254caecd627}{di}}
+\item 
+int \mbox{\hyperlink{structpdedge_afd69df264d6e16b0f201995423738b6d}{dj}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structpdedge_a4a0e60d5b30737a64504e647e8a7a925}\index{pdedge@{pdedge}!bind@{bind}}
+\index{bind@{bind}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{bind()}{bind()}}
+{\footnotesize\ttfamily \label{structpdedge_a4a0e60d5b30737a64504e647e8a7a925} 
+static void pdedge\+::bind (\begin{DoxyParamCaption}\item[{py\+::module\+\_\+ \&}]{m}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{structpdedge_a9002d65afab23cff6089ac414470f29a}\index{pdedge@{pdedge}!cycle\_decomposition@{cycle\_decomposition}}
+\index{cycle\_decomposition@{cycle\_decomposition}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{cycle\_decomposition()}{cycle\_decomposition()}}
+{\footnotesize\ttfamily \label{structpdedge_a9002d65afab23cff6089ac414470f29a} 
+template$<$bool primal = true$>$ \\
+static std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ $>$ pdedge\+::cycle\+\_\+decomposition (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ \&}]{edg}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{structpdedge_a0f63e8859be7e43c3bfcbd79faaf9295}\index{pdedge@{pdedge}!dend@{dend}}
+\index{dend@{dend}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{dend()}{dend()}}
+{\footnotesize\ttfamily \label{structpdedge_a0f63e8859be7e43c3bfcbd79faaf9295} 
+const int \& pdedge\+::dend (\begin{DoxyParamCaption}\item[{const int \&}]{p}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structpdedge_ad86f08eac97ea1507613fc88e0e03353}\index{pdedge@{pdedge}!dstart@{dstart}}
+\index{dstart@{dstart}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{dstart()}{dstart()}}
+{\footnotesize\ttfamily \label{structpdedge_ad86f08eac97ea1507613fc88e0e03353} 
+const int \& pdedge\+::dstart (\begin{DoxyParamCaption}\item[{const int \&}]{p}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structpdedge_a5ded78a869d97ebf4eb7a0d5ab0e5d78}\index{pdedge@{pdedge}!mirrored@{mirrored}}
+\index{mirrored@{mirrored}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{mirrored()}{mirrored()}}
+{\footnotesize\ttfamily \label{structpdedge_a5ded78a869d97ebf4eb7a0d5ab0e5d78} 
+\mbox{\hyperlink{structpdedge}{pdedge}} pdedge\+::mirrored (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structpdedge_acd41f3afab4bfdbdf041ac363fa21860}\index{pdedge@{pdedge}!order\_cycle@{order\_cycle}}
+\index{order\_cycle@{order\_cycle}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{order\_cycle()}{order\_cycle()}}
+{\footnotesize\ttfamily \label{structpdedge_acd41f3afab4bfdbdf041ac363fa21860} 
+template$<$bool primal = true$>$ \\
+static std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ pdedge\+::order\+\_\+cycle (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{structpdedge}{pdedge}} $>$ \&}]{edg}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{structpdedge_a8013d76f05594ff8fdad27fc75cd590b}\index{pdedge@{pdedge}!pend@{pend}}
+\index{pend@{pend}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{pend()}{pend()}}
+{\footnotesize\ttfamily \label{structpdedge_a8013d76f05594ff8fdad27fc75cd590b} 
+const int \& pdedge\+::pend (\begin{DoxyParamCaption}\item[{const int \&}]{d}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structpdedge_ad900081a76a1a19e258ee17f41d1b101}\index{pdedge@{pdedge}!pstart@{pstart}}
+\index{pstart@{pstart}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{pstart()}{pstart()}}
+{\footnotesize\ttfamily \label{structpdedge_ad900081a76a1a19e258ee17f41d1b101} 
+const int \& pdedge\+::pstart (\begin{DoxyParamCaption}\item[{const int \&}]{d}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structpdedge_ad42940686343e06476e0964c91529e3b}\index{pdedge@{pdedge}!repr@{repr}}
+\index{repr@{repr}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{repr()}{repr()}}
+{\footnotesize\ttfamily \label{structpdedge_ad42940686343e06476e0964c91529e3b} 
+std\+::string pdedge\+::repr (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structpdedge_afb6f9263b5218b817b7a5254caecd627}\index{pdedge@{pdedge}!di@{di}}
+\index{di@{di}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{di}{di}}
+{\footnotesize\ttfamily \label{structpdedge_afb6f9263b5218b817b7a5254caecd627} 
+int pdedge\+::di}
+
+\Hypertarget{structpdedge_afd69df264d6e16b0f201995423738b6d}\index{pdedge@{pdedge}!dj@{dj}}
+\index{dj@{dj}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{dj}{dj}}
+{\footnotesize\ttfamily \label{structpdedge_afd69df264d6e16b0f201995423738b6d} 
+int pdedge\+::dj}
+
+\Hypertarget{structpdedge_a13dbb678e2808fb85fa46af223b9babd}\index{pdedge@{pdedge}!pi@{pi}}
+\index{pi@{pi}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{pi}{pi}}
+{\footnotesize\ttfamily \label{structpdedge_a13dbb678e2808fb85fa46af223b9babd} 
+int pdedge\+::pi}
+
+\Hypertarget{structpdedge_a6b68f249d42781148be9e3aa9802ae6f}\index{pdedge@{pdedge}!pj@{pj}}
+\index{pj@{pj}!pdedge@{pdedge}}
+\doxysubsubsection{\texorpdfstring{pj}{pj}}
+{\footnotesize\ttfamily \label{structpdedge_a6b68f249d42781148be9e3aa9802ae6f} 
+int pdedge\+::pj}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{halfspace__intersection_8hpp}{halfspace\+\_\+intersection.\+hpp}}\end{DoxyCompactItemize}

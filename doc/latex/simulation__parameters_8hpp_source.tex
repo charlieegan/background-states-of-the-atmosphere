@@ -1,0 +1,134 @@
+\doxysection{simulation\+\_\+parameters.\+hpp}
+\hypertarget{simulation__parameters_8hpp_source}{}\label{simulation__parameters_8hpp_source}\index{src/simulation\_parameters.hpp@{src/simulation\_parameters.hpp}}
+\mbox{\hyperlink{simulation__parameters_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ SIMULATION\_PARAMETERS\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ SIMULATION\_PARAMETERS\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{common_8hpp}{common.hpp}}"{}}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structsimulation__parameters}{simulation\_parameters}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00008\ \ \ \textcolor{comment}{//\ limits\ for\ s\ and\ p}}
+\DoxyCodeLine{00009\ \ \ Eigen::Vector2d\ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}},\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}};}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \ \ \textcolor{comment}{//\ resolution\ of\ top\ cell\ boundary}}
+\DoxyCodeLine{00012\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\_res}};}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \ \ \textcolor{comment}{//\ relative\ error\ to\ try\ to\ reach\ with\ discretization}}
+\DoxyCodeLine{00015\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\_tolerance}};}
+\DoxyCodeLine{00016\ \ \ }
+\DoxyCodeLine{00017\ \ \ \textcolor{comment}{//\ maximal\ number\ of\ times\ to\ try\ to\ reach\ error\ (does\ not\ do\ much)}}
+\DoxyCodeLine{00018\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\_refine\_steps}};}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \textcolor{comment}{//\ relative\ area\ error\ to\ try\ to\ reach\ per\ line}}
+\DoxyCodeLine{00021\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\_tolerance}};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \textcolor{comment}{//\ minimal\ number\ of\ points\ to\ use\ per\ line\ }}
+\DoxyCodeLine{00024\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\_line\_resolution}};}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ \textcolor{comment}{//\ maximal\ number\ of\ points\ to\ use\ per\ line}}
+\DoxyCodeLine{00027\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\_line\_resolution}};}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \textcolor{comment}{//\ factor\ to\ use\ for\ negative\ areas\ (set\ <=\ 0\ to\ not\ allow\ negative\ areas)}}
+\DoxyCodeLine{00030\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\_area\_scaling}};}
+\DoxyCodeLine{00031\ \ \ }
+\DoxyCodeLine{00032\ \ \ \mbox{\hyperlink{structsimulation__parameters_a0553b6cf211945c46365ff405077f565}{simulation\_parameters}}(\textcolor{keywordtype}{double}\ smin\ =\ 0.1747087883522576,}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ smax\ =\ 0.9809294113733709,}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ pmin\ =\ 7300,}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ pmax\ =\ 141855,}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\_res}}\ =\ 1000,}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\_tolerance}}\ =\ 1e-\/4,}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\_refine\_steps}}\ =\ 1000,}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\_tolerance}}\ =\ 1e-\/3,}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\_line\_resolution}}\ =\ 4,}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\_line\_resolution}}\ =\ 100,}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\_area\_scaling}}\ =\ 0.0)\ :}
+\DoxyCodeLine{00043\ \ \ \ \ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}(smin,\ pmin),\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}(smax,\ pmax),\ \mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\_res}}(\mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\_res}}),}
+\DoxyCodeLine{00044\ \ \ \ \ \mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\_tolerance}}(\mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\_tolerance}}),\ \mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\_refine\_steps}}(\mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\_refine\_steps}}),}
+\DoxyCodeLine{00045\ \ \ \ \ \mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\_tolerance}}(\mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\_tolerance}}),\ \mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\_line\_resolution}}(\mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\_line\_resolution}}),\ \mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\_line\_resolution}}(\mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\_line\_resolution}}),}
+\DoxyCodeLine{00046\ \ \ \ \ \mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\_area\_scaling}}(\mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\_area\_scaling}})\ \{\}}
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00048\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structsimulation__parameters_abcbe7ad0850e5a6bf94792ede2b0c974}{set\_smin}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&v)\ \{\ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}[0]\ =\ v;\ \}}
+\DoxyCodeLine{00049\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structsimulation__parameters_a831025655d254e48db5adb577379436e}{set\_smax}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&v)\ \{\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}[0]\ =\ v;\ \}}
+\DoxyCodeLine{00050\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structsimulation__parameters_ae0209b59e558dddf30e7c24a2535fe49}{set\_pmin}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&v)\ \{\ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}[1]\ =\ v;\ \}}
+\DoxyCodeLine{00051\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structsimulation__parameters_a7defaa4b7fe1228268d454302ff6169a}{set\_pmax}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&v)\ \{\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}[1]\ =\ v;\ \}}
+\DoxyCodeLine{00052\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a22b35619d6ef8ad2bd078baf37b82ff6}{get\_smin}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}[0];\ \}}
+\DoxyCodeLine{00053\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_ab484747750ebae0ac3e6ba3fdf1467af}{get\_smax}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}[0];\ \}}
+\DoxyCodeLine{00054\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_a1c1bbddee8cd74d48b4a8cb1c8e2971f}{get\_pmin}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}[1];\ \}}
+\DoxyCodeLine{00055\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structsimulation__parameters_ac8c96ef2dee203f1c5d758780a042bdd}{get\_pmax}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}[1];\ \}}
+\DoxyCodeLine{00056\ \ \ }
+\DoxyCodeLine{00057\ \ \ std::string\ \mbox{\hyperlink{structsimulation__parameters_a003ea8aabef4b2b0f505923178a137db}{repr}}()\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00058\ \ \ \ \ std::stringstream\ ss;}
+\DoxyCodeLine{00059\ \ \ \ \ ss\ <<\ \textcolor{stringliteral}{"{}smin\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}(0)}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ smax\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}(0)}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ pmin\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}(1)}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ pmax\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}(1)}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ boundary\_res\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\_res}}}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ area\_tolerance\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\_tolerance}}}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ max\_refine\_steps\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\_refine\_steps}}}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ line\_tolerance\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\_tolerance}}}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ min\_line\_resolution\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\_line\_resolution}}}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ max\_line\_resolution\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\_line\_resolution}}}
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ negative\_area\_scaling\ =\ "{}}\ <<\ \mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\_area\_scaling}};}
+\DoxyCodeLine{00070\ \ \ \ \ \textcolor{keywordflow}{return}\ ss.str();}
+\DoxyCodeLine{00071\ \ \ \}}
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00073\ \ \ \textcolor{keyword}{static}\ py::tuple\ \mbox{\hyperlink{structsimulation__parameters_a03c54f739cb00a17e4940aa256fef718}{pickle}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structsimulation__parameters}{simulation\_parameters}}\ \&s)\ \{}
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{keywordflow}{return}\ py::make\_tuple(s.\mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}[0],\ s.\mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}[0],\ s.\mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{spmin}}[1],\ s.\mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{spmax}}[1],\ }
+\DoxyCodeLine{00075\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ s.\mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{boundary\_res}},\ s.\mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{area\_tolerance}},\ s.\mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{max\_refine\_steps}},}
+\DoxyCodeLine{00076\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ s.\mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{line\_tolerance}},\ s.\mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{min\_line\_resolution}},\ s.\mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{max\_line\_resolution}},}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ s.\mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{negative\_area\_scaling}});}
+\DoxyCodeLine{00078\ \ \ \}}
+\DoxyCodeLine{00079\ }
+\DoxyCodeLine{00080\ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{structsimulation__parameters}{simulation\_parameters}}\ \mbox{\hyperlink{structsimulation__parameters_a7bfa04677eedba8169b276b74abf1994}{unpickle}}(py::tuple\ t)\ \{}
+\DoxyCodeLine{00081\ \ \ \ \ \textcolor{keywordflow}{if}\ (t.size()\ !=\ 11)}
+\DoxyCodeLine{00082\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}invalid\ state\ in\ simulation\_parameters::unpickle"{}});}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00084\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{structsimulation__parameters_a0553b6cf211945c46365ff405077f565}{simulation\_parameters}}(t[0].cast<double>(),}
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[1].cast<double>(),}
+\DoxyCodeLine{00086\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[2].cast<double>(),}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[3].cast<double>(),}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[4].cast<int>(),}
+\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[5].cast<double>(),\ }
+\DoxyCodeLine{00090\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[6].cast<int>(),\ }
+\DoxyCodeLine{00091\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[7].cast<double>(),\ }
+\DoxyCodeLine{00092\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[8].cast<int>(),\ }
+\DoxyCodeLine{00093\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[9].cast<int>(),}
+\DoxyCodeLine{00094\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ t[10].cast<double>());}
+\DoxyCodeLine{00095\ \ \ \}}
+\DoxyCodeLine{00096\ \ \ }
+\DoxyCodeLine{00097\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structsimulation__parameters_a83d5779bb7a4d431afe79f42281398a5}{bind}}(py::module\_\ \&m)\ \{}
+\DoxyCodeLine{00098\ \ \ \ \ py::class\_<simulation\_parameters>(m,\ \textcolor{stringliteral}{"{}SimulationParameters"{}})}
+\DoxyCodeLine{00099\ \ \ \ \ \ \ .def(py::init<\textcolor{keywordtype}{double},\ \textcolor{keywordtype}{double},\ \textcolor{keywordtype}{double},\ \textcolor{keywordtype}{double},}
+\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int},\ \textcolor{keywordtype}{double},\ \textcolor{keywordtype}{int},\ \textcolor{keywordtype}{double},\ \textcolor{keywordtype}{int},\ \textcolor{keywordtype}{int},\ \textcolor{keywordtype}{double}>(),}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}smin"{}})\ =\ 0.1747087883522576,\ py::arg(\textcolor{stringliteral}{"{}smax"{}})\ =\ 0.9809294113733709,}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}pmin"{}})\ =\ 7300.,\ py::arg(\textcolor{stringliteral}{"{}pmax"{}})\ =\ 141855.,}
+\DoxyCodeLine{00103\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}boundary\_res"{}})\ =\ 1000,}
+\DoxyCodeLine{00104\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}area\_tolerance"{}})\ =\ 1e-\/4,}
+\DoxyCodeLine{00105\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}max\_refine\_steps"{}})\ =\ 1000,}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}line\_tolerance"{}})\ =\ 1e-\/3,}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}min\_line\_resolution"{}})\ =\ 4,}
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}max\_line\_resolution"{}})\ =\ 100,}
+\DoxyCodeLine{00109\ \ \ \ \ \ \ \ \ \ \ \ py::arg(\textcolor{stringliteral}{"{}negative\_area\_scaling"{}})\ =\ 0.0)}
+\DoxyCodeLine{00110\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}spmin"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_ae02a7efdb70138210cc193809573efa1}{simulation\_parameters::spmin}})}
+\DoxyCodeLine{00111\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}spmax"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_affd303ea2aa619550b18c0d49f294658}{simulation\_parameters::spmax}})}
+\DoxyCodeLine{00112\ \ \ \ \ \ \ .def\_property(\textcolor{stringliteral}{"{}smin"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a22b35619d6ef8ad2bd078baf37b82ff6}{simulation\_parameters::get\_smin}},\ \&\mbox{\hyperlink{structsimulation__parameters_abcbe7ad0850e5a6bf94792ede2b0c974}{simulation\_parameters::set\_smin}})}
+\DoxyCodeLine{00113\ \ \ \ \ \ \ .def\_property(\textcolor{stringliteral}{"{}smax"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_ab484747750ebae0ac3e6ba3fdf1467af}{simulation\_parameters::get\_smax}},\ \&\mbox{\hyperlink{structsimulation__parameters_a831025655d254e48db5adb577379436e}{simulation\_parameters::set\_smax}})}
+\DoxyCodeLine{00114\ \ \ \ \ \ \ .def\_property(\textcolor{stringliteral}{"{}pmin"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a1c1bbddee8cd74d48b4a8cb1c8e2971f}{simulation\_parameters::get\_pmin}},\ \&\mbox{\hyperlink{structsimulation__parameters_ae0209b59e558dddf30e7c24a2535fe49}{simulation\_parameters::set\_pmin}})}
+\DoxyCodeLine{00115\ \ \ \ \ \ \ .def\_property(\textcolor{stringliteral}{"{}pmax"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_ac8c96ef2dee203f1c5d758780a042bdd}{simulation\_parameters::get\_pmax}},\ \&\mbox{\hyperlink{structsimulation__parameters_a7defaa4b7fe1228268d454302ff6169a}{simulation\_parameters::set\_pmax}})}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}boundary\_res"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a341167bc60b59048e1a5c258283062b5}{simulation\_parameters::boundary\_res}})}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}area\_tolerance"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a32b98364ef5cc6ad9ec163568378e153}{simulation\_parameters::area\_tolerance}})}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}max\_refine\_steps"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a522047e365fd284a500316163b0c311f}{simulation\_parameters::max\_refine\_steps}})}
+\DoxyCodeLine{00119\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}line\_tolerance"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a4663b5b4a62013a903cada82b3f8ee62}{simulation\_parameters::line\_tolerance}})}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}min\_line\_resolution"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_aca97ce34fff067c3212a0572efcbd1b6}{simulation\_parameters::min\_line\_resolution}})}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}max\_line\_resolution"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a0f62eb780ed0ffc6c86c9b05096e6242}{simulation\_parameters::max\_line\_resolution}})}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ .def\_readwrite(\textcolor{stringliteral}{"{}negative\_area\_scaling"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a6b0a169315363fafddbc2f39a39bd2cc}{simulation\_parameters::negative\_area\_scaling}})}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ .def(py::pickle(\&\mbox{\hyperlink{structsimulation__parameters_a03c54f739cb00a17e4940aa256fef718}{simulation\_parameters::pickle}},\ \&\mbox{\hyperlink{structsimulation__parameters_a7bfa04677eedba8169b276b74abf1994}{simulation\_parameters::unpickle}}))}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ .def(\textcolor{stringliteral}{"{}\_\_repr\_\_"{}},\ \&\mbox{\hyperlink{structsimulation__parameters_a003ea8aabef4b2b0f505923178a137db}{simulation\_parameters::repr}});}
+\DoxyCodeLine{00125\ \ \ \}}
+\DoxyCodeLine{00126\ \};}
+\DoxyCodeLine{00127\ }
+\DoxyCodeLine{00128\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

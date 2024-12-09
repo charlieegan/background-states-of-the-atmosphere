@@ -1,0 +1,34 @@
+\doxysection{src/pool.hpp File Reference}
+\hypertarget{pool_8hpp}{}\label{pool_8hpp}\index{src/pool.hpp@{src/pool.hpp}}
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$utility$>$}\newline
+{\ttfamily \#include $<$memory$>$}\newline
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classpool}{pool$<$ T, BLOCKSIZE, Allocator $>$}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{pool_8hpp_a0cf2bffcdd4f30980a067b76537632a2}{BIND\+\_\+\+POOL}}(m,  T,  name)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{pool_8hpp_a0cf2bffcdd4f30980a067b76537632a2}\index{pool.hpp@{pool.hpp}!BIND\_POOL@{BIND\_POOL}}
+\index{BIND\_POOL@{BIND\_POOL}!pool.hpp@{pool.hpp}}
+\doxysubsubsection{\texorpdfstring{BIND\_POOL}{BIND\_POOL}}
+{\footnotesize\ttfamily \label{pool_8hpp_a0cf2bffcdd4f30980a067b76537632a2} 
+\#define BIND\+\_\+\+POOL(\begin{DoxyParamCaption}\item[{}]{m}{, }\item[{}]{T}{, }\item[{}]{name}{}\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\ \ py::class\_<pool<T>>(m,\ name)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(py::init<>())\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(\textcolor{stringliteral}{"{}\_\_getitem\_\_"{}},\ [](\textcolor{keyword}{const}\ \mbox{\hyperlink{classpool}{pool<T>}}\ \&r,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&i)\{\ \textcolor{keywordflow}{return}\ r[i];\ \})\ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(\textcolor{stringliteral}{"{}\_\_len\_\_"{}},\ \mbox{\hyperlink{classpool}{pool<T>::size}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(\textcolor{stringliteral}{"{}push\_back"{}},\ \mbox{\hyperlink{classpool}{pool<T>::push\_back}})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ .def(\textcolor{stringliteral}{"{}back"{}},\ \mbox{\hyperlink{classpool}{pool<T>::back}});}
+
+\end{DoxyCode}

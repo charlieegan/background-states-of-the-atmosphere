@@ -1,0 +1,74 @@
+\doxysection{pool.\+hpp}
+\hypertarget{pool_8hpp_source}{}\label{pool_8hpp_source}\index{src/pool.hpp@{src/pool.hpp}}
+\mbox{\hyperlink{pool_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ POOL\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ POOL\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <utility>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <memory>}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{comment}{//\ a\ simple\ class\ for\ storing\ elements\ (in\ blocks\ of\ size\ BLOCKSIZE\ for\ efficiency)\ in\ a\ way\ that\ their\ addresses\ do\ not\ change\ and\ they\ are\ deleted\ when\ pool\ goes\ out\ of\ scope}}
+\DoxyCodeLine{00009\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T,\ \textcolor{keywordtype}{int}\ BLOCKSIZE=1024,\ \textcolor{keyword}{class}\ Allocator=std::allocator<T>>}
+\DoxyCodeLine{00010\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classpool}{pool}}}
+\DoxyCodeLine{00011\ \{}
+\DoxyCodeLine{00012\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00013\ \ \ Allocator\ \mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}};}
+\DoxyCodeLine{00014\ \ \ std::vector<T*>\ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}};}
+\DoxyCodeLine{00015\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}};\ \textcolor{comment}{//\ number\ of\ elements\ in\ last\ block}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00018\ \ \ \mbox{\hyperlink{classpool_a1ef82ea8bf520ebd6ebafcbcba5eb5ca}{pool}}(\textcolor{keyword}{const}\ Allocator\ \&\mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}\ =\ Allocator())\ :\ \mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}(\mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}),\ \mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}(BLOCKSIZE)\ \{\}}
+\DoxyCodeLine{00019\ \ \ \mbox{\hyperlink{classpool_a393d36be7e7b1bf63e6c684598735f82}{pool}}(\mbox{\hyperlink{classpool}{pool}}\ \&\&o)\ :\ \mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}(o.\mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}),\ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}(o.\mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}),\ \mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}(o.\mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}})\ \{}
+\DoxyCodeLine{00020\ \ \ \ \ o.data.clear();}
+\DoxyCodeLine{00021\ \ \ \}}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \mbox{\hyperlink{classpool_ada139fc8855a7f5d93a6e63bca05c7b9}{\string~pool}}()\ \{}
+\DoxyCodeLine{00024\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&p\ :\ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}})}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}.deallocate(p,\ BLOCKSIZE);}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \textcolor{comment}{//delete[]\ p;}}
+\DoxyCodeLine{00027\ \ \ \}}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ T\ \&\mbox{\hyperlink{classpool_ae39dc4d478cf61c3cc041274db5758d5}{operator[]}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&i)\ \{}
+\DoxyCodeLine{00030\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}[i\ /\ BLOCKSIZE][i\ \%\ BLOCKSIZE];}
+\DoxyCodeLine{00031\ \ \ \}}
+\DoxyCodeLine{00032\ \ \ \textcolor{keyword}{const}\ T\ \&\mbox{\hyperlink{classpool_a7186176900cdcca4b9d9c229ac6a0710}{operator[]}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&i)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}[i\ /\ BLOCKSIZE][i\ \%\ BLOCKSIZE];}
+\DoxyCodeLine{00034\ \ \ \}}
+\DoxyCodeLine{00035\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classpool_adff12616f6281ded13833be153f80e95}{push\_back}}(\textcolor{keyword}{const}\ T\ \&t)\ \{}
+\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}\ ==\ BLOCKSIZE)\ \{}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}.push\_back(\mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}.allocate(BLOCKSIZE));\ \textcolor{comment}{//new\ T[BLOCKSIZE]);}}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}\ =\ 0;}
+\DoxyCodeLine{00039\ \ \ \ \ \}}
+\DoxyCodeLine{00040\ \ \ \ \ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}.back()[\mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}++]\ =\ t;}
+\DoxyCodeLine{00041\ \ \ \}}
+\DoxyCodeLine{00042\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classpool_a352bcdf1d5de67d8ae4450f00be14ac5}{push\_back}}(T\ \&\&t)\ \{}
+\DoxyCodeLine{00043\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}\ ==\ BLOCKSIZE)\ \{}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}.push\_back(\mbox{\hyperlink{classpool_acee00fa370d0695cc82e0398ebf96397}{alloc}}.allocate(BLOCKSIZE));\ \textcolor{comment}{//new\ T[BLOCKSIZE]);}}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}\ =\ 0;}
+\DoxyCodeLine{00046\ \ \ \ \ \}}
+\DoxyCodeLine{00047\ \ \ \ \ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}.back()[\mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}++]\ =\ std::move(t);}
+\DoxyCodeLine{00048\ \ \ \}}
+\DoxyCodeLine{00049\ \ \ T\ \&\mbox{\hyperlink{classpool_a85107bca0230780e01c1af9123cfe71c}{back}}()\ \{}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}.back()[\mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}\ -\/\ 1];}
+\DoxyCodeLine{00051\ \ \ \}}
+\DoxyCodeLine{00052\ \ \ \textcolor{keyword}{const}\ T\ \&\mbox{\hyperlink{classpool_a79709efaace76713f6eeebba34e20bac}{back}}()\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}.back()[\mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}}\ -\/\ 1];}
+\DoxyCodeLine{00054\ \ \ \}}
+\DoxyCodeLine{00055\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classpool_a0a6f14d002438e079ab2a02bd9c177bc}{size}}()\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keywordflow}{return}\ ((\textcolor{keywordtype}{int})\mbox{\hyperlink{classpool_a245c91a75b95de1b5e2af06a66d80070}{data}}.size()\ -\/\ 1)\ *\ BLOCKSIZE\ \ +\ \mbox{\hyperlink{classpool_a7a0c5e9301d193b106866d0224c61b55}{lcnt}};}
+\DoxyCodeLine{00057\ \ \ \}}
+\DoxyCodeLine{00058\ \};}
+\DoxyCodeLine{00059\ }
+\DoxyCodeLine{00060\ \textcolor{preprocessor}{\#define\ BIND\_POOL(m,\ T,\ name)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00061\ \textcolor{preprocessor}{\ \ py::class\_<pool<T>>(m,\ name)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00062\ \textcolor{preprocessor}{\ \ .def(py::init<>())\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00063\ \textcolor{preprocessor}{\ \ .def("{}\_\_getitem\_\_"{},\ [](const\ pool<T>\ \&r,\ const\ int\ \&i)\{\ return\ r[i];\ \})\ \(\backslash\)}}
+\DoxyCodeLine{00064\ \textcolor{preprocessor}{\ \ .def("{}\_\_len\_\_"{},\ pool<T>::size)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00065\ \textcolor{preprocessor}{\ \ .def("{}push\_back"{},\ pool<T>::push\_back)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00066\ \textcolor{preprocessor}{\ \ .def("{}back"{},\ pool<T>::back);}}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00068\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

@@ -1,0 +1,701 @@
+\doxysection{rasterizer\+\_\+old.\+hpp}
+\hypertarget{rasterizer__old_8hpp_source}{}\label{rasterizer__old_8hpp_source}\index{src/rasterizer\_old.hpp@{src/rasterizer\_old.hpp}}
+\mbox{\hyperlink{rasterizer__old_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ RASTERIZER\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ RASTERIZER\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{common_8hpp}{common.hpp}}"{}}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classrasterizer}{rasterizer}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00008\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ Eigen::Vector2d\ \mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}},\ \mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}};\ \textcolor{comment}{//\ start\ and\ end\ point}}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structrasterizer_1_1segment_af3953e17bf0135bc5135ca52e607aba3}{idx}},\ \mbox{\hyperlink{structrasterizer_1_1segment_aa2069628b306ad39a398bfd5045ca8dc}{sidx}};\ \ \ \ \ \ \ \ \textcolor{comment}{//\ index\ of\ cell\ below\ (if\ it\ exists),\ index\ of\ segment}}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structrasterizer_1_1segment_a5cfdf490f52e67c5822409c3cd651415}{x0}};\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ (current)\ start\ of\ trapezoid\ below\ segment}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \ \ \ \ std::string\ \mbox{\hyperlink{structrasterizer_1_1segment_a95ad1ab28765684cf5fa55156300ac1f}{repr}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ precision\ =\ -\/1)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ std::stringstream\ ss;}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (precision\ >\ 0)}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ ss\ <<\ std::setprecision(precision);}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ ss\ <<\ \textcolor{stringliteral}{"{}segment("{}}}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{}s\ =\ ("{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(0)\ <<\ \textcolor{stringliteral}{"{},\ "{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(1)\ <<\ \textcolor{stringliteral}{"{})"{}}}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ e\ =\ ("{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(0)\ <<\ \textcolor{stringliteral}{"{},\ "{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(1)\ <<\ \textcolor{stringliteral}{"{})"{}}}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ idx\ =\ "{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1segment_af3953e17bf0135bc5135ca52e607aba3}{idx}}}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ sidx\ =\ "{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1segment_aa2069628b306ad39a398bfd5045ca8dc}{sidx}}}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ x0\ =\ "{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1segment_a5cfdf490f52e67c5822409c3cd651415}{x0}}}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ ss.str();}
+\DoxyCodeLine{00027\ \ \ \ \ \}}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structrasterizer_1_1segment_aef9648fa1a669c6e7aae4b8d283e4204}{slope}}()\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (\mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(1)\ -\/\ \mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(1))\ /\ (\mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(0)\ -\/\ \mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(0));}
+\DoxyCodeLine{00031\ \ \ \ \ \}}
+\DoxyCodeLine{00032\ \ \ \};}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \textcolor{keyword}{typedef}\ std::list<segment>::iterator\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}};}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structrasterizer_1_1event}{event}}\ \{}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{comment}{//Eigen::Vector2d\ pos;\ //\ position\ of\ the\ event}}
+\DoxyCodeLine{00038\ \ \ \ \ Eigen::Matrix<double,\ 2,\ 1>\ \mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}};\ \textcolor{comment}{//\ position\ of\ the\ event}}
+\DoxyCodeLine{00039\ \ \ \ \ std::vector<sit\_t>\ \mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}},\ \mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}};\ \textcolor{comment}{//\ incoming\ and\ outgoing\ segments}}
+\DoxyCodeLine{00040\ \ \ \ \ \textcolor{keyword}{friend}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structrasterizer_1_1event_a7c39b71433bb7db9e028b1a34d894262}{operator<}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1event}{event}}\ \&lhs,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1event}{event}}\ \&rhs)\ \{}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (lhs.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0)\ !=\ rhs.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0))}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ lhs.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0)\ <\ rhs.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0);}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&itl\ :\ lhs.\mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}})}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&itr\ :\ rhs.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}})}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (itl\ ==\ itr)}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&itl\ :\ lhs.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}})}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&itr\ :\ rhs.\mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}})}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (itl\ ==\ itr)}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ lhs.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(1)\ <\ rhs.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(1);}
+\DoxyCodeLine{00055\ \ \ \ \ \}}
+\DoxyCodeLine{00056\ \ \ \ \ std::string\ \mbox{\hyperlink{structrasterizer_1_1event_aa5ba6c489d8954ca0fd7d4c9555afa45}{repr}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&precision\ =\ -\/1)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00057\ \ \ \ \ \ \ std::stringstream\ ss;}
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (precision\ >\ 0)}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ ss\ <<\ std::setprecision(precision);}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ ss\ <<\ \textcolor{stringliteral}{"{}event("{}}}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{}coord\ =\ ("{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0)\ <<\ \textcolor{stringliteral}{"{},\ "{}}\ <<\ \mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(1)\ <<\ \textcolor{stringliteral}{"{})"{}}}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ in\ =\ ["{}};}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ \mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}})}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ ss\ <<\ it-\/>sidx\ <<\ \textcolor{stringliteral}{"{},\ "{}};}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ ss\ <<\ \textcolor{stringliteral}{"{}]"{}}}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{},\ out\ =\ ["{}};}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ \mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}})}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ ss\ <<\ it-\/>sidx\ <<\ \textcolor{stringliteral}{"{},\ "{}};}
+\DoxyCodeLine{00069\ \ \ \ \ \ \ ss\ <<\ \textcolor{stringliteral}{"{}]"{}}}
+\DoxyCodeLine{00070\ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ ss.str();}
+\DoxyCodeLine{00072\ \ \ \ \ \}}
+\DoxyCodeLine{00073\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structrasterizer_1_1event_a0a85763dc4cef15d2467b792a0e085fa}{sort}}()\ \{}
+\DoxyCodeLine{00074\ \ \ \ \ \ \ std::sort(\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}}.begin(),\ \mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}}.end(),}
+\DoxyCodeLine{00075\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ [](\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&l,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&r)\{}
+\DoxyCodeLine{00076\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ return\ (l-\/>slope()\ >\ r-\/>slope());\ \});}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ std::sort(\mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}}.begin(),\ \mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}}.end(),}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ [](\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&l,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&r)\{}
+\DoxyCodeLine{00079\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ return\ (l-\/>slope()\ <\ r-\/>slope());\ \});}
+\DoxyCodeLine{00080\ \ \ \ \ \}}
+\DoxyCodeLine{00081\ \ \ \};}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \ \ \textcolor{comment}{//\ segments\ that\ are\ in\ the\ current\ sweep\ line\ and\ ones\ that\ are\ not\ correspondingly}}
+\DoxyCodeLine{00084\ \ \ std::list<segment>\ \mbox{\hyperlink{classrasterizer_afdac46dee9ee7e4b00b5ad6538d5601b}{line}},\ \mbox{\hyperlink{classrasterizer_af01f2b5b602ae070826606dd5a4daa30}{pool}};}
+\DoxyCodeLine{00085\ \ \ std::vector<bool>\ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}};}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \ \ Eigen::Matrix<double,\ Eigen::Dynamic,\ Eigen::Dynamic,\ Eigen::RowMajor>\ \mbox{\hyperlink{classrasterizer_aaab7780b554dc64d72da10b810eded71}{out}},\ \mbox{\hyperlink{classrasterizer_a731d0fe1fc2cd3c771a254e67b08a176}{fill}};}
+\DoxyCodeLine{00088\ \ \ Eigen::Array4d\ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}};}
+\DoxyCodeLine{00089\ \ \ Eigen::Array2d\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}},\ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}};}
+\DoxyCodeLine{00090\ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_ab657ada7becc1d81811c25d4a39ed729}{pixA}};}
+\DoxyCodeLine{00091\ \ \ \textcolor{comment}{//\ pixel\ (i,\ j)\ represents\ area\ lb\ +\ (i,\ j)\string^T\ *\ step\ (pointwise\ multiplication)}}
+\DoxyCodeLine{00092\ }
+\DoxyCodeLine{00093\ \ \ Eigen::VectorXd\ \mbox{\hyperlink{classrasterizer_ab4efa643fd40ef5e0dc62f08c8d7500d}{val}};\ \textcolor{comment}{//\ value\ of\ function\ on\ cells}}
+\DoxyCodeLine{00094\ }
+\DoxyCodeLine{00095\ \ \ std::vector<sit\_t>\ \mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}};\ \textcolor{comment}{//\ starting\ line}}
+\DoxyCodeLine{00096\ \ \ std::vector<event>\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}};\ \textcolor{comment}{//\ transition\ events}}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00098\ \ \ \mbox{\hyperlink{classrasterizer_a22170481005ed75c444ecb380e23d516}{rasterizer}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ \ \ \textcolor{comment}{//\ seg\ =\ (geometric)\ segments;\ seg[i]\ =\ \{start\ point,\ end\ point,\ index\ of\ cell\ below\ segment\};\ segments\ should\ include\ top\ and\ bottom\ but\ not\ left\ and\ right\ border\ (direction\ does\ not\ matter)}}
+\DoxyCodeLine{00101\ \ \ \textcolor{comment}{//\ con\ =\ connectivity,\ con[i]\ has\ length\ >=\ 2\ and\ contains\ indices\ of\ segments\ that\ are\ connected\ (order\ does\ not\ matter)}}
+\DoxyCodeLine{00102\ \ \ \textcolor{comment}{//\ start\ =\ segment\ indices\ of\ segments\ at\ the\ start}}
+\DoxyCodeLine{00103\ \ \ \textcolor{comment}{//\ bounds\ =\ (left,\ right,\ bottom,\ top)\ boundaries\ left\ <\ right\ bounds\ coordinate\ 0;\ bottom\ <\ top\ bounds\ coordinate\ 1}}
+\DoxyCodeLine{00104\ \ \ \mbox{\hyperlink{classrasterizer_ac40f17a6c2a46861c1479e5a8fe5d96d}{rasterizer}}(\textcolor{keyword}{const}\ std::vector<std::tuple<Eigen::Vector2d,\ Eigen::Vector2d,\ int>>\ \&seg,}
+\DoxyCodeLine{00105\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::vector<std::vector<int>>\ \&con,}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::vector<int>\ \&start,}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ Eigen::Ref<const\ Eigen::Array4d>\ \&\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}},}
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&merge\_epsi)\ :}
+\DoxyCodeLine{00109\ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}(seg.size()),}
+\DoxyCodeLine{00110\ \ \ \ \ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}),}
+\DoxyCodeLine{00111\ \ \ \ \ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(0),\ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(2))\ \{}
+\DoxyCodeLine{00112\ }
+\DoxyCodeLine{00113\ \ \ \ \ \textcolor{comment}{//\ costruct\ segments\ from\ input\ parameters\ and\ store\ them\ in\ pool}}
+\DoxyCodeLine{00114\ \ \ \ \ std::vector<sit\_t>\ sits;}
+\DoxyCodeLine{00115\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ (int)seg.size();\ ++i)\ \{}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keyword}{auto}\ \&s\ =\ seg[i];}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_ab5ace06ce4b97316d8072aadd8249454}{seg\_is\_oriented}}(std::get<0>(s),\ std::get<1>(s)))}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ sits.push\_back(\mbox{\hyperlink{classpool}{pool}}.insert(\mbox{\hyperlink{classpool}{pool}}.end(),\ \{std::get<0>(s),\ std::get<1>(s),\ std::get<2>(s),\ i,\ std::get<0>(s)(0)\}));}
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_ab5ace06ce4b97316d8072aadd8249454}{seg\_is\_oriented}}(std::get<1>(s),\ std::get<0>(s)))}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ sits.push\_back(\mbox{\hyperlink{classpool}{pool}}.insert(\mbox{\hyperlink{classpool}{pool}}.end(),\ \{std::get<1>(s),\ std::get<0>(s),\ std::get<2>(s),\ i,\ std::get<1>(s)(0)\}));}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}rasterizer\ got\ 0-\/length\ segment,\ which\ is\ currently\ not\ supported"{}});}
+\DoxyCodeLine{00123\ \ \ \ \ \}}
+\DoxyCodeLine{00124\ }
+\DoxyCodeLine{00125\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00126\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{const}\ \textcolor{keyword}{auto}\ \&it\ :\ sits)}
+\DoxyCodeLine{00127\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (it-\/>s(0)\ >\ it-\/>e(0))}
+\DoxyCodeLine{00128\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}segment\ was\ not\ oriented\ correctly\ :\ \{\}"{}},\ it-\/>repr(16)));}
+\DoxyCodeLine{00129\ \#endif}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00131\ \ \ \ \ \textcolor{comment}{//\ sort\ starting\ segments}}
+\DoxyCodeLine{00132\ \ \ \ \ for\ (\textcolor{keyword}{auto}\ \&i\ :\ start)}
+\DoxyCodeLine{00133\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}}.push\_back(sits[i]);}
+\DoxyCodeLine{00134\ \ \ \ \ std::sort(\mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}}.begin(),\ \mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}}.end(),\ [](\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&it0,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&it1)\{}
+\DoxyCodeLine{00135\ \ \ \ \ \ \ return\ std::make\_pair(it0-\/>s(1),\ it0-\/>slope())\ <\ std::make\_pair(it1-\/>s(1),\ it1-\/>slope());}
+\DoxyCodeLine{00136\ \ \ \ \ \});}
+\DoxyCodeLine{00137\ }
+\DoxyCodeLine{00138\ \ \ \ \ \textcolor{comment}{//\ collect\ events\ (based\ on\ connections)}}
+\DoxyCodeLine{00139\ \ \ \ \ for\ (\textcolor{keyword}{auto}\ \&c\ :\ con)\ \{}
+\DoxyCodeLine{00140\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (c.size()\ <\ 2)}
+\DoxyCodeLine{00141\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}rasterizer\ got\ invalid\ connection\ (size\ <\ 2)"{}});}
+\DoxyCodeLine{00142\ }
+\DoxyCodeLine{00143\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&i\ :\ c)}
+\DoxyCodeLine{00145\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ <\ 0\ ||\ i\ >=\ (\textcolor{keywordtype}{int})sits.size())}
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}connection\ contains\ invalid\ index\ \{\}"{}},\ i));}
+\DoxyCodeLine{00147\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00148\ }
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \textcolor{keyword}{event}\ e;}
+\DoxyCodeLine{00150\ }
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \textcolor{comment}{//\ find\ common\ point}}
+\DoxyCodeLine{00152\ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keyword}{auto}\ \&s0\ =\ sits[c[0]];}
+\DoxyCodeLine{00153\ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keyword}{auto}\ \&s1\ =\ sits[c[1]];}
+\DoxyCodeLine{00154\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (s0-\/>s\ ==\ s1-\/>s\ ||\ s0-\/>s\ ==\ s1-\/>e)}
+\DoxyCodeLine{00155\ \ \ \ \ \ \ \ \ e.pos\ =\ s0-\/>s;}
+\DoxyCodeLine{00156\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (s0-\/>e\ ==\ s1-\/>s\ ||\ s0-\/>e\ ==\ s1-\/>e)}
+\DoxyCodeLine{00157\ \ \ \ \ \ \ \ \ e.pos\ =\ s0-\/>e;}
+\DoxyCodeLine{00158\ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00159\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}rasterizer\ got\ invalid\ connection"{}}}
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}(no\ common\ point\ in\ first\ two\ segments\ \{\}\ and\ \{\})"{}},}
+\DoxyCodeLine{00161\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ s0-\/>repr(),\ s1-\/>repr()));}
+\DoxyCodeLine{00162\ }
+\DoxyCodeLine{00163\ \ \ \ \ \ \ \textcolor{comment}{//\ separate\ into\ incoming\ and\ outgoing\ segments}}
+\DoxyCodeLine{00164\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&i\ :\ c)\ \{}
+\DoxyCodeLine{00165\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (sits[i]-\/>s\ ==\ e.pos)}
+\DoxyCodeLine{00166\ \ \ \ \ \ \ \ \ \ \ e.seg\_out.push\_back(sits[i]);}
+\DoxyCodeLine{00167\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (sits[i]-\/>e\ ==\ e.pos)}
+\DoxyCodeLine{00168\ \ \ \ \ \ \ \ \ \ \ e.seg\_in.push\_back(sits[i]);}
+\DoxyCodeLine{00169\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}rasterizer\ got\ invalid\ connection\ of\ size\ \{\}"{}}}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}(participating\ segment\ \{\}\ does\ not\ contain\ common\ point\ (\{\},\ \{\}))"{}},}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ con.size(),\ sits[i]-\/>repr(),\ e.pos(0),\ e.pos(1)));}
+\DoxyCodeLine{00173\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00176\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (e.seg\_in.size()\ +\ e.seg\_out.size()\ !=\ c.size())}
+\DoxyCodeLine{00177\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}incoming\ and\ outgoing\ segments\ don't\ add\ up:\ \{\}\ +\ \{\}\ !=\ \{\}"{}},}
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ e.seg\_in.size(),\ e.seg\_out.size(),\ c.size()));}
+\DoxyCodeLine{00179\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00180\ }
+\DoxyCodeLine{00181\ \ \ \ \ \ \ \textcolor{comment}{//\ add\ event\ to\ list}}
+\DoxyCodeLine{00182\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.push\_back(e);}
+\DoxyCodeLine{00183\ \ \ \ \ \}}
+\DoxyCodeLine{00184\ }
+\DoxyCodeLine{00185\ \ \ \ \ \textcolor{comment}{//\ sort\ events\ (by\ position\ /\ topology\ if\ neighboring)}}
+\DoxyCodeLine{00186\ \ \ \ \ std::sort(\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.begin(),\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.end());}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \textcolor{comment}{//\ merge\ events\ which\ are\ within\ tolerance}}
+\DoxyCodeLine{00189\ \ \ \ \ \mbox{\hyperlink{classrasterizer_a194e8a577b9685d7f62d8f745c7541ee}{merge\_close\_events}}(merge\_epsi);}
+\DoxyCodeLine{00190\ }
+\DoxyCodeLine{00191\ \ \ \ \ \textcolor{comment}{//\ sort\ event\ segments}}
+\DoxyCodeLine{00192\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&e\ :\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}})}
+\DoxyCodeLine{00193\ \ \ \ \ \ \ e.sort();}
+\DoxyCodeLine{00194\ }
+\DoxyCodeLine{00195\ \ \ \ \ \textcolor{comment}{//\ find\ segment\ intersects\ (topology\ errors\ in\ input)}}
+\DoxyCodeLine{00196\ \ \ \ \ \textcolor{keyword}{auto}\ ints\ =\ \mbox{\hyperlink{classrasterizer_a1d0bc180aca22b41322870f58f9e4dac}{find\_intersects}}();}
+\DoxyCodeLine{00197\ }
+\DoxyCodeLine{00198\ \ \ \ \ \textcolor{comment}{//\ fix\ topology\ errors\ by\ adding\ swap\ events\ at\ intersects}}
+\DoxyCodeLine{00199\ \ \ \ \ \textcolor{keywordflow}{if}\ (!ints.empty())\ \{}
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&e\ :\ ints)}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.push\_back(e);}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ std::sort(\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.begin(),\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.end());}
+\DoxyCodeLine{00203\ \ \ \ \ \}}
+\DoxyCodeLine{00204\ }
+\DoxyCodeLine{00205\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00206\ \ \ \ \ \textcolor{keywordflow}{if}\ (!\mbox{\hyperlink{classrasterizer_a2fe45578ccf2fb56ddf7ebcd3b123924}{check\_topology}}())}
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}invalid\ topology\ detected\ in\ rasterizer:\ "{}}\ +\ \mbox{\hyperlink{classrasterizer_ab523247e139628251f911a4a15b7997c}{top\_error}});}
+\DoxyCodeLine{00208\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00209\ \ \ \}}
+\DoxyCodeLine{00210\ }
+\DoxyCodeLine{00211\ \ \ \textcolor{comment}{//\ val\ =\ values\ of\ cells}}
+\DoxyCodeLine{00212\ \ \ \textcolor{comment}{//\ res\ =\ resolution\ the\ result\ shall\ have}}
+\DoxyCodeLine{00213\ \ \ Eigen::Ref<const\ Eigen::Matrix<double,\ Eigen::Dynamic,\ Eigen::Dynamic,\ Eigen::RowMajor>>}
+\DoxyCodeLine{00214\ \ \ \mbox{\hyperlink{classrasterizer_a44372b47724338f399d78e3489c70be7}{rasterize}}(\textcolor{keyword}{const}\ Eigen::Ref<const\ Eigen::VectorXd>\ \&\mbox{\hyperlink{classrasterizer_ab4efa643fd40ef5e0dc62f08c8d7500d}{val}},}
+\DoxyCodeLine{00215\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ Eigen::Ref<const\ Eigen::Array2i>\ \&res)\ \{}
+\DoxyCodeLine{00216\ }
+\DoxyCodeLine{00217\ \ \ \ \ this-\/>val\ =\ \mbox{\hyperlink{classrasterizer_ab4efa643fd40ef5e0dc62f08c8d7500d}{val}};}
+\DoxyCodeLine{00218\ }
+\DoxyCodeLine{00219\ \ \ \ \ \textcolor{comment}{//\ reset\ out}}
+\DoxyCodeLine{00220\ \ \ \ \ \mbox{\hyperlink{classrasterizer_aaab7780b554dc64d72da10b810eded71}{out}}\ =\ Eigen::Matrix<double,\ Eigen::Dynamic,\ Eigen::Dynamic,\ Eigen::RowMajor>::Zero(res(0),\ res(1));}
+\DoxyCodeLine{00221\ \ \ \ \ \mbox{\hyperlink{classrasterizer_a731d0fe1fc2cd3c771a254e67b08a176}{fill}}\ =\ Eigen::Matrix<double,\ Eigen::Dynamic,\ Eigen::Dynamic,\ Eigen::RowMajor>::Zero(res(0),\ res(1));}
+\DoxyCodeLine{00222\ }
+\DoxyCodeLine{00223\ \ \ \ \ \textcolor{comment}{//\ calculate\ step\ spacings}}
+\DoxyCodeLine{00224\ \ \ \ \ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}}\ =\ \{(\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(1)\ -\/\ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(0))\ /\ res(0),\ (\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(3)\ -\/\ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(2))\ /\ res(1)\};}
+\DoxyCodeLine{00225\ \ \ \ \ \mbox{\hyperlink{classrasterizer_ab657ada7becc1d81811c25d4a39ed729}{pixA}}\ =\ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}}(0)\ *\ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}}(1);}
+\DoxyCodeLine{00226\ }
+\DoxyCodeLine{00227\ \ \ \ \ \textcolor{comment}{//\ move\ all\ segments\ back\ into\ pool}}
+\DoxyCodeLine{00228\ \ \ \ \ std::fill(\mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}.begin(),\ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}.end(),\ \textcolor{keyword}{false});}
+\DoxyCodeLine{00229\ \ \ \ \ \mbox{\hyperlink{classpool}{pool}}.splice(\mbox{\hyperlink{classpool}{pool}}.end(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}});}
+\DoxyCodeLine{00230\ \ \ \ \ \textcolor{comment}{//\ move\ start\ segments\ into\ line}}
+\DoxyCodeLine{00231\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ \mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}})\ \{}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ it-\/>x0\ =\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(0);}
+\DoxyCodeLine{00233\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx]\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00234\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.splice(\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end(),\ \mbox{\hyperlink{classpool}{pool}},\ it);}
+\DoxyCodeLine{00235\ \ \ \ \ \}}
+\DoxyCodeLine{00236\ }
+\DoxyCodeLine{00237\ \ \ \ \ \textcolor{comment}{//\ process\ events\ in\ order}}
+\DoxyCodeLine{00238\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&e\ :\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}})}
+\DoxyCodeLine{00239\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a70da3299219742e05ee891d9b4644b22}{process\_event}}(e);}
+\DoxyCodeLine{00240\ }
+\DoxyCodeLine{00241\ \ \ \ \ \textcolor{comment}{//\ add\ remaining\ areas\ at\ the\ end}}
+\DoxyCodeLine{00242\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.size())}
+\DoxyCodeLine{00243\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ it1\ =\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin(),\ it0\ =\ it1++;\ it1\ !=\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end();\ it0\ =\ it1++)}
+\DoxyCodeLine{00244\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a764956c24f744ccb8d795002fff3d1d6}{add\_area\_between}}(it0,\ it1,\ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}(1));}
+\DoxyCodeLine{00245\ }
+\DoxyCodeLine{00246\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classrasterizer_aaab7780b554dc64d72da10b810eded71}{out}};}
+\DoxyCodeLine{00247\ \ \ \}}
+\DoxyCodeLine{00248\ }
+\DoxyCodeLine{00249\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00250\ }
+\DoxyCodeLine{00251\ \ \ std::vector<event>\ \mbox{\hyperlink{classrasterizer_a1d0bc180aca22b41322870f58f9e4dac}{find\_intersects}}()\ \{}
+\DoxyCodeLine{00252\ \ \ \ \ std::vector<event>\ res;}
+\DoxyCodeLine{00253\ }
+\DoxyCodeLine{00254\ \ \ \ \ \mbox{\hyperlink{classpool}{pool}}.splice(\mbox{\hyperlink{classpool}{pool}}.end(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}});}
+\DoxyCodeLine{00255\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ \mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}})\ \{}
+\DoxyCodeLine{00256\ \ \ \ \ \ \ it-\/>x0\ =\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(0);}
+\DoxyCodeLine{00257\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.splice(\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end(),\ \mbox{\hyperlink{classpool}{pool}},\ it);}
+\DoxyCodeLine{00258\ \ \ \ \ \}}
+\DoxyCodeLine{00259\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&e\ :\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}})\ \{}
+\DoxyCodeLine{00260\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (e.seg\_in.empty()\ \&\&\ e.seg\_out.empty())}
+\DoxyCodeLine{00261\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{continue};}
+\DoxyCodeLine{00262\ }
+\DoxyCodeLine{00263\ \ \ \ \ \ \ \textcolor{comment}{//\ insertion\ sort\ line\ and\ store\ inversions}}
+\DoxyCodeLine{00264\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ it1\ =\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin(),\ it0\ =\ it1++;\ it1\ !=\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end();\ )\ \{}
+\DoxyCodeLine{00265\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it0,\ e.pos(0))\ >\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it1,\ e.pos(0)))\ \{}
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ found\ inversion}}
+\DoxyCodeLine{00267\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ find\ intersection\ coordinate}}
+\DoxyCodeLine{00268\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ (by\ binsearch\ to\ guarantee\ exact\ result:\ x\ is\ the\ first\ representable\ number\ at\ which\ the\ order\ breaks)}}
+\DoxyCodeLine{00269\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ x\ =\ e.pos(0);}
+\DoxyCodeLine{00270\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{double}\ d\ =\ 1.0;\ x\ !=\ (x\ -\/\ d);\ d\ *=\ 0.5)}
+\DoxyCodeLine{00271\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (\mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it0,\ x\ -\/\ d)\ >\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it1,\ x\ -\/\ d))}
+\DoxyCodeLine{00272\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ x\ -\/=\ d;}
+\DoxyCodeLine{00273\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ y\ =\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(std::abs(it0-\/>slope())\ <\ std::abs(it1-\/>slope())\ ?\ it0\ :\ it1,\ x);}
+\DoxyCodeLine{00274\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ push\ event}}
+\DoxyCodeLine{00275\ \ \ \ \ \ \ \ \ \ \ res.push\_back(\{\{x,\ y\},\ \{it0,\ it1\},\ \{it1,\ it0\}\});}
+\DoxyCodeLine{00276\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ swap\ segments\ in\ line}}
+\DoxyCodeLine{00277\ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.splice(it0,\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}},\ it1);}
+\DoxyCodeLine{00278\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ if\ not\ at\ begin:\ go\ back\ a\ step\ to\ allow\ swaps\ over\ multiple\ positions}}
+\DoxyCodeLine{00279\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (it1\ !=\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin())}
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ \ \ \ \ it0\ =\ std::prev(it1);}
+\DoxyCodeLine{00281\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00282\ \ \ \ \ \ \ \ \ \ \ \ \ it1\ =\ std::next(it0);}
+\DoxyCodeLine{00283\ \ \ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00284\ \ \ \ \ \ \ \ \ \ \ it0\ =\ it1++;}
+\DoxyCodeLine{00285\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00286\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00287\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00288\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!std::is\_sorted(\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end(),}
+\DoxyCodeLine{00289\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ [\&e](\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&lhs,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&rhs)\ \{}
+\DoxyCodeLine{00290\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ return\ y\_at(lhs,\ e.pos(0))\ <\ y\_at(rhs,\ e.pos(0));}
+\DoxyCodeLine{00291\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}))}
+\DoxyCodeLine{00292\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}wrong\ line\ order\ after\ insertion\ sort\ in\ find\_intersects"{}});}
+\DoxyCodeLine{00293\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00294\ }
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ ins\_pos;}
+\DoxyCodeLine{00296\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (e.seg\_in.size())\ \{}
+\DoxyCodeLine{00297\ \ \ \ \ \ \ \ \ ins\_pos\ =\ std::next(e.seg\_in.back());}
+\DoxyCodeLine{00298\ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00299\ \ \ \ \ \ \ \ \ ins\_pos\ =\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin();}
+\DoxyCodeLine{00300\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (ins\_pos\ !=\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end()\ \&\&\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(ins\_pos,\ e.pos(0))\ <=\ e.pos(1))}
+\DoxyCodeLine{00301\ \ \ \ \ \ \ \ \ \ \ ++ins\_pos;}
+\DoxyCodeLine{00302\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00303\ }
+\DoxyCodeLine{00304\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ e.seg\_in)\ \{}
+\DoxyCodeLine{00305\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classpool}{pool}}.splice(\mbox{\hyperlink{classpool}{pool}}.end(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}},\ it);}
+\DoxyCodeLine{00306\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00307\ }
+\DoxyCodeLine{00308\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ e.seg\_out)\ \{}
+\DoxyCodeLine{00309\ \ \ \ \ \ \ \ \ it-\/>x0\ =\ e.pos(0);}
+\DoxyCodeLine{00310\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.splice(ins\_pos,\ \mbox{\hyperlink{classpool}{pool}},\ it);}
+\DoxyCodeLine{00311\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00312\ }
+\DoxyCodeLine{00313\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00314\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!std::is\_sorted(\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end(),}
+\DoxyCodeLine{00315\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ [\&e](\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&lhs,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&rhs)\ \{}
+\DoxyCodeLine{00316\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ return\ y\_at(lhs,\ e.pos(0))\ <\ y\_at(rhs,\ e.pos(0));}
+\DoxyCodeLine{00317\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}))}
+\DoxyCodeLine{00318\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}wrong\ line\ order\ after\ event\ processing\ in\ find\_intersects!"{}});}
+\DoxyCodeLine{00319\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00320\ \ \ \ \ \}}
+\DoxyCodeLine{00321\ }
+\DoxyCodeLine{00322\ \ \ \ \ \textcolor{keywordflow}{return}\ res;}
+\DoxyCodeLine{00323\ \ \ \}}
+\DoxyCodeLine{00324\ }
+\DoxyCodeLine{00325\ \ \ std::string\ \mbox{\hyperlink{classrasterizer_ab523247e139628251f911a4a15b7997c}{top\_error}};}
+\DoxyCodeLine{00326\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classrasterizer_a2fe45578ccf2fb56ddf7ebcd3b123924}{check\_topology}}()\ \{}
+\DoxyCodeLine{00327\ \ \ \ \ \mbox{\hyperlink{classrasterizer_ab523247e139628251f911a4a15b7997c}{top\_error}}\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00328\ \ \ \ \ std::fill(\mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}.begin(),\ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}.end(),\ \textcolor{keyword}{false});}
+\DoxyCodeLine{00329\ \ \ \ \ \mbox{\hyperlink{classpool}{pool}}.splice(\mbox{\hyperlink{classpool}{pool}}.end(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}});}
+\DoxyCodeLine{00330\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ \mbox{\hyperlink{classrasterizer_a3288490cee2f9bc0824d30b85334f01a}{pline}})\ \{}
+\DoxyCodeLine{00331\ \ \ \ \ \ \ it-\/>x0\ =\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(0);}
+\DoxyCodeLine{00332\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx]\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00333\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.splice(\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end(),\ \mbox{\hyperlink{classpool}{pool}},\ it);}
+\DoxyCodeLine{00334\ \ \ \ \ \}}
+\DoxyCodeLine{00335\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ (int)\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.size();\ ++i)\ \{}
+\DoxyCodeLine{00336\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ \&e\ =\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[i];}
+\DoxyCodeLine{00337\ \ \ \ \ \ \ }
+\DoxyCodeLine{00338\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (e.seg\_in.empty()\ \&\&\ e.seg\_out.empty())}
+\DoxyCodeLine{00339\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{continue};}
+\DoxyCodeLine{00340\ }
+\DoxyCodeLine{00341\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ ins\_pos;}
+\DoxyCodeLine{00342\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (e.seg\_in.size())\ \{}
+\DoxyCodeLine{00343\ \ \ \ \ \ \ \ \ ins\_pos\ =\ std::next(e.seg\_in.back());}
+\DoxyCodeLine{00344\ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00345\ \ \ \ \ \ \ \ \ ins\_pos\ =\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin();}
+\DoxyCodeLine{00346\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (ins\_pos\ !=\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end()\ \&\&\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(ins\_pos,\ e.pos(0))\ <=\ e.pos(1))}
+\DoxyCodeLine{00347\ \ \ \ \ \ \ \ \ \ \ ++ins\_pos;}
+\DoxyCodeLine{00348\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00349\ }
+\DoxyCodeLine{00350\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ e.seg\_in)\ \{}
+\DoxyCodeLine{00351\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!\mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx])\ \{}
+\DoxyCodeLine{00352\ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_ab523247e139628251f911a4a15b7997c}{top\_error}}\ =\ \textcolor{stringliteral}{"{}double\ remove\ @\ "{}}\ +\ e.repr(16);}
+\DoxyCodeLine{00353\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00354\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00355\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx]\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00356\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classpool}{pool}}.splice(\mbox{\hyperlink{classpool}{pool}}.end(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}},\ it);}
+\DoxyCodeLine{00357\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00358\ }
+\DoxyCodeLine{00359\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ e.seg\_out)\ \{}
+\DoxyCodeLine{00360\ \ \ \ \ \ \ \ \ it-\/>x0\ =\ e.pos(0);}
+\DoxyCodeLine{00361\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx])\ \{}
+\DoxyCodeLine{00362\ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_ab523247e139628251f911a4a15b7997c}{top\_error}}\ =\ \textcolor{stringliteral}{"{}double\ insert\ @\ "{}}\ +\ e.repr(16);}
+\DoxyCodeLine{00363\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00364\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00365\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx]\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00366\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.splice(ins\_pos,\ \mbox{\hyperlink{classpool}{pool}},\ it);}
+\DoxyCodeLine{00367\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00368\ }
+\DoxyCodeLine{00369\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ ((i\ +\ 1\ ==\ (\textcolor{keywordtype}{int})\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.size()\ ||\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[i\ +\ 1].pos(0)\ !=\ e.pos(0))\ \&\&}
+\DoxyCodeLine{00370\ \ \ \ \ \ \ \ \ \ \ !std::is\_sorted(\mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end(),}
+\DoxyCodeLine{00371\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ [\&e](\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&lhs,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&rhs)\ \{}
+\DoxyCodeLine{00372\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ return\ y\_at(lhs,\ e.pos(0))\ <\ y\_at(rhs,\ e.pos(0));}
+\DoxyCodeLine{00373\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}))\ \{}
+\DoxyCodeLine{00374\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_ab523247e139628251f911a4a15b7997c}{top\_error}}\ =\ \textcolor{stringliteral}{"{}order\ @\ "{}}\ +\ e.repr(16);}
+\DoxyCodeLine{00375\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00376\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00377\ \ \ \ \ \}}
+\DoxyCodeLine{00378\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00379\ \ \ \}}
+\DoxyCodeLine{00380\ }
+\DoxyCodeLine{00381\ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classrasterizer_a194e8a577b9685d7f62d8f745c7541ee}{merge\_close\_events}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&merge\_epsi)\ \{}
+\DoxyCodeLine{00382\ \ \ \ \ \textcolor{keywordtype}{int}\ merge\_cnt\ =\ 0;}
+\DoxyCodeLine{00383\ }
+\DoxyCodeLine{00384\ \ \ \ \ \textcolor{keywordflow}{if}\ (merge\_epsi\ >=\ 0)\ \{}
+\DoxyCodeLine{00385\ \ \ \ \ \ \ \textcolor{comment}{//\ merge\ very\ close\ events\ (and\ endpoints\ of\ corresponding\ segments)}}
+\DoxyCodeLine{00386\ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ epsi\_x\ =\ merge\_epsi\ *\ (\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}[1]\ -\/\ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}[0]);}
+\DoxyCodeLine{00387\ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ epsi\_y\ =\ merge\_epsi\ *\ (\mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}[3]\ -\/\ \mbox{\hyperlink{classrasterizer_a1eb5da1ae1a128c30c24dbb22eee268c}{bounds}}[2]);}
+\DoxyCodeLine{00388\ }
+\DoxyCodeLine{00389\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ l\ =\ 0,\ r\ =\ 0;\ r\ <\ (int)\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.size();\ ++l)\ \{}
+\DoxyCodeLine{00390\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (r\ <\ (\textcolor{keywordtype}{int})\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}.size()\ \&\&\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[r].pos(0)\ -\/\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].pos(0)\ <=\ epsi\_x)}
+\DoxyCodeLine{00391\ \ \ \ \ \ \ \ \ \ \ ++r;}
+\DoxyCodeLine{00392\ }
+\DoxyCodeLine{00393\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ don't\ merge\ for\ empty\ events}}
+\DoxyCodeLine{00394\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].seg\_in.empty()\ \&\&\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].seg\_out.empty())}
+\DoxyCodeLine{00395\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{continue};}
+\DoxyCodeLine{00396\ }
+\DoxyCodeLine{00397\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ find\ events\ to\ merge\ with}}
+\DoxyCodeLine{00398\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ l\ +\ 1;\ i\ <\ r;\ ++i)\ \{}
+\DoxyCodeLine{00399\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ check\ if\ event[i]\ is\ within\ merging\ distance}}
+\DoxyCodeLine{00400\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (std::abs(\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].pos(1)\ -\/\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[i].pos(1))\ <=\ epsi\_y)\ \{}
+\DoxyCodeLine{00401\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ py::print("{}merge"{},\ events[l].repr(16),\ "{}and"{},\ events[i].repr(16));}}
+\DoxyCodeLine{00402\ }
+\DoxyCodeLine{00403\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ merge\ events[i].seg\_in;\ handle\ collapsed\ and\ flipped\ segments}}
+\DoxyCodeLine{00404\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{auto}\ \&p\ =\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].pos;}
+\DoxyCodeLine{00405\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[i].seg\_in)\ \{}
+\DoxyCodeLine{00406\ }
+\DoxyCodeLine{00407\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ it-\/>e\ =\ p;}
+\DoxyCodeLine{00408\ }
+\DoxyCodeLine{00409\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ handle\ cases\ of\ segments\ collapsed\ to\ point\ or\ flipped\ due\ to\ merging}}
+\DoxyCodeLine{00410\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_ab5ace06ce4b97316d8072aadd8249454}{seg\_is\_oriented}}(it-\/>s,\ \ it-\/>e))\ \{}
+\DoxyCodeLine{00411\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ py::print("{}change\ endpoint\ of\ segment\ without\ flipping"{});}}
+\DoxyCodeLine{00412\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].seg\_in.push\_back(it);}
+\DoxyCodeLine{00413\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00414\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ si\ =\ -\/1;}
+\DoxyCodeLine{00415\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ j\ =\ i\ -\/\ 1;\ j\ >=\ 0\ \&\&\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[j].pos(0)\ >=\ it-\/>s(0);\ -\/-\/j)\ \{}
+\DoxyCodeLine{00416\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[j].pos\ ==\ it-\/>s)\ \{}
+\DoxyCodeLine{00417\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ si\ =\ j;}
+\DoxyCodeLine{00418\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00419\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00420\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00421\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (si\ <\ 0)}
+\DoxyCodeLine{00422\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}did\ not\ find\ starting\ event\ of\ segment\ flipped\ in\ merging\ operation"{}});}
+\DoxyCodeLine{00423\ }
+\DoxyCodeLine{00424\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::erase(\mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[si].seg\_out,\ it);}
+\DoxyCodeLine{00425\ }
+\DoxyCodeLine{00426\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (it-\/>s\ !=\ it-\/>e)\ \{}
+\DoxyCodeLine{00427\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ py::print("{}flipping\ segment"{});}}
+\DoxyCodeLine{00428\ }
+\DoxyCodeLine{00429\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::swap(it-\/>s,\ it-\/>e);}
+\DoxyCodeLine{00430\ }
+\DoxyCodeLine{00431\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].seg\_out.push\_back(it);}
+\DoxyCodeLine{00432\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[si].seg\_in.push\_back(it);}
+\DoxyCodeLine{00433\ }
+\DoxyCodeLine{00434\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00435\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ py::print("{}segment\ collapsed\ to\ point\ is\ ignored"{});}}
+\DoxyCodeLine{00436\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00437\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00438\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00439\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[i].seg\_in.clear();}
+\DoxyCodeLine{00440\ }
+\DoxyCodeLine{00441\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ merge\ events[i].seg\_out;\ segments\ here\ are\ always\ regular}}
+\DoxyCodeLine{00442\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[i].seg\_out)\ \{}
+\DoxyCodeLine{00443\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ it-\/>s\ =\ p;}
+\DoxyCodeLine{00444\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[l].seg\_out.push\_back(it);}
+\DoxyCodeLine{00445\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00446\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a81aadc5c347158334c38d1f9916aab3d}{events}}[i].seg\_out.clear();}
+\DoxyCodeLine{00447\ }
+\DoxyCodeLine{00448\ \ \ \ \ \ \ \ \ \ \ \ \ ++merge\_cnt;}
+\DoxyCodeLine{00449\ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00450\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00451\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00452\ \ \ \ \ \}}
+\DoxyCodeLine{00453\ \ \ \ \ \textcolor{keywordflow}{return}\ merge\_cnt;}
+\DoxyCodeLine{00454\ \ \ \}}
+\DoxyCodeLine{00455\ }
+\DoxyCodeLine{00456\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classrasterizer_a70da3299219742e05ee891d9b4644b22}{process\_event}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1event}{event}}\ \&e)\ \{}
+\DoxyCodeLine{00457\ \ \ \ \ \textcolor{comment}{//\ ignore\ empty\ event}}
+\DoxyCodeLine{00458\ \ \ \ \ \textcolor{keywordflow}{if}\ (e.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}}.empty()\ \&\&\ e.\mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}}.empty())}
+\DoxyCodeLine{00459\ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{00460\ }
+\DoxyCodeLine{00461\ \ \ \ \ \textcolor{comment}{//\ add\ areas\ below\ ending\ segment}}
+\DoxyCodeLine{00462\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ e.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}})}
+\DoxyCodeLine{00463\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a4181d4afa4eea89844466c0ef382b2bf}{add\_area\_below}}(it,\ e.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0));}
+\DoxyCodeLine{00464\ }
+\DoxyCodeLine{00465\ \ \ \ \ \textcolor{comment}{//\ find\ ins\_pos\ (which\ is\ either\ the\ one\ following\ the\ highest\ ending\ segment\ in\ line\ or\ has\ to\ be\ found\ by\ linear\ search)}}
+\DoxyCodeLine{00466\ \ \ \ \ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ ins\_pos;}
+\DoxyCodeLine{00467\ \ \ \ \ \textcolor{keywordflow}{if}\ (e.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}}.size())\ \{}
+\DoxyCodeLine{00468\ \ \ \ \ \ \ ins\_pos\ =\ std::next(e.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}}.back());}
+\DoxyCodeLine{00469\ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00470\ \ \ \ \ \ \ ins\_pos\ =\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin();}
+\DoxyCodeLine{00471\ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (ins\_pos\ !=\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end()\ \&\&\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(ins\_pos,\ e.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0))\ <=\ e.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(1))}
+\DoxyCodeLine{00472\ \ \ \ \ \ \ \ \ ++ins\_pos;}
+\DoxyCodeLine{00473\ \ \ \ \ \}}
+\DoxyCodeLine{00474\ }
+\DoxyCodeLine{00475\ \ \ \ \ \textcolor{comment}{//\ add\ the\ area\ below\ ins\_pos\ (i.e.\ area\ above\ topmost\ incoming\ segment\ or\ area\ which\ will\ be\ cut\ by\ event)}}
+\DoxyCodeLine{00476\ \ \ \ \ \textcolor{keywordflow}{if}\ (ins\_pos\ !=\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.end())}
+\DoxyCodeLine{00477\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a4181d4afa4eea89844466c0ef382b2bf}{add\_area\_below}}(ins\_pos,\ e.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0));}
+\DoxyCodeLine{00478\ }
+\DoxyCodeLine{00479\ \ \ \ \ \textcolor{comment}{//\ remove\ ending\ segments\ from\ line}}
+\DoxyCodeLine{00480\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ e.\mbox{\hyperlink{structrasterizer_1_1event_ae2f9095b0857f13b9ef67aa488c81fef}{seg\_in}})\ \{}
+\DoxyCodeLine{00481\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00482\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!\mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx])}
+\DoxyCodeLine{00483\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}try\ to\ remove\ segment\ \{\}\ from\ line\ that\ is\ not\ contained"{}},\ it-\/>sidx));}
+\DoxyCodeLine{00484\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00485\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx]\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00486\ \ \ \ \ \ \ \mbox{\hyperlink{classpool}{pool}}.splice(\mbox{\hyperlink{classpool}{pool}}.end(),\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}},\ it);}
+\DoxyCodeLine{00487\ \ \ \ \ \}}
+\DoxyCodeLine{00488\ }
+\DoxyCodeLine{00489\ \ \ \ \ \textcolor{comment}{//\ add\ new\ segments\ to\ line\ (in\ order:\ starting\ at\ lowest,\ all\ before\ ins\_pos)}}
+\DoxyCodeLine{00490\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ \&it\ :\ e.\mbox{\hyperlink{structrasterizer_1_1event_a324621a50c998d552919b4a3d7db1280}{seg\_out}})\ \{}
+\DoxyCodeLine{00491\ \ \ \ \ \ \ it-\/>x0\ =\ e.\mbox{\hyperlink{structrasterizer_1_1event_ab6821e1c78325a94e1c267f395914911}{pos}}(0);}
+\DoxyCodeLine{00492\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00493\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx])}
+\DoxyCodeLine{00494\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}try\ to\ add\ segment\ \{\}\ to\ line\ that\ is\ already\ contained"{}},\ it-\/>sidx));}
+\DoxyCodeLine{00495\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00496\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0755e4bcd93353882650b9c190ee4c58}{used}}[it-\/>sidx]\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00497\ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.splice(ins\_pos,\ \mbox{\hyperlink{classpool}{pool}},\ it);}
+\DoxyCodeLine{00498\ \ \ \ \ \}}
+\DoxyCodeLine{00499\ \ \ \}}
+\DoxyCodeLine{00500\ }
+\DoxyCodeLine{00501\ \ \ \textcolor{comment}{//\ calculate\ y-\/coordinate\ of\ segment\ (extended\ to\ line)\ (x0,\ y0)\ -\/-\/\ (x1,\ y1)\ at\ x-\/coord\ x}}
+\DoxyCodeLine{00502\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T\ =\ \textcolor{keywordtype}{double}>}
+\DoxyCodeLine{00503\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_aa9ca611d2e7a00a8683d9284b09ac79c}{y\_at}}(\textcolor{keyword}{const}\ T\ \&x0,\ \textcolor{keyword}{const}\ T\ \&y0,}
+\DoxyCodeLine{00504\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ T\ \&x1,\ \textcolor{keyword}{const}\ T\ \&y1,}
+\DoxyCodeLine{00505\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ T\ \&x)\ \{}
+\DoxyCodeLine{00506\ \ \ \ \ \textcolor{keywordflow}{if}\ (x1\ ==\ x0\ \&\&\ x\ ==\ x0)\ \textcolor{keywordflow}{return}\ 0.5\ *\ (y1\ +\ y0);}
+\DoxyCodeLine{00507\ \ \ \ \ \textcolor{keywordtype}{double}\ res\ =\ y0\ +\ (y1\ -\/\ y0)\ *\ (x\ -\/\ x0)\ /\ (x1\ -\/\ x0);}
+\DoxyCodeLine{00508\ \ \ \ \ \textcolor{keywordflow}{if}\ (std::min(x0,\ x1)\ <=\ x\ \&\&\ x\ <=\ std::max(x0,\ x1))}
+\DoxyCodeLine{00509\ \ \ \ \ \ \ res\ =\ std::clamp(res,\ std::min(y0,\ y1),\ std::max(y0,\ y1));}
+\DoxyCodeLine{00510\ \ \ \ \ \textcolor{keywordflow}{return}\ res;}
+\DoxyCodeLine{00511\ \ \ \}}
+\DoxyCodeLine{00512\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T\ =\ \textcolor{keywordtype}{double}>}
+\DoxyCodeLine{00513\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_a7def1c166bffb2b863cf9a1e74d2a745}{y\_at}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&it,\ \textcolor{keyword}{const}\ T\ \&x)\ \{}
+\DoxyCodeLine{00514\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at<T>}}(*it,\ x);}
+\DoxyCodeLine{00515\ \ \ \}}
+\DoxyCodeLine{00516\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T\ =\ \textcolor{keywordtype}{double}>}
+\DoxyCodeLine{00517\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_a9b6203344bc73dc37420a55ba527fe1c}{y\_at}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&s,\ \textcolor{keyword}{const}\ T\ \&x)\ \{}
+\DoxyCodeLine{00518\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at<T>}}(s.\mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(0),\ s.\mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(1),\ s.\mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(0),\ s.\mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(1),\ x);}
+\DoxyCodeLine{00519\ \ \ \}}
+\DoxyCodeLine{00520\ \ \ \textcolor{comment}{//\ calculate\ x-\/coordinate\ of\ segment\ (extended\ to\ line)\ (x0,\ y0)\ -\/-\/\ (x1,\ y1)\ at\ y-\/coord\ y}}
+\DoxyCodeLine{00521\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_a27ec35fd423b01912f8dd80bb7702636}{x\_at}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&x0,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&y0,}
+\DoxyCodeLine{00522\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&x1,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&y1,}
+\DoxyCodeLine{00523\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&y)\ \{}
+\DoxyCodeLine{00524\ \ \ \ \ \textcolor{keywordflow}{if}\ (y1\ ==\ y0\ \&\&\ y\ ==\ y0)\ \textcolor{keywordflow}{return}\ 0.5\ *\ (x1\ +\ x0);}
+\DoxyCodeLine{00525\ \ \ \ \ \textcolor{keywordtype}{double}\ res\ =\ x0\ +\ (x1\ -\/\ x0)\ *\ (y\ -\/\ y0)\ /\ (y1\ -\/\ y0);}
+\DoxyCodeLine{00526\ \ \ \ \ \textcolor{keywordflow}{if}\ (std::min(y0,\ y1)\ <=\ y\ \&\&\ y\ <=\ std::max(y0,\ y1))}
+\DoxyCodeLine{00527\ \ \ \ \ \ \ res\ =\ std::clamp(res,\ std::min(x0,\ x1),\ std::max(x0,\ x1));}
+\DoxyCodeLine{00528\ \ \ \ \ \textcolor{keywordflow}{return}\ res;}
+\DoxyCodeLine{00529\ \ \ \}}
+\DoxyCodeLine{00530\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_af8cb98cadcbc26a2f4d5f5fd8c7ae664}{x\_at}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&it,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&y)\ \{}
+\DoxyCodeLine{00531\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(*it,\ y);}
+\DoxyCodeLine{00532\ \ \ \}}
+\DoxyCodeLine{00533\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_a3efd3240e411f166a28a37df525e27c9}{x\_at}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structrasterizer_1_1segment}{segment}}\ \&s,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&y)\ \{}
+\DoxyCodeLine{00534\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(s.\mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(0),\ s.\mbox{\hyperlink{structrasterizer_1_1segment_acf109bcc341b697ab41032a394650014}{s}}(1),\ s.\mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(0),\ s.\mbox{\hyperlink{structrasterizer_1_1segment_aa418d0812376d95733a9ee785e84276a}{e}}(1),\ y);}
+\DoxyCodeLine{00535\ \ \ \}}
+\DoxyCodeLine{00536\ }
+\DoxyCodeLine{00537\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classrasterizer_ab5ace06ce4b97316d8072aadd8249454}{seg\_is\_oriented}}(\textcolor{keyword}{const}\ Eigen::Ref<const\ Eigen::Vector2d>\ \&s,\ \textcolor{keyword}{const}\ Eigen::Ref<const\ Eigen::Vector2d>\ \&e)\ \{}
+\DoxyCodeLine{00538\ \ \ \ \ \textcolor{keywordflow}{return}\ (s(0)\ <\ e(0))\ ||\ ((s(0)\ ==\ e(0))\ \&\&\ s(1)\ <\ e(1));}
+\DoxyCodeLine{00539\ \ \ \}}
+\DoxyCodeLine{00540\ }
+\DoxyCodeLine{00541\ \ \ \textcolor{comment}{//\ for\ given\ x,\ find\ pixel\ column\ containing\ it}}
+\DoxyCodeLine{00542\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classrasterizer_a0b65e61f61ae9d9b38b51f6f53a931c2}{x\_to\_pixel}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&x)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00543\ \ \ \ \ \textcolor{keywordflow}{return}\ std::floor((x\ -\/\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(0))\ /\ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}}(0));}
+\DoxyCodeLine{00544\ \ \ \}}
+\DoxyCodeLine{00545\ \ \ \textcolor{comment}{//\ for\ given\ y,\ gind\ pixel\ row\ containing\ it}}
+\DoxyCodeLine{00546\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classrasterizer_a66921354af957cfd857d1c2a1c935054}{y\_to\_pixel}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&y)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00547\ \ \ \ \ \textcolor{keywordflow}{return}\ std::floor((y\ -\/\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(1))\ /\ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}}(1));}
+\DoxyCodeLine{00548\ \ \ \}}
+\DoxyCodeLine{00549\ \ \ \textcolor{comment}{//\ for\ given\ i,\ give\ start\ of\ pixel\ column\ i}}
+\DoxyCodeLine{00550\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_a6fc1c6fc77e20146f864df8b35402e2e}{pixel\_to\_x}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&i)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00551\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(0)\ +\ i\ *\ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}}(0);}
+\DoxyCodeLine{00552\ \ \ \}}
+\DoxyCodeLine{00553\ \ \ \textcolor{comment}{//\ for\ given\ j,\ give\ start\ of\ pixel\ row\ j}}
+\DoxyCodeLine{00554\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_a704a90b9118e355f72ce2d6d5458972c}{pixel\_to\_y}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \&j)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00555\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classrasterizer_a4f33964bbc35054aa678919f73c3518d}{lb}}(1)\ +\ j\ *\ \mbox{\hyperlink{classrasterizer_a02fc7ce0239ce4ac2e73d9ddc9fe1234}{step}}(1);}
+\DoxyCodeLine{00556\ \ \ \}}
+\DoxyCodeLine{00557\ \ \ \textcolor{comment}{//\ calculate\ the\ area\ of\ the\ intersection\ of\ the\ rectangle\ [xlo,\ xhi]\ x\ [ylo,\ yhi]\ with\ the}}
+\DoxyCodeLine{00558\ \ \ \textcolor{comment}{//\ halfspace\ below\ the\ line\ connecting\ (xlo,\ syl)\ and\ (xhi,\ syr)}}
+\DoxyCodeLine{00559\ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classrasterizer_ae5d1cff9ebd2888507608ed734d11991}{rect\_intersect\_area}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&xlo,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&xhi,}
+\DoxyCodeLine{00560\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&ylo,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&yhi,}
+\DoxyCodeLine{00561\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&syl,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&syr)\ \{}
+\DoxyCodeLine{00562\ \ \ \ \ \textcolor{keywordflow}{if}\ (xlo\ >=\ xhi)}
+\DoxyCodeLine{00563\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0;}
+\DoxyCodeLine{00564\ \ \ \ \ \textcolor{keywordflow}{if}\ (syl\ <\ ylo)}
+\DoxyCodeLine{00565\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (syr\ <\ ylo)\ \textcolor{comment}{//\ both\ sides\ below\ -\/>\ no\ intersect}}
+\DoxyCodeLine{00566\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0;}
+\DoxyCodeLine{00567\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (syr\ <\ yhi)\ \textcolor{comment}{//\ left\ side\ below,\ right\ inside\ -\/>\ lower\ right\ side\ triangle}}
+\DoxyCodeLine{00568\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.5\ *\ (xhi\ -\/\ \mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ ylo))\ *\ (syr\ -\/\ ylo);}
+\DoxyCodeLine{00569\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{comment}{//\ left\ side\ below,\ right\ above\ -\/>\ trapezoid\ with\ horizontal\ parallels\ on\ the\ right}}
+\DoxyCodeLine{00570\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.5\ *\ ((xhi\ -\/\ \mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ ylo))\ +\ (xhi\ -\/\ \mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ yhi)))\ *\ (yhi\ -\/\ ylo);}
+\DoxyCodeLine{00571\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (syl\ <\ yhi)}
+\DoxyCodeLine{00572\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (syr\ <\ ylo)\ \textcolor{comment}{//\ left\ side\ inside,\ right\ below\ -\/>\ lower\ left\ side\ triangle}}
+\DoxyCodeLine{00573\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.5\ *\ (\mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ ylo)\ -\/\ xlo)\ *\ (syl\ -\/\ ylo);}
+\DoxyCodeLine{00574\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (syr\ <\ yhi)\ \textcolor{comment}{//\ left\ side\ inside,\ right\ inside\ -\/>\ trepezoid\ with\ vertical\ parallels}}
+\DoxyCodeLine{00575\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.5\ *\ (xhi\ -\/\ xlo)\ *\ ((syl\ -\/\ ylo)\ +\ (syr\ -\/\ ylo));}
+\DoxyCodeLine{00576\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{comment}{//\ left\ side\ inside,\ right\ above\ -\/>\ all\ -\/\ upper\ left\ triangle}}
+\DoxyCodeLine{00577\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (xhi\ -\/\ xlo)\ *\ (yhi\ -\/\ ylo)\ -\/\ 0.5\ *\ (\mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ yhi)\ -\/\ xlo)\ *\ (yhi\ -\/\ syl);}
+\DoxyCodeLine{00578\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00579\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (syr\ <\ ylo)\ \textcolor{comment}{//\ left\ side\ above,\ right\ below\ -\/>\ trapezoid\ on\ left\ side\ with\ horizontal\ parallels}}
+\DoxyCodeLine{00580\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ 0.5\ *\ ((\mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ ylo)\ -\/\ xlo)\ +\ (\mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ yhi)\ -\/\ xlo))\ *\ (yhi\ -\/\ ylo);}
+\DoxyCodeLine{00581\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (syr\ <\ yhi)\ \textcolor{comment}{//\ left\ side\ above,\ right\ inside\ -\/>\ all\ -\/\ upper\ right\ triangle}}
+\DoxyCodeLine{00582\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (xhi\ -\/\ xlo)\ *\ (yhi\ -\/\ ylo)\ -\/\ 0.5\ *\ (xhi\ -\/\ \mbox{\hyperlink{classrasterizer_a9e457e18075097822219659516eb2146}{x\_at}}(xlo,\ syl,\ xhi,\ syr,\ yhi))\ *\ (yhi\ -\/\ syr);}
+\DoxyCodeLine{00583\ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{comment}{//\ left\ side\ above,\ right\ above\ -\/>\ completely\ contained}}
+\DoxyCodeLine{00584\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (xhi\ -\/\ xlo)\ *\ (yhi\ -\/\ ylo);}
+\DoxyCodeLine{00585\ \ \ \}}
+\DoxyCodeLine{00586\ }
+\DoxyCodeLine{00587\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classrasterizer_a379b20b983e3ea93d86e8e2ded2d3855}{add\_area\_between}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&it0,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&it1,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&x1)\ \{}
+\DoxyCodeLine{00588\ }
+\DoxyCodeLine{00589\ \ \ \ \ \textcolor{comment}{//\ add\ area\ between\ *it0\ and\ *it1\ (interpreted\ as\ lines)\ in\ range\ it1-\/>x0\ to\ x1\ to\ all\ affected\ pixels}}
+\DoxyCodeLine{00590\ \ \ \ \ \textcolor{comment}{//\ assume\ it0\ is\ below\ it1\ (in\ y-\/coords)\ and\ it1-\/>x0\ <\ x1}}
+\DoxyCodeLine{00591\ \ \ \ \ \textcolor{comment}{//\ i.e.\ add\ val[it1-\/>idx]\ to\ all\ pixels\ in\ the\ trapezoid\ (weighted\ towards\ 0\ on\ the\ boundary)}}
+\DoxyCodeLine{00592\ }
+\DoxyCodeLine{00593\ \ \ \ \ \textcolor{comment}{//\ py::print("{}add\_area\_between("{}\ +\ it0-\/>repr()\ +\ "{},\ "{}\ +\ it1-\/>repr()\ +\ "{},\ "{}\ +\ std::to\_string(x1)\ +\ "{})"{});}}
+\DoxyCodeLine{00594\ }
+\DoxyCodeLine{00595\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&x0\ =\ it1-\/>x0;}
+\DoxyCodeLine{00596\ }
+\DoxyCodeLine{00597\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00598\ \ \ \ \ \textcolor{keywordflow}{if}\ (x0\ >\ x1)}
+\DoxyCodeLine{00599\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}add\_area\_between\ with\ negative\ x-\/interval\ \{\}\ to\ \{\}"{}},\ x0,\ x1));}
+\DoxyCodeLine{00600\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00601\ }
+\DoxyCodeLine{00602\ \ \ \ \ \textcolor{comment}{//\ find\ pixel-\/index\ bounding\ box}}
+\DoxyCodeLine{00603\ \ \ \ \ \textcolor{keywordtype}{int}\ imin\ =\ std::max(0,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a0b65e61f61ae9d9b38b51f6f53a931c2}{x\_to\_pixel}}(x0));}
+\DoxyCodeLine{00604\ \ \ \ \ \textcolor{keywordtype}{int}\ imax\ =\ std::min((\textcolor{keywordtype}{int})\mbox{\hyperlink{classrasterizer_aaab7780b554dc64d72da10b810eded71}{out}}.rows()\ -\/\ 1,\ \mbox{\hyperlink{classrasterizer_a0b65e61f61ae9d9b38b51f6f53a931c2}{x\_to\_pixel}}(x1));}
+\DoxyCodeLine{00605\ }
+\DoxyCodeLine{00606\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ imin;\ i\ <=\ imax;\ ++i)\ \{}
+\DoxyCodeLine{00607\ \ \ \ \ \ \ \textcolor{comment}{//\ x\ left\ and\ right\ boundaries\ for\ pixel\ column}}
+\DoxyCodeLine{00608\ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ xlo\ =\ std::max(x0,\ \mbox{\hyperlink{classrasterizer_a6fc1c6fc77e20146f864df8b35402e2e}{pixel\_to\_x}}(i));}
+\DoxyCodeLine{00609\ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ xhi\ =\ std::min(x1,\ \mbox{\hyperlink{classrasterizer_a6fc1c6fc77e20146f864df8b35402e2e}{pixel\_to\_x}}(i\ +\ 1));}
+\DoxyCodeLine{00610\ }
+\DoxyCodeLine{00611\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (xlo\ >=\ xhi)}
+\DoxyCodeLine{00612\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{continue};}
+\DoxyCodeLine{00613\ }
+\DoxyCodeLine{00614\ \ \ \ \ \ \ \textcolor{comment}{//\ y\ min-\/max\ range\ on\ left\ and\ right\ side}}
+\DoxyCodeLine{00615\ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ y0l\ =\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it0,\ xlo),\ y0r\ =\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it0,\ xhi);}
+\DoxyCodeLine{00616\ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ y1l\ =\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it1,\ xlo),\ y1r\ =\ \mbox{\hyperlink{classrasterizer_a96fa1a32f79cd714b82dfb237435f0a2}{y\_at}}(it1,\ xhi);}
+\DoxyCodeLine{00617\ }
+\DoxyCodeLine{00618\ \ \ \ \ \ \ \textcolor{comment}{//\ find\ topology\ of\ intersections}}
+\DoxyCodeLine{00619\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ jmin\ =\ std::max(0,\ \mbox{\hyperlink{classrasterizer_a66921354af957cfd857d1c2a1c935054}{y\_to\_pixel}}(std::min(y0l,\ y0r)));}
+\DoxyCodeLine{00620\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ jmax\ =\ std::min((\textcolor{keywordtype}{int})\mbox{\hyperlink{classrasterizer_aaab7780b554dc64d72da10b810eded71}{out}}.cols()\ -\/\ 1,\ \mbox{\hyperlink{classrasterizer_a66921354af957cfd857d1c2a1c935054}{y\_to\_pixel}}(std::max(y1l,\ y1r)));}
+\DoxyCodeLine{00621\ }
+\DoxyCodeLine{00622\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ j\ =\ jmin;\ j\ <=\ jmax;\ ++j)\ \{}
+\DoxyCodeLine{00623\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ yhi\ =\ \mbox{\hyperlink{classrasterizer_a704a90b9118e355f72ce2d6d5458972c}{pixel\_to\_y}}(j\ +\ 1),\ ylo\ =\ \mbox{\hyperlink{classrasterizer_a704a90b9118e355f72ce2d6d5458972c}{pixel\_to\_y}}(j);}
+\DoxyCodeLine{00624\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ A\ =\ (\mbox{\hyperlink{classrasterizer_a5c4c7bfbc192ed3558e099ca226dc152}{rect\_intersect\_area}}(xlo,\ xhi,\ ylo,\ yhi,\ y1l,\ y1r)}
+\DoxyCodeLine{00625\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ -\/\ \mbox{\hyperlink{classrasterizer_a5c4c7bfbc192ed3558e099ca226dc152}{rect\_intersect\_area}}(xlo,\ xhi,\ ylo,\ yhi,\ y0l,\ y0r));}
+\DoxyCodeLine{00626\ }
+\DoxyCodeLine{00627\ \textcolor{preprocessor}{\#ifdef\ DEBUG\_CHECKS}}
+\DoxyCodeLine{00628\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (it1-\/>idx\ <\ 0\ ||\ it1-\/>idx\ >=\ \mbox{\hyperlink{classrasterizer_ab4efa643fd40ef5e0dc62f08c8d7500d}{val}}.size())}
+\DoxyCodeLine{00629\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\mbox{\hyperlink{common_8hpp_ac8dc47e3b39c930caed4bfd05b4ba805}{FORMAT}}(\textcolor{stringliteral}{"{}index\ in\ rasterizer\ out\ of\ bounds:\ \{\}"{}},\ it1-\/>idx));}
+\DoxyCodeLine{00630\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00631\ }
+\DoxyCodeLine{00632\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_aaab7780b554dc64d72da10b810eded71}{out}}(i,\ j)\ +=\ std::clamp(A\ /\ \mbox{\hyperlink{classrasterizer_ab657ada7becc1d81811c25d4a39ed729}{pixA}},\ 0.0,\ 1.0)\ *\ \mbox{\hyperlink{classrasterizer_ab4efa643fd40ef5e0dc62f08c8d7500d}{val}}[it1-\/>idx];}
+\DoxyCodeLine{00633\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classrasterizer_a731d0fe1fc2cd3c771a254e67b08a176}{fill}}(i,\ j)\ +=\ std::clamp(A\ /\ \mbox{\hyperlink{classrasterizer_ab657ada7becc1d81811c25d4a39ed729}{pixA}},\ 0.0,\ 1.0);}
+\DoxyCodeLine{00634\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00635\ \ \ \ \ \}}
+\DoxyCodeLine{00636\ }
+\DoxyCodeLine{00637\ \ \ \ \ \textcolor{comment}{//\ update\ current\ trapezoid\ starting\ x}}
+\DoxyCodeLine{00638\ \ \ \ \ it1-\/>x0\ =\ x1;}
+\DoxyCodeLine{00639\ \ \ \}}
+\DoxyCodeLine{00640\ }
+\DoxyCodeLine{00641\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classrasterizer_a4181d4afa4eea89844466c0ef382b2bf}{add\_area\_below}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classrasterizer_ac78dbcdb405413c28d5b2d3aed96b408}{sit\_t}}\ \&it,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \&x1)\ \{}
+\DoxyCodeLine{00642\ \ \ \ \ \textcolor{comment}{//\ add\ area\ below\ it\ (if\ it\ exists)}}
+\DoxyCodeLine{00643\ \ \ \ \ \textcolor{keywordflow}{if}\ (it\ ==\ \mbox{\hyperlink{classrasterizer_a92f8fc1ea4f30bf18b85ea986a75f269}{line}}.begin())}
+\DoxyCodeLine{00644\ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{00645\ \ \ \ \ \mbox{\hyperlink{classrasterizer_a764956c24f744ccb8d795002fff3d1d6}{add\_area\_between}}(std::prev(it),\ it,\ x1);}
+\DoxyCodeLine{00646\ \ \ \}}
+\DoxyCodeLine{00647\ \};}
+\DoxyCodeLine{00648\ }
+\DoxyCodeLine{00649\ \textcolor{preprocessor}{\#define\ BIND\_RASTERIZER\_SEGMENT(m)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00650\ \textcolor{preprocessor}{\ \ py::class\_<rasterizer::segment>(m,\ "{}RasterizerSegment"{})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00651\ \textcolor{preprocessor}{\ \ .def\_readonly("{}s"{},\ \&rasterizer::segment::s)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00652\ \textcolor{preprocessor}{\ \ .def\_readonly("{}e"{},\ \&rasterizer::segment::e)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00653\ \textcolor{preprocessor}{\ \ .def\_readonly("{}idx"{},\ \&rasterizer::segment::idx)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00654\ \textcolor{preprocessor}{\ \ .def\_readonly("{}sidx"{},\ \&rasterizer::segment::sidx)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00655\ \textcolor{preprocessor}{\ \ .def\_readonly("{}x0"{},\ \&rasterizer::segment::x0)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00656\ \textcolor{preprocessor}{\ \ .def("{}\_\_repr\_\_"{},\ \&rasterizer::segment::repr,\ py::arg("{}precision"{})=-\/1);}}
+\DoxyCodeLine{00657\ }
+\DoxyCodeLine{00658\ }
+\DoxyCodeLine{00659\ \textcolor{preprocessor}{\#define\ BIND\_RASTERIZER\_EVENT(m)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00660\ \textcolor{preprocessor}{\ \ py::class\_<rasterizer::event>(m,\ "{}RasterizerEvent"{})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00661\ \textcolor{preprocessor}{\ \ .def\_readonly("{}pos"{},\ \&rasterizer::event::pos)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00662\ \textcolor{preprocessor}{\ \ .def\_property\_readonly("{}n\_in"{},\ [](const\ rasterizer::event\ \&e)\{\ return\ e.seg\_in.size();\ \})\ \(\backslash\)}}
+\DoxyCodeLine{00663\ \textcolor{preprocessor}{\ \ .def\_property\_readonly("{}n\_out"{},\ [](const\ rasterizer::event\ \&e)\{\ return\ e.seg\_out.size();\ \})\ \(\backslash\)}}
+\DoxyCodeLine{00664\ \textcolor{preprocessor}{\ \ .def("{}\_\_repr\_\_"{},\ \&rasterizer::event::repr,\ py::arg("{}precision"{})=-\/1);}}
+\DoxyCodeLine{00665\ }
+\DoxyCodeLine{00666\ }
+\DoxyCodeLine{00667\ \textcolor{preprocessor}{\#define\ BIND\_RASTERIZER(m)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00668\ \textcolor{preprocessor}{\ \ py::class\_<rasterizer>(m,\ "{}Rasterizer"{})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00669\ \textcolor{preprocessor}{\ \ .def(py::init<const\ std::vector<std::tuple<Eigen::Vector2d,\ Eigen::Vector2d,\ int>>\ \&,\ \(\backslash\)}}
+\DoxyCodeLine{00670\ \textcolor{preprocessor}{\ \ \ \ \ \ \ const\ std::vector<std::vector<int>>\ \&,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00671\ \textcolor{preprocessor}{\ \ \ \ \ \ \ const\ std::vector<int>\ \&,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00672\ \textcolor{preprocessor}{\ \ \ \ \ \ \ const\ Eigen::Ref<const\ Eigen::Array4d>\ \&,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00673\ \textcolor{preprocessor}{\ \ \ \ \ \ \ const\ double\ \&>(),\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00674\ \textcolor{preprocessor}{\ \ \ \ \ \ \ py::arg("{}seg"{}),\ py::arg("{}con"{}),\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00675\ \textcolor{preprocessor}{\ \ \ \ \ \ \ py::arg("{}start"{}),\ py::arg("{}bounds"{}),\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00676\ \textcolor{preprocessor}{\ \ \ \ \ \ \ py::arg("{}merge\_epsi"{}))\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00677\ \textcolor{preprocessor}{\ \ .def("{}rasterize"{},\ \&rasterizer::rasterize,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00678\ \textcolor{preprocessor}{\ \ \ \ \ \ \ py::arg("{}val"{}),\ py::arg("{}res"{}))\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00679\ \textcolor{preprocessor}{\ \ .def\_readonly("{}pool"{},\ \&rasterizer::pool)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00680\ \textcolor{preprocessor}{\ \ .def\_readonly("{}events"{},\ \&rasterizer::events)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00681\ \textcolor{preprocessor}{\ \ .def\_property\_readonly("{}pline"{},\ [](const\ rasterizer\ \&rast)\ \{\ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00682\ \textcolor{preprocessor}{\ \ \ \ std::vector<rasterizer::segment>\ res;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00683\ \textcolor{preprocessor}{\ \ \ \ for\ (auto\ \&it\ :\ rast.pline)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00684\ \textcolor{preprocessor}{\ \ \ \ \ \ res.push\_back(*it);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00685\ \textcolor{preprocessor}{\ \ \ \ return\ res;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00686\ \textcolor{preprocessor}{\ \ \})\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00687\ \textcolor{preprocessor}{\ \ .def\_readonly("{}line"{},\ \&rasterizer::line)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00688\ \textcolor{preprocessor}{\ \ .def\_readonly("{}out"{},\ \&rasterizer::out)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00689\ \textcolor{preprocessor}{\ \ .def\_readonly("{}fill"{},\ \&rasterizer::fill)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00690\ \textcolor{preprocessor}{\ \ .def\_readonly("{}bounds"{},\ \&rasterizer::bounds)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00691\ \textcolor{preprocessor}{\ \ .def\_readonly("{}lb"{},\ \&rasterizer::lb)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00692\ \textcolor{preprocessor}{\ \ .def\_readonly("{}step"{},\ \&rasterizer::step)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00693\ \textcolor{preprocessor}{\ \ .def\_readonly("{}pixA"{},\ \&rasterizer::pixA);}}
+\DoxyCodeLine{00694\ }
+\DoxyCodeLine{00695\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

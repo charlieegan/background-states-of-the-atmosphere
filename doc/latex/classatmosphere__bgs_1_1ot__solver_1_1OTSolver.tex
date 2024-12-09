@@ -1,0 +1,178 @@
+\doxysection{atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver Class Reference}
+\hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver}{}\label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a714c9b668f095fa3384abf03cc598cba}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, input\+\_\+data, \mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a2b4aa61f69d69be146615c162ae50382}{ot\+\_\+tol}}=1e-\/4, boundary\+\_\+res=2000)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_ab1c126f9f2376861a8baedbbff3fb914}{initialise\+\_\+weights}} (self, phi\+\_\+0=-\/1e+4)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a335ffd21e106da58845b182f28bfa4ba}{initialise\+\_\+weights2}} (self, phi\+\_\+0=-\/1e4)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a285415b35f8782a37d5c5b4b442ab174}{get\+\_\+bgs}} (self, use\+\_\+long\+\_\+double=False, verbose=False, max\+\_\+its=1000, descent\+\_\+accept\+\_\+thresh=0.\+01, min\+\_\+area=0, max\+\_\+lost\+\_\+areas=None, lr\+\_\+up=2.\+0, lr\+\_\+down=0.\+5, lr\+\_\+max=1.\+0, lr\+\_\+min=1e-\/20, lr\+\_\+init=1e-\/5, max\+\_\+loss\+\_\+fraction=1e-\/3)
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a4b5ea77b26b13a597a8ade3df02d897d}{plot\+\_\+runstats}} (self)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_af4653ffd819c83fd268f4357f469c950}{y}} = input\+\_\+data.\+y
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a768ad9b326b1a9956b0e78862999e558}{tm}} = input\+\_\+data.\+tm
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a23da13dc39e2c5beb206af7028d098b1}{tmn}} = input\+\_\+data.\+tmn
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a69d3909fc81e340e344f4740ce74fe94}{pp}} = input\+\_\+data.\+pp
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a9726726631b3ee3ac40f6c039782f316}{sp}}
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a2b4aa61f69d69be146615c162ae50382}{ot\+\_\+tol}} = ot\+\_\+tol
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_abad558784a51e0a2fac2f2cc63a771fd}{n}} = self.\+y.\+shape\mbox{[}0\mbox{]}
+\item 
+dict \mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_ae51350f17d3252f9f9b36d532e988f36}{runstats}} = None
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a88d641eaf5f4e50f3d2e1877ad07845a}{timer}} = \+\_\+atmosphere\+\_\+bgs.\+Timer(\mbox{[}$\,$\mbox{]})
+\item 
+\mbox{\hyperlink{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a6261ba46aeb8e5dcf007fd26cf53874d}{ld}} = ld
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a714c9b668f095fa3384abf03cc598cba}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a714c9b668f095fa3384abf03cc598cba} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{input\+\_\+data}{, }\item[{}]{ot\+\_\+tol}{ = {\ttfamily 1e-\/4}, }\item[{}]{boundary\+\_\+res}{ = {\ttfamily 2000}}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a285415b35f8782a37d5c5b4b442ab174}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!get\_bgs@{get\_bgs}}
+\index{get\_bgs@{get\_bgs}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{get\_bgs()}{get\_bgs()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a285415b35f8782a37d5c5b4b442ab174} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+get\+\_\+bgs (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{use\+\_\+long\+\_\+double}{ = {\ttfamily False}, }\item[{}]{verbose}{ = {\ttfamily False}, }\item[{}]{max\+\_\+its}{ = {\ttfamily 1000}, }\item[{}]{descent\+\_\+accept\+\_\+thresh}{ = {\ttfamily 0.01}, }\item[{}]{min\+\_\+area}{ = {\ttfamily 0}, }\item[{}]{max\+\_\+lost\+\_\+areas}{ = {\ttfamily None}, }\item[{}]{lr\+\_\+up}{ = {\ttfamily 2.0}, }\item[{}]{lr\+\_\+down}{ = {\ttfamily 0.5}, }\item[{}]{lr\+\_\+max}{ = {\ttfamily 1.0}, }\item[{}]{lr\+\_\+min}{ = {\ttfamily 1e-\/20}, }\item[{}]{lr\+\_\+init}{ = {\ttfamily 1e-\/5}, }\item[{}]{max\+\_\+loss\+\_\+fraction}{ = {\ttfamily 1e-\/3}}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}run the modified damped Newton solver
+
+Parameters:
+use_long_double : bool -- whether to use long double precision in critical parts of the calculation (default False)
+verbose : bool -- output information about the procedure during execution (default False)
+max_its : int -- maximal number of iterations to run the solver for (default 1000)
+descent_accept_thresh : float < 1 -- threshold of relative descent to accept step (default 0.01)
+min_area : float >= 0.0 -- minimal area to treat as non-empty (default 0)
+max_lost_areas : int >= 0 -- maximal number of cells that may be lost during an accepted step (default None, chosen based on problem size)
+lr_up : float > 1.0 -- factor by which to increase the learning rate (aka. step size) at the start of each iteration (default 2.0)
+lr_down : float < 1.0 -- factor by which to decrease the learning rate after a failed step (default 0.5)
+lr_max : float <= 1.0 -- upper bound for the learning rate (default 1.0)
+lr_min : float > 0 -- lower bound for the learning rate, when it falls below this, the solver is terminated (default 1e-20)
+lr_init : 0 < float <= 1 -- initial learning rate (default 1e-5)
+\end{DoxyVerb}
+ \Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_ab1c126f9f2376861a8baedbbff3fb914}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!initialise\_weights@{initialise\_weights}}
+\index{initialise\_weights@{initialise\_weights}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{initialise\_weights()}{initialise\_weights()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_ab1c126f9f2376861a8baedbbff3fb914} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+initialise\+\_\+weights (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{phi\+\_\+0}{ = {\ttfamily -\/1e+4}}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Given an (N,2) array of seeds y in (Z,Theta) coordinates, this function returns a weight vector phi such that 
+all cells in the dot-product-Laguerre tessellation generated by phi and the transformed seeds E 
+(defined in this function) are non-empty.
+
+Physical parameters used are a and Cp
+Simulation parameters used are zeta_max and zeta_min, the extents of the transformed source space lifted to 3d
+\end{DoxyVerb}
+ \Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a335ffd21e106da58845b182f28bfa4ba}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!initialise\_weights2@{initialise\_weights2}}
+\index{initialise\_weights2@{initialise\_weights2}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{initialise\_weights2()}{initialise\_weights2()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a335ffd21e106da58845b182f28bfa4ba} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+initialise\+\_\+weights2 (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{}]{phi\+\_\+0}{ = {\ttfamily -\/1e4}}\end{DoxyParamCaption})}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a4b5ea77b26b13a597a8ade3df02d897d}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!plot\_runstats@{plot\_runstats}}
+\index{plot\_runstats@{plot\_runstats}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{plot\_runstats()}{plot\_runstats()}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a4b5ea77b26b13a597a8ade3df02d897d} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+plot\+\_\+runstats (\begin{DoxyParamCaption}\item[{}]{self}{}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}plot the behavior of the last run
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a6261ba46aeb8e5dcf007fd26cf53874d}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!ld@{ld}}
+\index{ld@{ld}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{ld}{ld}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a6261ba46aeb8e5dcf007fd26cf53874d} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+ld = ld}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_abad558784a51e0a2fac2f2cc63a771fd}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!n@{n}}
+\index{n@{n}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{n}{n}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_abad558784a51e0a2fac2f2cc63a771fd} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+n = self.\+y.\+shape\mbox{[}0\mbox{]}}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a2b4aa61f69d69be146615c162ae50382}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!ot\_tol@{ot\_tol}}
+\index{ot\_tol@{ot\_tol}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{ot\_tol}{ot\_tol}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a2b4aa61f69d69be146615c162ae50382} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+ot\+\_\+tol = ot\+\_\+tol}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a69d3909fc81e340e344f4740ce74fe94}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!pp@{pp}}
+\index{pp@{pp}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{pp}{pp}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a69d3909fc81e340e344f4740ce74fe94} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+pp = input\+\_\+data.\+pp}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_ae51350f17d3252f9f9b36d532e988f36}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!runstats@{runstats}}
+\index{runstats@{runstats}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{runstats}{runstats}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_ae51350f17d3252f9f9b36d532e988f36} 
+dict atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+runstats = None}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a9726726631b3ee3ac40f6c039782f316}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!sp@{sp}}
+\index{sp@{sp}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{sp}{sp}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a9726726631b3ee3ac40f6c039782f316} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+sp}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{=\ \ \_atmosphere\_bgs.SimulationParameters(area\_tolerance=.2*ot\_tol,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ line\_tolerance=1e-\/4,}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ min\_line\_resolution=8,}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ boundary\_res=boundary\_res,}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ max\_refine\_steps=1000,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ smin=input\_data.smin,}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ smax=input\_data.smax,}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ pmin\ =\ input\_data.pmin)}
+
+\end{DoxyCode}
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a88d641eaf5f4e50f3d2e1877ad07845a}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!timer@{timer}}
+\index{timer@{timer}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{timer}{timer}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a88d641eaf5f4e50f3d2e1877ad07845a} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+timer = \+\_\+atmosphere\+\_\+bgs.\+Timer(\mbox{[}$\,$\mbox{]})}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a768ad9b326b1a9956b0e78862999e558}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!tm@{tm}}
+\index{tm@{tm}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{tm}{tm}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a768ad9b326b1a9956b0e78862999e558} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+tm = input\+\_\+data.\+tm}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a23da13dc39e2c5beb206af7028d098b1}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!tmn@{tmn}}
+\index{tmn@{tmn}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{tmn}{tmn}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_a23da13dc39e2c5beb206af7028d098b1} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+tmn = input\+\_\+data.\+tmn}
+
+\Hypertarget{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_af4653ffd819c83fd268f4357f469c950}\index{atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}!y@{y}}
+\index{y@{y}!atmosphere\_bgs.ot\_solver.OTSolver@{atmosphere\_bgs.ot\_solver.OTSolver}}
+\doxysubsubsection{\texorpdfstring{y}{y}}
+{\footnotesize\ttfamily \label{classatmosphere__bgs_1_1ot__solver_1_1OTSolver_af4653ffd819c83fd268f4357f469c950} 
+atmosphere\+\_\+bgs.\+ot\+\_\+solver.\+OTSolver.\+y = input\+\_\+data.\+y}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/atmosphere\+\_\+bgs/\mbox{\hyperlink{ot__solver_8py}{ot\+\_\+solver.\+py}}\end{DoxyCompactItemize}
