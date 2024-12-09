@@ -1,5 +1,7 @@
 image: alpine
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
 pages:
   script:
   - apk update && apk add doxygen
