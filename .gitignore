@@ -25,7 +25,7 @@ autogen
 MANIFEST
 /.ninja_*
 /*.ninja
-/docs/.build
+/docs/*
 *.py[co]
 *.egg-info
 *~
