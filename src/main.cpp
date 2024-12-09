@@ -22,7 +22,7 @@ namespace py = pybind11;
 #include "timer.hpp"
 #include "halfspace_intersection.hpp"
  
-
+/// @private
 PYBIND11_MODULE(_atmosphere_bgs, m) {
   timer::bind(m);
 
