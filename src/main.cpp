@@ -21,16 +21,9 @@ namespace py = pybind11;
 #include "laguerre_diagram.hpp"
 #include "timer.hpp"
 #include "halfspace_intersection.hpp"
-
-
-void hello() {
-  py::print("Hello from C++!"); 
-}
  
 
 PYBIND11_MODULE(_atmosphere_bgs, m) {
-  m.def("_hello", &hello); 
-
   timer::bind(m);
 
   physical_parameters::bind(m);
