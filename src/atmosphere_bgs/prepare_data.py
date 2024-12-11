@@ -245,6 +245,7 @@ class DataLoader:
         th = np.matlib.repmat(th_lev,num_pv_lev+nextra-1,1) # ((num_pv_lev+nextra-1),num_th_lev) numpy array of potential temperature values
 
         # ravel the data
+        pv_mid = np.ravel(pv_mid)
         ang_mom = np.ravel(ang_mom)
         th = np.ravel(th)
         mass_weight = np.ravel(mass_weight)
@@ -257,6 +258,7 @@ class DataLoader:
 
         # delete seeds with zero momentum or zero mass
         idx = idx_mom | idx_mass
+        pv_mid = np.delete(pv_mid,idx)
         ang_mom = np.delete(ang_mom,idx)
         th = np.delete(th,idx)
         mass_weight = np.delete(mass_weight,idx)
@@ -273,6 +275,7 @@ class DataLoader:
         tmn = tm / np.sum(tm) * (pp.p00 - self.pmin) * (self.smax - self.smin)
         
         # assign seeds and masses to the class instance
+        self.epv = pv_mid
         self.y = y
         self.tm = tm
         self.tmn = tmn
