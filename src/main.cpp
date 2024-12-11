@@ -14,9 +14,10 @@ namespace py = pybind11;
 
 #define PROFILING
 
-#define DEBUG_CHECKS
+//#define EXPENSIVE_DEBUG_CHECKS
+//#define DEBUG_CHECKS
 #include "rasterizer.hpp"
-#undef DEBUG_CHECKS
+//#undef DEBUG_CHECKS
 
 #include "laguerre_diagram.hpp"
 #include "timer.hpp"

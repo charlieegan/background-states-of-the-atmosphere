@@ -401,7 +401,7 @@ struct pdmesh {
         continue;
 
       val = std::numeric_limits<T>::infinity();
-      for (auto &e : padj[pi]) {
+      for (const auto &e : padj[pi]) {
         val = std::min(val, dvert[e.di].head(3).dot(d) / dvert[e.di](3));
         if (val < maxval)
           break;
@@ -442,7 +442,7 @@ struct pdmesh {
 
   std::vector<Vec4> primal_poly(const int &pi) const {
     std::vector<Vec4> res;
-    for (auto &e : pdedge::order_cycle<false>(padj[pi])) {
+    for (const auto &e : pdedge::order_cycle<false>(padj[pi])) {
       res.push_back(dvert[e.di]);
     }
     return res;
@@ -502,7 +502,7 @@ struct pdmesh {
         auto dv = dvert[di];
 
         bool neigh = false;
-        for (auto &e : padj[pi])
+        for (const auto &e : padj[pi])
           if (di == e.di)
             neigh = true;
 
@@ -537,11 +537,11 @@ struct pdmesh {
     for (const auto &es : padj) {
       s << es.size();
       try {
-        for (auto &e : pdedge::order_cycle<false>(es))
+        for (const auto &e : pdedge::order_cycle<false>(es))
           s << " " << e.di;
       } catch (std::runtime_error &ex) {
         py::print("WARNING: failed to order_cycle in write_ply");
-        for (auto &e : es)
+        for (const auto &e : es)
           s << " " << e.di;
       }
       s << std::endl;
@@ -604,7 +604,6 @@ public:
   }
 #endif
 
-
   // start with cuboid domain defined by lower and upper bounds
   halfspace_intersection(const Eigen::Ref<const Vec3> &lb = Vec3(0,0,0),
                          const Eigen::Ref<const Vec3> &ub = Vec3(1,1,1)) :
@@ -623,7 +622,7 @@ public:
   }
 
   void add_halfspaces(const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) {
-    for (auto &hs : hss.rowwise())
+    for (const auto &hs : hss.rowwise())
       add_halfspace(hs);
   }
 
@@ -640,14 +639,16 @@ public:
     time->start_section(idx_time_find_cut);
 #endif
 
-    // add new primal
-    int pi = mesh.add_primal(hs);
+#ifdef DEBUG_CHECKS
+    if (hs.array().isNaN().any())
+      throw std::runtime_error("halfspace to add contains NaN");
+#endif
 
     // find best dual hint from primal hint
     int dhint = -1;
     if (hint >= 0 && hint < mesh.padj.size() && mesh.pneigh(hint).size() > 0) {
       T bval = -std::numeric_limits<T>::infinity();
-      for (auto &e : mesh.pneigh(hint)) {
+      for (const auto &e : mesh.pneigh(hint)) {
         T val = mesh.dvert[e.di].head(3).dot(hs.head(3)) / mesh.dvert[e.di][3];
         if (val > bval) {
           bval = val;
@@ -656,6 +657,11 @@ public:
       }
     }
 
+#ifdef DEBUG_CHECKS
+    if (dhint >= 0 && !mesh.dadj.contains_idx(dhint))
+      throw std::runtime_error("dual hint is invalid");
+#endif
+    
     // find dual vertex furthest in direction of halfspace normal
     int di_start = mesh.extremal_dual(hs.head(3), false, dhint);
 
@@ -668,14 +674,13 @@ public:
     int phint = -1;
     {
       int best = 1e9;
-      for (auto &e : mesh.dneigh(di_start)) {
+      for (const auto &e : mesh.dneigh(di_start)) {
         if (mesh.pneigh(e.pi).size() < best) {
           phint = e.pi;
           best = mesh.pneigh(e.pi).size();
         }
       }
     }
-
 
 #ifdef EXPENSIVE_DEBUG_CHECKS
     int di_start_brute = mesh.extremal_dual(hs.head(3), true);
@@ -690,6 +695,10 @@ public:
                                       mesh.check_integrity()));
 #endif
 
+    // add new primal
+    int pi = mesh.add_primal(hs);
+
+    // if new halfspace does not intersect, do not process further
     if (mesh.contains(pi, di_start))
       di_start = -1;
 
@@ -698,9 +707,8 @@ public:
 #endif
 
     // if there is no point outside, the new halfspace does nothing
-    if (di_start < 0) {
+    if (di_start < 0)
       return phint;
-    }
 
 #ifdef PROFILING
     time->start_section(idx_time_partition);
@@ -715,8 +723,6 @@ public:
     // traverse set of cut off vertices and store the vertices and edges connecting them to the remaining part
     std::vector<int> q({di_start});
     while (!q.empty()) {
-      // int di = q.front();
-      // q.pop_front();
       int di = q.back();
       q.pop_back();
 

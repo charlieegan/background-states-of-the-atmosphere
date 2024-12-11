@@ -1,18 +1,20 @@
 [build-system]
-requires = ["scikit-build-core>=0.3.3", "pybind11"]
+requires = ["scikit-build-core>=0.10", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 cmake.version = "CMakeLists.txt"
 cmake.verbose = true
 logging.level = "INFO"
+#cmake.build-type = "Debug"
+install.strip = false
 
 [project]
 name = "atmosphere_bgs"
 description = "TODO"
 authors = [{"name" = "Charles Peter Egan"}, {"name" = "Thilo Stier"}]
 license = {"file" = "LICENSE"}
-version = "0.15.0"
+version = "0.16.0"
 readme = "README.md"
 dependencies = [
     "numpy",

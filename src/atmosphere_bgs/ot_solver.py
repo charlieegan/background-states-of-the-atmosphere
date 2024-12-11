@@ -106,18 +106,25 @@ class OTSolver:
         self.runstats = {"na" : [],  "lr" : [], "maxerr" : [], "l2err" : [], "meanerr" : [], "good" : [], "bad" : [], "tries" : []}
         self.timer = _atmosphere_bgs.Timer([])
 
+        if verbose:
+            print(f'initial duals calculated', flush=True)
+        
         ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
+
+        if verbose:
+            print(f'try to fix {np.sum(ld.areas < min_area)} bad areas', flush=True)
+            
         psi = ld.touching_dual(randomize=True)
         self.timer += ld.time
         self.timer += ld.hs.time
-
+        
         psi -= np.mean(psi)
         
         ld = _atmosphere_bgs.LaguerreDiagram(ld, psi)
         err = np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
         if verbose:
-            print(f'it={-1}, lr={lr:.2e}, good_areas={np.sum(good_areas)}/{good_areas.shape[0]}')
+            print(f'it={-1}, lr={lr:.2e}, good_areas={np.sum(good_areas)}/{good_areas.shape[0]}', flush=True)
 
         t00 = time.time()
         for it in range(max_its):
@@ -181,14 +188,14 @@ class OTSolver:
                 else:
                     # reject step
                     if verbose:
-                        print(f"failed step at it {it}, lr {lr:.2e}, error {aerr:.10e} -> {aerr2:.10e}, areas_good: {areas_good} ({np.sum(good_areas)}, {np.sum(good_areas2)}, {np.sum(good_areas & ~good_areas2)}), descent_good: {descent_good}")
+                        print(f"failed step at it {it}, lr {lr:.2e}, error {aerr:.10e} -> {aerr2:.10e}, areas_good: {areas_good} ({np.sum(good_areas)}, {np.sum(good_areas2)}, {np.sum(good_areas & ~good_areas2)}), descent_good: {descent_good}", flush=True)
                     lr *= lr_down
                     continue
 
             if self.sp.negative_area_scaling <= 0 and not np.all(good_areas):
                 good_areas_prev = good_areas
                 if verbose:
-                    print(f"try to fix {np.sum(~good_areas_prev)} bad area(s)")
+                    print(f"try to fix {np.sum(~good_areas_prev)} bad area(s)", flush=True)
                     
                 psi = ld.touching_dual(randomize=True)
                 self.timer += ld.time
@@ -198,7 +205,7 @@ class OTSolver:
                 good_areas = (ld.areas > min_area)
 
                 if verbose:
-                    print(f"managed to fix {np.sum(good_areas & ~good_areas_prev)} and broke {np.sum(good_areas_prev & ~good_areas)}")
+                    print(f"managed to fix {np.sum(good_areas & ~good_areas_prev)} and broke {np.sum(good_areas_prev & ~good_areas)}", flush=True)
 
             if lr <= lr_min:
                 raise RuntimeError("can not find sufficiently small learning rate")
@@ -214,14 +221,14 @@ class OTSolver:
             self.runstats["tries"] += [cnt_tries]
 
             if verbose:
-                print(f'it={it}, lr={lr:.2e}, good_areas={self.runstats["good"][-1]}/{good_areas.shape[0]}, meanerr={self.runstats["meanerr"][-1]:.6e}, l2err = {self.runstats["l2err"][-1]:.6e}, max_err={self.runstats["maxerr"][-1]:.6e}')
+                print(f'it={it}, lr={lr:.2e}, good_areas={self.runstats["good"][-1]}/{good_areas.shape[0]}, meanerr={self.runstats["meanerr"][-1]:.6e}, l2err = {self.runstats["l2err"][-1]:.6e}, max_err={self.runstats["maxerr"][-1]:.6e}', flush=True)
 
             if np.max(err / self.tmn) < err_goal:
                 break
 
         t11 = time.time()
         if verbose:
-            print(f"finished in {t11 - t00:.2f}s")
+            print(f"finished in {t11 - t00:.2f}s", flush=True)
 
         self.timer += ld.time
         self.timer += ld.hs.time

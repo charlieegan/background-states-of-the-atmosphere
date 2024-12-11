@@ -60,11 +60,16 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
   setup_timer();
 #endif
 
+#ifdef DEBUG_CHECKS
+  if (duals.isNaN().any())
+    throw std::runtime_error("duals contain NaN");
+#endif
+  
   if ((int)duals.size() != n + 1)
     throw std::runtime_error("the size of the dual vector must be one larger than the first dimension of seed positions (the last entry of duals corresponds to the boundary cell)");
 
   do_hs_intersect();
-
+  
   extract_diagram();
 }
 
@@ -76,6 +81,11 @@ laguerre_diagram<T>::laguerre_diagram(std::shared_ptr<laguerre_diagram<T>> paren
 
 #ifdef PROFILING
   setup_timer();
+#endif
+
+#ifdef DEBUG_CHECKS
+  if (duals.isNaN().any())
+    throw std::runtime_error("duals contain NaN");
 #endif
 
   if ((int)duals.size() != n + 1)
@@ -111,8 +121,18 @@ void laguerre_diagram<T>::do_hs_intersect() {
            1.0,
            phys.Omega * ys(i, 0) + duals(i));
 
+#ifdef DEBUG_CHECKS
+    if (i < 0 || i >= hints.size())
+      throw std::runtime_error(FORMAT("index in hints oob : {} >= {}", i, hints.size()));
+#endif
+    
     hints[i] = hs.add_halfspace(H, hints[i]);
   }
+
+#ifdef DEBUG_CHECKS
+  if (sim.boundary_res < 2)
+    throw std::runtime_error(FORMAT("sim.boundary_res too small: {}", sim.boundary_res));
+#endif
 
   // add boundary halfspaces
   for (int i = 0; i < sim.boundary_res; i++) {
@@ -124,7 +144,12 @@ void laguerre_diagram<T>::do_hs_intersect() {
            1.0,
            duals(n) + sqr(phys.Omega * phys.a) / z0);
 
-    hints[sim.boundary_res + i] = hs.add_halfspace(H, hints[sim.boundary_res + i]);
+#ifdef DEBUG_CHECKS
+    if (n + i < 0 || n + i >= hints.size())
+      throw std::runtime_error(FORMAT("index in hints oob : {} >= {}", n + i, hints.size()));
+#endif
+
+    hints[n + i] = hs.add_halfspace(H, hints[n + i]);
   }
 
 #ifdef PROFILING
@@ -178,8 +203,8 @@ void laguerre_diagram<T>::extract_diagram() {
   for (int i = 0; i < n; i++) {
 
     // calculate initial area and error
-    for (auto &ei : faces[i + 6]) {
-      auto &e = edglist[ei];
+    for (const auto &ei : faces[i + 6]) {
+      const auto &e = edglist[ei];
       areas(i) += (e.pi == i + 6 ? e.ls.area : -e.ls.area);
       areaerrs(i) += e.ls.errb;
     }
@@ -191,8 +216,8 @@ void laguerre_diagram<T>::extract_diagram() {
 
     std::multimap<double, int> errmap;
 
-    for (auto &ei : faces[i + 6]) {
-      auto &e = edglist[ei];
+    for (const auto &ei : faces[i + 6]) {
+      const auto &e = edglist[ei];
       errmap.insert({-e.ls.errb, ei});
     }
 
@@ -247,7 +272,7 @@ void laguerre_diagram<T>::extract_diagram() {
 
         // add negative area taken from neighboring cells
         auto w = hs.mesh.dneigh(di).size();
-        for (auto &e : hs.mesh.dneigh(di)) {
+        for (const auto &e : hs.mesh.dneigh(di)) {
           // there is only a change for non-simulation-boundary neighbors
           if (e.pi >= 6) {
             // subtract area from this, add virtual edge
@@ -493,7 +518,7 @@ std::unordered_map<uint64_t, double> laguerre_diagram<T>::jac() {
   // get jacobian (derivative of masses w.r.t. dual)
 
   std::unordered_map<uint64_t, double> res;
-  for (auto &e : edglist) {
+  for (const auto &e : edglist) {
     if (e.pj >= 6) {
       uint64_t i = e.pi-6;
       uint64_t j = std::min(e.pj-6,n);
@@ -506,7 +531,7 @@ std::unordered_map<uint64_t, double> laguerre_diagram<T>::jac() {
     }
   }
 
-  for (auto &e : vedglist) {
+  for (const auto &e : vedglist) {
     if (e.pj >= 6) {
       uint64_t i = e.pi-6;
       uint64_t j = std::min(e.pj-6,n);
@@ -537,7 +562,7 @@ std::pair<Eigen::VectorXd, std::pair<Eigen::VectorXi, Eigen::VectorXi>> laguerre
   Eigen::VectorXi i(J.size()), j(J.size());
 
   int k = 0;
-  for (auto &v : J) {
+  for (const auto &v : J) {
     data[k] = v.second;
     i[k] = v.first >> 32;
     j[k++] = v.first & 0xFFFFFFFF;
@@ -586,7 +611,7 @@ Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> laguerre_diagram<T>::g
 
   int ri = 0;
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> res(len, 2);
-  for (auto &ep : path)
+  for (const auto &ep : path)
     if (ep->pi == pi)
       for (int i = 0; i < ep->ls.size() - 1; ++i)
         res.row(ri++) = ep->ls.x.row(i);
