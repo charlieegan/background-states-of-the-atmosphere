@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 
-struct physical_parameters
+struct physical_parameters : public std::enable_shared_from_this<physical_parameters>
 {
   double a;      //!< earth radius [m]
   double Omega;  //!< earth angular velocity [rad/s]
@@ -83,8 +83,8 @@ struct physical_parameters
    * \param s physical_parameters instance to pickle
    * \return py::tuple containing relevant values of s
    */
-  static py::tuple pickle(const physical_parameters &s) {
-    return py::make_tuple(s.a, s.Omega, s.p00, s.kappa, s.cp);
+  static py::tuple pickle(std::shared_ptr<physical_parameters> s) {
+    return py::make_tuple(s->a, s->Omega, s->p00, s->kappa, s->cp);
   }
 
   /*!
@@ -92,15 +92,15 @@ struct physical_parameters
    * \param t py::tuple containing values defining physical_parameters
    * \return physical_parameters defined by given tuple
    */
-  static physical_parameters unpickle(py::tuple t) {
+  static std::shared_ptr<physical_parameters> unpickle(py::tuple t) {
     if (t.size() != 5)
       throw std::runtime_error("invalid state in physical_parameters::unpickle");
 
-    return physical_parameters(t[0].cast<double>(),
-                               t[1].cast<double>(),
-                               t[2].cast<double>(),
-                               t[3].cast<double>(),
-                               t[4].cast<double>());
+    return std::make_shared<physical_parameters>(t[0].cast<double>(),
+                                                 t[1].cast<double>(),
+                                                 t[2].cast<double>(),
+                                                 t[3].cast<double>(),
+                                                 t[4].cast<double>());
   }
   
   /*!
@@ -108,7 +108,7 @@ struct physical_parameters
    * \param m module to bind to
    */
   static void bind(py::module_ &m) {
-    py::class_<physical_parameters>(m, "PhysicalParameters")
+    py::class_<physical_parameters, std::shared_ptr<physical_parameters>>(m, "PhysicalParameters")
       .def(py::init<double, double, double, double, double>(),
            py::arg("a") = 6371000., py::arg("Omega") = 7.2921e-05,
            py::arg("p00") = 101325., py::arg("kappa") = 2. / 7., py::arg("cp") = 1003.5)

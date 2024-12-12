@@ -52,7 +52,7 @@ void laguerre_diagram<T>::setup_timer() {
 template <typename T>
 laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
                                       const Eigen::Ref<const VecX> &duals,
-                                      const physical_parameters &phys,
+                                      std::shared_ptr<physical_parameters> phys,
                                       const simulation_parameters &sim) :
   parent(NULL), n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + sim.boundary_res, -1) {
 
@@ -106,16 +106,16 @@ void laguerre_diagram<T>::do_hs_intersect() {
   // perform the halfspace intersection
 
   Vec3 zeta_min, zeta_max;
-  zeta_min << phys.tf<T>(sim.spmin.cast<T>()), (T)-1e100;
-  zeta_max << phys.tf<T>(sim.spmax.cast<T>()), (T)1e100;
+  zeta_min << phys->tf<T>(sim.spmin.cast<T>()), (T)-1e100;
+  zeta_max << phys->tf<T>(sim.spmax.cast<T>()), (T)1e100;
   hs = halfspace_intersection<T>(zeta_min, zeta_max);
 
   // add seed halfspaces
   for (int i = 0; i < n; i++) {
-    Vec4 H(-0.5 * sqr(ys(i, 0) / phys.a),
-           -phys.cp * ys(i, 1),
+    Vec4 H(-0.5 * sqr(ys(i, 0) / phys->a),
+           -phys->cp * ys(i, 1),
            1.0,
-           phys.Omega * ys(i, 0) + duals(i));
+           phys->Omega * ys(i, 0) + duals(i));
 
 #ifdef DEBUG_CHECKS
     if (i < 0 || i >= hints.size())
@@ -135,10 +135,10 @@ void laguerre_diagram<T>::do_hs_intersect() {
     T s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / (sim.boundary_res - 1);
     T z0 = 1. / (1 - s * s);
 
-    Vec4 H(-0.5 * sqr(phys.Omega * phys.a / z0),
+    Vec4 H(-0.5 * sqr(phys->Omega * phys->a / z0),
            0.0,
            1.0,
-           duals(n) + sqr(phys.Omega * phys.a) / z0);
+           duals(n) + sqr(phys->Omega * phys->a) / z0);
 
 #ifdef DEBUG_CHECKS
     if (n + i < 0 || n + i >= hints.size())
@@ -304,12 +304,12 @@ void laguerre_diagram<T>::extract_diagram() {
         if (e.pj - 6 < n) {
           // inner edge
           auto yj = ys.row(e.pj-6);
-          dc = Eigen::Vector2d((sqr(yi(0)) - sqr(yj(0))) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))),
-                               phys.cp * phys.kappa / phys.p00 * (yi(1) - yj(1)) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
+          dc = Eigen::Vector2d((sqr(yi(0)) - sqr(yj(0))) * e.ls.x(k,0) / (sqr(phys->a) * sqr(1 - sqr(e.ls.x(k,0)))),
+                               phys->cp * phys->kappa / phys->p00 * (yi(1) - yj(1)) * std::pow(e.ls.x(k,1) / phys->p00, phys->kappa-1));
         } else {
           // top boundary edge
-          dc = Eigen::Vector2d(sqr(yi(0)) * e.ls.x(k,0) / (sqr(phys.a) * sqr(1 - sqr(e.ls.x(k,0)))) - sqr(phys.Omega * phys.a) * e.ls.x(k,0),
-                               phys.cp * phys.kappa / phys.p00 * yi(1) * std::pow(e.ls.x(k,1) / phys.p00, phys.kappa-1));
+          dc = Eigen::Vector2d(sqr(yi(0)) * e.ls.x(k,0) / (sqr(phys->a) * sqr(1 - sqr(e.ls.x(k,0)))) - sqr(phys->Omega * phys->a) * e.ls.x(k,0),
+                               phys->cp * phys->kappa / phys->p00 * yi(1) * std::pow(e.ls.x(k,1) / phys->p00, phys->kappa-1));
         }
         
         if (k > 0) {
@@ -371,7 +371,7 @@ laguerre_diagram<T>::VecX laguerre_diagram<T>::touching_dual(bool randomize) {
       // direction of halfplane at index pi
       auto pp = hs.mesh.pvert[pi + 6].head(3);
       // z-offset of plane (without dual potential part)
-      auto os = phys.Omega * ys(pi, 0);
+      auto os = phys->Omega * ys(pi, 0);
       // find closest dual point
       int di = hs.mesh.extremal_dual(pp);
       auto dp = hs.mesh.dvert[di].head(3) / hs.mesh.dvert[di][3];
@@ -631,7 +631,7 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
   py::class_<laguerre_diagram<T>, std::shared_ptr<laguerre_diagram<T>>>(m, ("LaguerreDiagram_" + type_name<T>::value()).c_str())
     .def(py::init<const laguerre_diagram<T>::seeds_t&,
          const Eigen::Ref<const laguerre_diagram<T>::VecX>&,
-         const physical_parameters &,
+         std::shared_ptr<physical_parameters>,
          const simulation_parameters&>(),
          py::arg("ys"), py::arg("duals"),
          py::arg("phys"), py::arg("sim"))
@@ -666,7 +666,7 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
   m.def("LaguerreDiagram",
         [](const laguerre_diagram<T>::seeds_t &ys,
            const Eigen::Ref<const laguerre_diagram<T>::VecX> &duals,
-           const physical_parameters &phys,
+           std::shared_ptr<physical_parameters> phys,
            const simulation_parameters &sim) {
           return laguerre_diagram<T>(ys, duals, phys, sim);
         },

@@ -66,7 +66,7 @@ public:
   int n; //!< number of seeds
   Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor> ys; //!< seed positions
   VecX duals; //!< duals corresponding to seeds
-  physical_parameters phys; //!< physical parameters defining cost / coordinate transform
+  std::shared_ptr<physical_parameters> phys; //!< physical parameters defining cost / coordinate transform
   simulation_parameters sim; //!< simulation parameters defining boundaries, resolutions, etc.
 
   halfspace_intersection<T> hs; //!< halfspace intersection solver used to calculate diagram topology
@@ -105,7 +105,7 @@ public:
    */
   laguerre_diagram(const seeds_t &ys,
                    const Eigen::Ref<const VecX> &duals,
-                   const physical_parameters &phys,
+                   std::shared_ptr<physical_parameters> phys,
                    const simulation_parameters &sim);
 
   /*!

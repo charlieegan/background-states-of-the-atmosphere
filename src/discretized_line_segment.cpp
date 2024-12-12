@@ -9,10 +9,10 @@ template class discretized_line_segment<long double>;
 template <typename T>
 DLS::discretized_line_segment(const Eigen::Ref<const DLS::Vector2> &zeta_s,
                               const Eigen::Ref<const DLS::Vector2> &zeta_e,
-                              const physical_parameters &phys,
+                              std::shared_ptr<physical_parameters> phys,
                               const simulation_parameters &sim) :
   start(zeta_s), end(zeta_e), direction((zeta_e - zeta_s).normalized()),
-  phys(&phys), 
+  phys(phys), 
   max_resolution(sim.max_line_resolution), aspect(sim.spmax(1) - sim.spmin(1), sim.spmax(0) - sim.spmin(0)),
   lams(sim.min_line_resolution), x(sim.min_line_resolution, 2),
   errb(0), area(0) {
@@ -159,7 +159,7 @@ void DLS::bind(py::module_ &m) {
   py::class_<DLS>(m, ("DiscretizedLineSegment_" + type_name<T>::value()).c_str())
     .def(py::init<const Eigen::Ref<const DLS::Vector2> &,
          const Eigen::Ref<const DLS::Vector2> &,
-         const physical_parameters &,
+         std::shared_ptr<physical_parameters>,
          const simulation_parameters &>())
     .def_readonly("start", &DLS::start)
     .def_readonly("end", &DLS::end)
