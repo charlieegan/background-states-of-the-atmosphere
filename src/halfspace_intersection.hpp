@@ -6,27 +6,37 @@
 #include "reusable_used_array.hpp"
 #include "timer.hpp"
 
-// an (oriented) primal-dual edge represented by primal and dual indices
+/*! An (oriented) primal-dual edge represented by primal and dual indices. */
 struct pdedge {
-  int pi, pj; // primal indices neighboring
-  int di, dj; // corresponding dual indices neighboring
+  int pi; //!< primal starting index
+  int pj; //!< primal ending index
+  int di; //!< dual starting index
+  int dj; //!< dual ending index
 
+  /*! Return a string representation of *this. */
   std::string repr() const {
     std::stringstream ss;
     ss << "PDEdge(" << pi << ", " << pj << "; " << di << ", " << dj << ")";
     return ss.str();
   }
 
+  /*! Get mirrored edge (same orientation but opposite direction). */
   pdedge mirrored() const {
     return {pj, pi, dj, di};
   }
 
+  /*! Functor struct to compare pdedge by primal index. */
   struct cmp_pj { bool operator()(const pdedge &e, const pdedge &f) const { return e.pj < f.pj; } };
+
+  /*! Functor struct to compare pdedge by dual index. */
   struct cmp_dj { bool operator()(const pdedge &e, const pdedge &f) const { return e.dj < f.dj; } };
 
-  // order the given edges to make up a cycle on primal side (if primal == true) or dual side (if primal == false)
-  // if the edges do not make up a cycle, a runtime_error will the thrown
-  // assumes edges are already oriented the same way and a cycle is possible
+  /*! Order the given edges to make up a cycle on primal side (if primal == true) or dual side (if primal == false).
+   *  If the edges do not make up a cycle, a runtime_error will the thrown, the function assumes that edges are already
+   *  oriented the same way and form a cycle under a suitable permutation.
+   * \param edg vector of input edges
+   * \return permutation of edg such that r[i].pj == r[(i+1)%n].pi (if primal == true, dual correspondingly)
+   */
   template <bool primal = true>
   static std::vector<pdedge> order_cycle(const std::vector<pdedge> &edg) {
     if (edg.size() <= 2)
@@ -70,6 +80,7 @@ struct pdedge {
     return path;
   }
 
+  /*! Add python bindings of pdedge to m. */
   static void bind(py::module_ &m) {
     py::class_<pdedge>(m, "PDEdge")
       .def("__repr__", &pdedge::repr)
@@ -80,29 +91,33 @@ struct pdedge {
   }
 };
 
+/*! An ordered primal-dual mesh in 3d (projective) space with dual vertices having degree 3. */
 template <typename T = double>
 struct pdmesh {
   typedef Eigen::Vector3<T> Vec3;
   typedef Eigen::Vector4<T> Vec4;
 
-  // primal adjacency list - for each primal index: list of incident edges
-  std::vector<std::vector<pdedge>> padj;
+  std::vector<std::vector<pdedge>> padj; //!< primal adjacency list - for each primal index: list of incident edges
+  dvector<std::vector<pdedge>> dadj; //!< dual adjacency list - for each dual index: list of incident edges (length 3)
 
-  // dual adjacency list - for each dual index: list of incident edges (3 for a dual-triangle-mesh)
-  dvector<std::vector<pdedge>> dadj;
+  std::vector<Vec4> pvert; //!< primal vertices
+  dvector<Vec4> dvert; //!< dual vertices
 
-  // primal vertices
-  std::vector<Vec4> pvert;
+  reusable_used_array<> used; //!< used array for internal algorithms
 
-  // dual vertices
-  dvector<Vec4> dvert;
-
-  reusable_used_array<> used;
-
+  /*! Construct mesh allocating space for primal and dual vertices if requested.
+   * \param pcnt number of primal vertices to allocate space for
+   * \param dcnt number of dual vertices to allocate space for
+   */
   pdmesh(const int &pcnt = 0, const int &dcnt = 0) :
     padj(pcnt), dadj(dcnt),
     pvert(pcnt), dvert(dcnt) {}
 
+  /*! Return a cuboid pdmesh with given lower and upper bounds.
+   * \param lb corner with lowest coordinates
+   * \param ub corner with highest coordinates
+   * \return pdmesh representing the cuboid with given dimensions
+   */
   static pdmesh cube(const Eigen::Ref<const Vec3> &lb,
                      const Eigen::Ref<const Vec3> &ub) {
     pdmesh res(6, 8);
@@ -175,6 +190,7 @@ struct pdmesh {
     return res;
   }
 
+  /*! Get number of primal indices. */
   int pcnt() const {
 #ifdef DEBUG_CHECKS
     if (padj.size() != pvert.size())
@@ -183,6 +199,7 @@ struct pdmesh {
     return padj.size();
   }
 
+  /*! Get number of dual indices. */
   int dcnt() const {
 #ifdef DEBUG_CHECKS
     if (dadj.size() != dvert.size())
@@ -191,7 +208,7 @@ struct pdmesh {
     return dadj.size();
   }
 
-  // add primal-dual edge to mesh
+  /*! Add primal-dual edge to mesh. */
   void add_edge(const pdedge &e) {
 #ifdef DEBUG_CHECKS
     if (e.pi < 0 || e.pj < 0 || e.pi >= pcnt() || e.pj >= pcnt() ||
@@ -208,7 +225,7 @@ struct pdmesh {
     fix_order(e.dj);
   }
 
-  // remove primal-dual edge from mesh
+  /*! Remove primal-dual edge from mesh. */
   void remove_edge(const pdedge &e) {
     // TODO: efficiency (using vectors may actually be best when number of elements is very small -> benchmark)
 #ifdef DEBUG_CHECKS
@@ -239,7 +256,7 @@ struct pdmesh {
     fix_order(e.dj);
   }
 
-  // remove dual vertex at index with all corresponding edges
+  /*! Remove dual vertex at index with all corresponding edges. */
   void remove_dual(const int &di) {
 #ifdef DEBUG_CHECKS
     if (!dadj.contains_idx(di))
@@ -253,21 +270,21 @@ struct pdmesh {
     dvert.remove(di);
   }
 
-  // add a new dual, return the index
+  /*! Add a new dual, return the index. */
   int add_dual(const Eigen::Ref<const Vec4> &p) {
     dvert.add(p);
     int di = dadj.add(std::vector<pdedge>());
     return di;
   }
 
-  // ad a new primal vertex and return the index
+  /*! Add a new primal vertex and return the index. */
   int add_primal(const Eigen::Ref<const Vec4> &hs) {
     pvert.push_back(hs);
     padj.push_back(std::vector<pdedge>());
     return (int)pvert.size() - 1;
   }
 
-  // make sure the order of dadj[di] is correct if dadj[di].size() == 3
+  /*! Make sure the order of dadj[di] is correct if dadj[di].size() == 3. */
   void fix_order(const int &di) {
 #ifdef DEBUG_CHECKS
     if (!dadj.contains_idx(di))
@@ -308,15 +325,14 @@ struct pdmesh {
 
   }
 
-
-  // find how far inside / outside of the halfspace corresponding to pi the dual point di is
-  // negative if inside, positive outside
+  /*! Find how far inside / outside of the halfspace corresponding to pi the dual point di is.
+   *  The value is negative if the dual point is inside the halfspace, positive if it is outside.
+   */
   T hs_error(const int &pi, const int &di) const {
     return pvert[pi].dot(dvert[di]) / (dvert[di](3) * pvert[pi].head(3).norm());
   }
 
-  // check whether halfspace defined by pi contains dual point di
-  // if di is not a valid dual index, return default_return
+  /*! Check whether halfspace defined by pi contains dual point di. */
   bool contains(const int &pi, const int &di) const {
 #ifdef DEBUG_CHECKS
     if (pi < 0 || pi >= pcnt() || !dadj.contains_idx(di))
@@ -325,7 +341,7 @@ struct pdmesh {
     return pvert[pi].dot(dvert[di]) <= 0;
   }
 
-  // find the (index of the) dual point which has largest inner product with d
+  /*! Find the index of the dual point which has largest inner product with d. */
   int extremal_dual(const Eigen::Ref<const Vec3> &d, bool brute_force=false, int hint = -1, bool debug=false) {
     int res = (hint >= 0 ? hint : *dadj.begin_idx());
     T maxval = dvert[res].head(3).dot(d) / dvert[res](3), val;
@@ -388,8 +404,9 @@ struct pdmesh {
     return res;
   }
 
-  // find the (index of the) primal point which is first cut off by the plane with normal d when translating it
-  // return {pi, <d, last (dual) vertex of pi cut off>}
+  /*! Find the (index of the) primal point which is first cut off by the plane with normal d when translating it.
+   * \return {pi, <d, last (dual) vertex of pi cut off>}
+   */
   std::pair<int, T> closest_primal(const Eigen::Ref<const Vec3> &d) {
 
     T maxval = -std::numeric_limits<T>::infinity(), val;
@@ -416,7 +433,7 @@ struct pdmesh {
     return {res, maxval};
   }
 
-  // get neighbors of primal index pi (as edges e with e.pi == pi)
+  /*! Fet neighbors of primal index pi (as edges e with e.pi == pi). */
   const std::vector<pdedge>& pneigh(const int &pi) const {
 #ifdef DEBUG_CHECKS
     if (pi < 0 || pi >= pcnt())
@@ -425,7 +442,7 @@ struct pdmesh {
     return padj[pi];
   }
 
-  // get neighbors of dual index di (as edges e with e.di == di)
+  /*! Get neighbors of dual index di (as edges e with e.di == di). */
   const std::vector<pdedge>& dneigh(const int &di) const {
 #ifdef DEBUG_CHECKS
     if (!dadj.contains_idx(di))
@@ -434,12 +451,14 @@ struct pdmesh {
     return dadj[di];
   }
 
+  /*! Get a minimalistic string representation. */
   std::string repr() const {
     std::stringstream ss;
     ss << "PDMesh(pcnt = " << pcnt() << ", dcnt = " << dcnt() << ")";
     return ss.str();
   }
 
+  /*! Get the polygon (list of dual vertices) corresponding to primal index pi. */
   std::vector<Vec4> primal_poly(const int &pi) const {
     std::vector<Vec4> res;
     for (const auto &e : pdedge::order_cycle<false>(padj[pi])) {
@@ -448,6 +467,7 @@ struct pdmesh {
     return res;
   }
 
+  /*! Do a bunch of checks for mesh integrity (for debugging purposes). */
   bool check_integrity() const {
     bool res = true;
 
@@ -517,6 +537,7 @@ struct pdmesh {
     return res;
   }
 
+  /*! Write mesh to a .ply file at given path (for debugging purposes). */
   void write_ply(std::string path) const {
     std::ofstream s(path);
     s << std::setprecision(10);
@@ -548,12 +569,14 @@ struct pdmesh {
     }
   }
 
+  /*! Fix order of all primal faces. */
   void order_all() {
     for (int i = 0; i < (int)padj.size(); ++i) {
       padj[i] = pdedge::order_cycle<false>(padj[i]);
     }
   }
 
+  /*! Add python binding code for module m. */
   static void bind(py::module_ &m) {
     py::class_<pdmesh<T>>(m, ("PDMesh_" + type_name<T>::value()).c_str())
       .def("__repr__", &pdmesh<T>::repr)
@@ -583,13 +606,11 @@ public:
   typedef Eigen::Vector3<T> Vec3;
   typedef Eigen::Vector4<T> Vec4;
 
-
-  pdmesh<T> mesh;
-
-  reusable_used_array<> used;
+  pdmesh<T> mesh; //!< primal-dual mesh representing intersection of halfspaces so far
+  reusable_used_array<> used; //!< used array for internal graph algorithms
 
 #ifdef PROFILING
-  std::shared_ptr<timer> time = NULL;
+  std::shared_ptr<timer> time = NULL; //!< profiling timer
   int idx_time_find_cut = -1, idx_time_partition = -1, idx_time_cycledec = -1, idx_time_add = -1, idx_time_remove = -1;
   int remove_count = 0;
 
@@ -604,7 +625,7 @@ public:
   }
 #endif
 
-  // start with cuboid domain defined by lower and upper bounds
+  /*! Construct halfspace intersection with an initial cuboid mesh with given corners. */
   halfspace_intersection(const Eigen::Ref<const Vec3> &lb = Vec3(0,0,0),
                          const Eigen::Ref<const Vec3> &ub = Vec3(1,1,1)) :
     mesh(pdmesh<T>::cube(lb, ub)), used(8) {
@@ -614,6 +635,7 @@ public:
 #endif
   }
 
+  /*! Construct halfspace intersection with initial cuboid and halfspaces. */
   halfspace_intersection(const Eigen::Ref<const Vec3> &lb,
                          const Eigen::Ref<const Vec3> &ub,
                          const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) :
@@ -621,11 +643,17 @@ public:
     add_halfspaces(hss);
   }
 
+  /*! Add list of halfspaces to intersection. */
   void add_halfspaces(const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 4, Eigen::RowMajor>> &hss) {
     for (const auto &hs : hss.rowwise())
       add_halfspace(hs);
   }
 
+  /*! Add a halfspace to the intersection.
+   * \param hs vector describing halfspace: {x | hs.head(3).dot(x) + hs[3] <= 0}
+   * \param hint primal index close to which the new face will likely intersect (to speed up search)
+   * \return hint for next execution - if halfspace_intersection is constructed in the same way multiple times with similar inputs, supplying the hint returned from the previous time will likely speed up the current one.
+   */
   int add_halfspace(const Eigen::Ref<const Vec4> &hs, int hint = -1) {
 #ifdef EXPENSIVE_DEBUG_CHECKS
     if (!mesh.check_integrity())
@@ -875,6 +903,7 @@ public:
     return phint;
   }
 
+  /*! Add python bindings to module m.  */
   static void bind(py::module_ &m) {
     py::class_<halfspace_intersection<T>>(m, ("HalfspaceIntersection_" + type_name<T>::value()).c_str())
       .def(py::init<const Eigen::Ref<const halfspace_intersection<T>::Vec3>&,
