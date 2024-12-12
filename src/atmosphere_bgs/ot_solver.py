@@ -110,6 +110,7 @@ class OTSolver:
             print(f'initial duals calculated', flush=True)
         
         ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
+        self.ld = ld
 
         if verbose:
             print(f'try to fix {np.sum(ld.areas < min_area)} bad areas', flush=True)
@@ -121,6 +122,7 @@ class OTSolver:
         psi -= np.mean(psi)
         
         ld = _atmosphere_bgs.LaguerreDiagram(ld, psi)
+        self.ld = ld
         err = np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
         if verbose:
@@ -129,7 +131,10 @@ class OTSolver:
         t00 = time.time()
         for it in range(max_its):
 
-            jac = coo_array(ld.jac_coo(), shape=(self.n+1, self.n+1)).tocsr()[:-1,:-1]
+            jac = coo_array(ld.jac_coo(), shape=(self.n+1, self.n+1)).tocsr()
+            if jac[self.n, self.n] == 0:
+                raise RuntimeError("ERROR: top cell became empty")
+            jac = jac[:-1,:-1]
             if self.sp.negative_area_scaling <= 0:
                 jac += dia_array((1.0 - good_areas[None,:], [0]), shape=(self.n, self.n))
             d = spsolve(jac, (self.tmn - ld.areas))
