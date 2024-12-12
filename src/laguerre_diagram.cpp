@@ -60,10 +60,8 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
   setup_timer();
 #endif
 
-#ifdef DEBUG_CHECKS
-  if (duals.isNaN().any())
+  if (duals.array().isNaN().any())
     throw std::runtime_error("duals contain NaN");
-#endif
   
   if ((int)duals.size() != n + 1)
     throw std::runtime_error("the size of the dual vector must be one larger than the first dimension of seed positions (the last entry of duals corresponds to the boundary cell)");
@@ -83,10 +81,8 @@ laguerre_diagram<T>::laguerre_diagram(std::shared_ptr<laguerre_diagram<T>> paren
   setup_timer();
 #endif
 
-#ifdef DEBUG_CHECKS
-  if (duals.isNaN().any())
+  if (duals.array().isNaN().any())
     throw std::runtime_error("duals contain NaN");
-#endif
 
   if ((int)duals.size() != n + 1)
     throw std::runtime_error("the size of the dual vector must be one larger than the first dimension of seed positions (the last entry of duals corresponds to the boundary cell)");
@@ -322,8 +318,10 @@ void laguerre_diagram<T>::extract_diagram() {
           double i1 = dcp.dot(dc - dcp);
           double i2 = dc.dot(dc - dcp);
           double s = (i1 < 0 ? -1.0 : 1.0);
-  
-          if (hlen < 1e-100) {
+
+          if (xlen == 0) {
+            // if segment has 0 length, don't add anything
+          } else if (hlen < 1e-100) {
             // if dc is very close to constant, just approximate it as constant
             e.dif += xlen / dc.norm();
           } else {
@@ -336,6 +334,12 @@ void laguerre_diagram<T>::extract_diagram() {
       }
       
     }
+
+#ifdef DEBUG_CHECKS
+    if (std::isinf(e.dif) || std::isnan(e.dif))
+      throw std::runtime_error(FORMAT("edge {} dif is {}", e.repr(), e.dif));
+#endif
+    
   }
 
 #ifdef PROFILING
