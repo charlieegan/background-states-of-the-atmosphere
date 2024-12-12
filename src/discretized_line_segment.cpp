@@ -17,6 +17,20 @@ DLS::discretized_line_segment(const Eigen::Ref<const DLS::Vector2> &zeta_s,
   lams(sim.min_line_resolution), x(sim.min_line_resolution, 2),
   errb(0), area(0) {
 
+  // handle length 0 
+  if (zeta_s == zeta_e) {
+    lams.resize(2);
+    x.resize(2, 2);
+    t.resize(2, 2);
+    s.resize(2 - 1, 2);
+
+    lams(0) = 0;
+    lams(1) = 1;
+    s.row(0) = x.row(0) = x.row(1) = get_x(0);
+    t.array() = 0;
+    return;
+  }
+  
   // calculate initial positions
   for (int i = 0; i < sim.min_line_resolution; ++i) {
     T lam = i / (T)(sim.min_line_resolution - 1);
@@ -49,6 +63,10 @@ DLS::Vector2 DLS::get_t(const T &lam) const {
 
 template <typename T>
 void DLS::refine(int newlen) {
+  // don't refine length 0 segment (since it is already exact and would lead to NaNs)
+  if (start == end)
+    return;
+  
   int oldlen = size();
   
   // if no new length is given, double current (split every current segment in half)
