@@ -18,16 +18,15 @@ public:
   Vector2 end; //!< end of segment in linear coords
   Vector2 direction; //!< normalized direction of segment in linear coords
 
-  std::shared_ptr<physical_parameters> phys; //!< physical parameters defining the coordante transform
+  std::shared_ptr<physical_parameters> phys; //!< physical parameters defining the coordinate transform
   int max_resolution; //!< maximal resolution (number of points) for the approximation
   Vector2 aspect; //!< coordinate stretch to apply before norm for even spacing (to correct for aspect ratio far off 1)
   
   // the coordinate lists are all on the same discretizaion
-  // s is one shorter than the rest, since there is no intersect after the last point
-  VectorX lams; //!< positions in [0,1] at which discretization points are (linearly spaced in linear domain)
+  VectorX lams; //!< positions in [0,1] at which discretization points are
   Matrix2X x; //!< coordinates in s-p-coords
   Matrix2X t; //!< tangent vectors in s-p-coords
-  Matrix2X s; //!< intersections between current tangent with next tangent in s-p-coords
+  Matrix2X s; //!< intersections between neighboring tangents (s is one element shorter than lams/x/t since there is no intersection after the last point)
 
   T errb; //!< area error bound
   T area; //!< (approx) area below (discretized) line segment in s-p-coords
