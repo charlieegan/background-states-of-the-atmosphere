@@ -5,30 +5,30 @@
 
 struct simulation_parameters
 {
-  // limits for s and p
-  Eigen::Vector2d spmin, spmax;
+  Eigen::Vector2d spmin; //!< lower bounds of s and p in a single vector
+  Eigen::Vector2d spmax; //!< upper bounds of s and p in a single vector
 
-  // resolution of top cell boundary
-  int boundary_res;
+  int boundary_res; //!< number of cells to divide top cell into (i.e. resolution of top boundary)
+  double area_tolerance; //!< relative area error to try to reach with discretization
+  int max_refine_steps; //!< maximal number of times to refine to try to reach error
+  double line_tolerance; //!< relative area error to try to reach for every single discretized line
+  int min_line_resolution; //!< minimal number of points to use per line (as long as the length is > 0)
+  int max_line_resolution; //!< maximal number of points to use per line (unless it is manually overridden)
+  double negative_area_scaling; //!< EXPERIMENTAL - factor to use for negative areas (set <= 0 to not allow negative areas)
 
-  // relative error to try to reach with discretization
-  double area_tolerance;
-  
-  // maximal number of times to try to reach error (does not do much)
-  int max_refine_steps;
-
-  // relative area error to try to reach per line
-  double line_tolerance;
-
-  // minimal number of points to use per line 
-  int min_line_resolution;
-
-  // maximal number of points to use per line
-  int max_line_resolution;
-
-  // factor to use for negative areas (set <= 0 to not allow negative areas)
-  double negative_area_scaling;
-  
+  /*! Construct simulation parameters from given values.
+   * \param smin lower bound for s
+   * \param smax upper bound for s
+   * \param pmin lower bound for p
+   * \param pmax upper bound for p
+   * \param boundary_res number of cells to divide top cell into (i.e. resolution of top boundary)
+   * \param area_tolerance relative area error to try to reach with discretization
+   * \param max_refine_steps maximal number of times to refine to try to reach error
+   * \param line_tolerance relative area error to try to reach for every single discretized line
+   * \param min_line_resolution minimal number of points to use per line (as long as the length is > 0)
+   * \param max_line_resolution maximal number of points to use per line (unless it is manually overridden)
+   * \param negative_area_scaling EXPERIMENTAL - factor to use for negative areas (set <= 0 to not allow negative areas)
+   */
   simulation_parameters(double smin = 0.1747087883522576,
                         double smax = 0.9809294113733709,
                         double pmin = 7300,
@@ -53,7 +53,8 @@ struct simulation_parameters
   double get_smax() const { return spmax[0]; }
   double get_pmin() const { return spmin[1]; }
   double get_pmax() const { return spmax[1]; }
-  
+
+  /*! Return human-readable string representation of stored parameters (mainly for python). */
   std::string repr() const {
     std::stringstream ss;
     ss << "smin = " << spmin(0)
@@ -70,6 +71,7 @@ struct simulation_parameters
     return ss.str();
   }
 
+  /*! Convert to python tuple for pickling support.  */
   static py::tuple pickle(const simulation_parameters &s) {
     return py::make_tuple(s.spmin[0], s.spmax[0], s.spmin[1], s.spmax[1], 
                           s.boundary_res, s.area_tolerance, s.max_refine_steps,
@@ -77,6 +79,7 @@ struct simulation_parameters
                           s.negative_area_scaling);
   }
 
+  /*! Convert from python tuple for pickling support.  */
   static simulation_parameters unpickle(py::tuple t) {
     if (t.size() != 11)
       throw std::runtime_error("invalid state in simulation_parameters::unpickle");
@@ -93,7 +96,8 @@ struct simulation_parameters
                                  t[9].cast<int>(),
                                  t[10].cast<double>());
   }
-  
+
+  /*! Add python bindings for this to given module m */
   static void bind(py::module_ &m) {
     py::class_<simulation_parameters>(m, "SimulationParameters")
       .def(py::init<double, double, double, double,
