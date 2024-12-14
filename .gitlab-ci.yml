@@ -1,20 +1,4 @@
 
-linux:
-  stage: build
-  image: quay.io/pypa/manylinux_2_28_x86_64
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
-  script:
-  - python3 -m ensurepip
-  - python3 -m pip install --upgrade pip
-  - python3 -m pip wheel --no-deps -w dist .
-  - auditwheel repair dist/atmosphere_bgs*whl -w dist
-  artifacts:
-    paths:
-    - dist/*whl
-  only:
-  - main
-
 doc:
   stage: build
   image: alpine
