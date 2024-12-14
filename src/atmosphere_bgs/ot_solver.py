@@ -14,7 +14,7 @@ class OTSolver:
         self.pp = input_data.pp
         self.sp = _atmosphere_bgs.SimulationParameters(area_tolerance=.2*ot_tol, 
                                                       line_tolerance=1e-4,
-                                                      min_line_resolution=8,
+                                                      min_line_resolution=3,
                                                       boundary_res=boundary_res,
                                                       max_refine_steps=1000, 
                                                       smin=input_data.smin,
