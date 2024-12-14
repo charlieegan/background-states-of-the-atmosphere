@@ -1,4 +1,19 @@
 
+linux:
+  stage: build
+  image: quay.io/pypa/manylinux_2_28_x86_64
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  script:
+  - pip install --upgrade pip
+  - pip install build
+  - python -m build
+  artifacts:
+    paths:
+    - dist
+  only:
+  - main
+
 doc:
   stage: build
   image: alpine
