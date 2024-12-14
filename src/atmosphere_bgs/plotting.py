@@ -1,5 +1,4 @@
 import numpy as np
-import shapely
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from scipy.ndimage import gaussian_filter
@@ -91,17 +90,38 @@ def plot_pressure_surface(ld,title='Pressure surface'):
     ax.set_xlim([ld.sim.spmin[0],ld.sim.spmax[0]])
     ax.set_ylim([ld.sim.spmin[1],ld.sim.spmax[1]])
     ax.set_title(title)
+
+def centroid(p):
+    """
+    Compute the centroid of a polygon.
+
+    Parameters:
+    p - numpy array of shape [n, 2] representing polygon vertices
+
+    Returns:
+    c - numpy array of shape [2] representing centroid of p
+    """
+    p = np.concatenate((p, p[0][None,:]), axis=0)
+    x0 = p[:-1,0]
+    x1 = p[1:,0]
+    y0 = p[:-1,1]
+    y1 = p[1:,1]
+    A = 0.5 * np.sum(x0 * y1 - x1 * y0)
+    C = 1. / (6 * A) * np.sum((p[1:] + p[:-1]) * (x0 * y1 - x1 * y0)[:,None], axis=0)
+    return C
     
 def get_u(ld):
+    """
+    Compute zonal wind at cell centroids.
+    """
 
-    # compute zonal wind at cell centroids
     pp = ld.phys
     y = ld.ys
     n = ld.ys.shape[0]
 
     polys = [ld.get_poly(i) for i in range(n)]
-    centroids = [shapely.centroid(shapely.Polygon(p)) for p in polys]
-    svals = np.array([p.x for p in centroids])
+    centroids = [centroid(p) for p in polys]
+    svals = np.array([p[0] for p in centroids])
     cosvals = np.sqrt(1-svals**2)
     u_vals = y[:,0]/(pp.a*cosvals) - pp.Omega*pp.a*cosvals # zonal wind at centroids
 
