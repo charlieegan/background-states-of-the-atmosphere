@@ -488,7 +488,7 @@ struct pdmesh {
       }
 
       // check dual face orientation / order
-      int first_pi, prev_pj;
+      int first_pi = -1, prev_pj = -1;
       bool first = true;
       for (const auto &e : v) {
         if (first) {
@@ -515,7 +515,7 @@ struct pdmesh {
       }
     }
 
-    for (int pi = 0; pi < pvert.size(); ++pi)
+    for (int pi = 0; pi < (int)pvert.size(); ++pi)
       for (auto dit = dvert.begin_idx(); dit != dvert.end_idx(); ++dit) {
         int di = *dit;
         auto v = pvert[pi];
@@ -674,7 +674,7 @@ public:
 
     // find best dual hint from primal hint
     int dhint = -1;
-    if (hint >= 0 && hint < mesh.padj.size() && mesh.pneigh(hint).size() > 0) {
+    if (hint >= 0 && hint < (int)mesh.padj.size() && mesh.pneigh(hint).size() > 0) {
       T bval = -std::numeric_limits<T>::infinity();
       for (const auto &e : mesh.pneigh(hint)) {
         T val = mesh.dvert[e.di].head(3).dot(hs.head(3)) / mesh.dvert[e.di][3];
@@ -703,7 +703,7 @@ public:
     {
       int best = 1e9;
       for (const auto &e : mesh.dneigh(di_start)) {
-        if (mesh.pneigh(e.pi).size() < best) {
+        if ((int)mesh.pneigh(e.pi).size() < best) {
           phint = e.pi;
           best = mesh.pneigh(e.pi).size();
         }
@@ -787,7 +787,7 @@ public:
 #endif
 
     std::vector<pdedge> cross_e_;
-    for (int cnt = 0, i = 0; cnt < cross_e.size(); ++cnt) {
+    for (int cnt = 0, i = 0; cnt < (int)cross_e.size(); ++cnt) {
       cross_e_.push_back(cross_e[i]);
 #ifdef DEBUG_CHECKS
       if (!start_e.count(cross_e[i].pj))
@@ -795,7 +795,7 @@ public:
 #endif
       i = start_e[cross_e[i].pj];
 #ifdef DEBUG_CHECKS
-      if (cnt == cross_e.size() - 1) {
+      if (cnt == (int)cross_e.size() - 1) {
         if (i != 0)
           throw std::runtime_error("cycle does not close: last element does not lead back to beginning");
       } else {

@@ -48,7 +48,7 @@ namespace py = pybind11;
 
 static inline auto sqr(const auto &x) { return x * x; }
 
-static std::partial_ordering operator*(const std::partial_ordering &o0, const std::partial_ordering &o1) {
+[[maybe_unused]] static std::partial_ordering operator*(const std::partial_ordering &o0, const std::partial_ordering &o1) {
   if (o0 == 0 || o1 == 0)
     return 0 <=> 0;
   if ((o0 < 0 && o1 < 0) || (o0 > 0 && o1 > 0))
@@ -56,7 +56,7 @@ static std::partial_ordering operator*(const std::partial_ordering &o0, const st
   return 0 <=> 1;
 }
 
-static std::string to_string(const std::partial_ordering &o) {
+[[maybe_unused]] static std::string to_string(const std::partial_ordering &o) {
   if (o == std::partial_ordering::less)
     return "less";
   if (o == std::partial_ordering::equivalent)
@@ -80,9 +80,9 @@ struct type_name {
 };
 
 template <typename T>
-bool significantly_less(const T &lhs, const T &rhs,
-                        const T &rel = 100 * std::numeric_limits<T>::epsilon(),
-                        const T &abs = 100 * std::numeric_limits<T>::epsilon()) {
+[[maybe_unused]] bool significantly_less(const T &lhs, const T &rhs,
+                                        const T &rel = 100 * std::numeric_limits<T>::epsilon(),
+                                        const T &abs = 100 * std::numeric_limits<T>::epsilon()) {
   T mean = 0.5 * (lhs + rhs);
   T eps = std::max(abs, std::abs(mean) * rel);
   return lhs < rhs - eps;

@@ -178,7 +178,7 @@ void laguerre_diagram<T>::extract_diagram() {
     for (const auto &e : hs.mesh.padj[i + 6])
       if (e.pj < 6 || e.pi < e.pj) {
         edglist.push_back({e.pi, e.pj, e.di, e.dj,
-            discretized_line_segment<double>(verts.row(e.di), verts.row(e.dj), phys, sim)});
+            discretized_line_segment<double>(verts.row(e.di), verts.row(e.dj), phys, sim), 0});
 
         faces[e.pi].push_back(edglist.size() - 1);
         faces[e.pj].push_back(edglist.size() - 1);
@@ -273,7 +273,7 @@ void laguerre_diagram<T>::extract_diagram() {
           if (e.pi >= 6) {
             // subtract area from this, add virtual edge
             areas(i) -= w * narea;
-            vedglist.push_back({i + 6, e.pi, w * dif});
+            vedglist.push_back({i + 6, e.pi, (double)(w * dif)});
 
             // if the other cell is a true cell, add the area there
             if (e.pi - 6 < n)

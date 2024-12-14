@@ -166,8 +166,8 @@ public:
 
   ~rasterizer();
 
-  /*! Rasterize a given function onto a regular grid with given resolution
-   *  This function can be called multiple times but the returned value (and set members) is only valid until the next execution (or destruction of the rasterizer).
+  /*! Rasterize a given function onto a regular grid with given resolution.
+   *  This function can be called multiple times but the returned value (and set members) are only valid until the next execution (or destruction of the rasterizer).
    *  Make sure to take a copy if you intend to keep using the result beyond the lifetime of the rasterizer or when rasterizing multiple functions.
    * 
    * \param val value vector for the function; the indices are specified by the segments

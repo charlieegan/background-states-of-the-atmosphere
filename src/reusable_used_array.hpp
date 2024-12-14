@@ -36,7 +36,7 @@ public:
    * \param i element to check for
    */
   bool check(const int &i) const {
-    if (i < a.size())
+    if (i < (int)a.size())
       return a[i] == ctr;
     return false;
   }
@@ -45,7 +45,7 @@ public:
    * \param i element to mark
    */
   void mark(const int &i) {
-    while (a.size() < i + 1)
+    while ((int)a.size() < i + 1)
       a.push_back(0);
     a[i] = ctr;
   }
@@ -53,7 +53,7 @@ public:
   /*! Output as binary representation. */
   friend std::ostream& operator<<(std::ostream &os, const reusable_used_array &a) {
     os << "used[";
-    for (int i = 0; i < a.a.size(); ++i)
+    for (int i = 0; i < (int)a.a.size(); ++i)
       os << (int)a.check(i);
     os << "]";
     return os;
