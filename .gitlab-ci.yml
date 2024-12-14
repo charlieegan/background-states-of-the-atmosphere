@@ -5,7 +5,8 @@ linux:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
-  - /opt/python/cp38-cp38/bin/pip install --upgrade pip
+  - python3 -m ensurepip
+  - python3 -m pip install --upgrade pip
   - python3 -m pip wheel --no-deps -w dist .
   - auditwheel repair dist/atmosphere_bgs*whl -w dist
   artifacts:
