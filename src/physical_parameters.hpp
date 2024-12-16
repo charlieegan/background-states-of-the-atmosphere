@@ -8,8 +8,8 @@ struct physical_parameters : public std::enable_shared_from_this<physical_parame
   double a;      //!< earth radius [m]
   double Omega;  //!< earth angular velocity [rad/s]
   double p00;    //!< standard atmosphere pressure [Pa]
-  double kappa;  //!< 
-  double cp;     //!< specific heat of air [J/kgK] ?
+  double kappa;  //!< Poisson constant for diatomic ideal gas
+  double cp;     //!< specific heat capacity at constant pressure [J/kgK]
   
   double ikappa; //!< 1 / kappa (for more efficient internal usage)
 
