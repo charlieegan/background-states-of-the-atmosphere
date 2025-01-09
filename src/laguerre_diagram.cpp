@@ -501,8 +501,8 @@ rasterizer laguerre_diagram<T>::get_rasterizer(std::optional<std::function<Eigen
 
   // add a segment below the bottom
   seg.push_back({
-      transform ? transform.value()(Eigen::Vector2d(sim.spmin(0), sim.spmin(1) - 1)) : Eigen::Vector2d(sim.spmin(0), sim.spmin(1) - 1),
-      transform ? transform.value()(Eigen::Vector2d(sim.spmax(0), sim.spmin(1) - 1)) : Eigen::Vector2d(sim.spmax(0), sim.spmin(1) - 1),
+      transform ? transform.value()(Eigen::Vector2d(sim.spmin(0), sim.spmin(1) * 0.5)) : Eigen::Vector2d(sim.spmin(0), sim.spmin(1) * 0.5),
+      transform ? transform.value()(Eigen::Vector2d(sim.spmax(0), sim.spmin(1) * 0.5)) : Eigen::Vector2d(sim.spmax(0), sim.spmin(1) * 0.5),
       n});
   
   rasterizer rast(seg, bounds);
