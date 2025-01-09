@@ -268,7 +268,9 @@ class DataLoader:
         tm = mass_weight
 
         # eliminate duplicate seeds
-        y, i = np.unique(y,axis = 0,return_index = True)
+        _, i = np.unique(y,axis = 0,return_index = True)
+        i = np.sort(i)
+        y = y[i]
         tm = tm[i]
         
         # normalise the masses
