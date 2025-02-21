@@ -5,7 +5,7 @@ import re
 
 class DataLoader:
     
-    def __init__(self, path, pmin=10, nextra=0, load_all=False):
+    def __init__(self, path, pmin=10, nextra=0, ny=None, load_all=False, interpolate=True):
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:
@@ -35,6 +35,7 @@ class DataLoader:
         self.parse_block(self.tracer_mixing_ratio_contour_cnt, "TRACER MIXING RATIO CONTOURS")
         self.parse_block(self.isentropic_level_cnt, "FACTOR TO CONVERT FROM LAIT TO ERTEL PV")
         self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "MASS INTEGRALS IN PV-THETA COORDINATES")
+        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
         self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "CIRCULATION INTEGRALS IN PV-THETA COORDINATES")
 
         if load_all:
@@ -67,7 +68,6 @@ class DataLoader:
         
             self.parse_block(self.isentropic_level_cnt, "MAX PV ON THETA LEVELS")
             self.parse_block(self.isentropic_level_cnt, "MIN PV ON THETA LEVELS")
-            self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
             self.parse_block(self.isentropic_level_cnt, "AREA INTEGRAL OVER POLAR SHELLS THETA COORDINATES")
             self.parse_block(self.isentropic_level_cnt, "MASS INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
             self.parse_block(self.isentropic_level_cnt, "CIRCULATION INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
@@ -85,7 +85,10 @@ class DataLoader:
         self.nextra = nextra
         
         # get seeds and masses
-        self.get_bgs_target_measure(nextra=nextra)
+        if interpolate:
+            self.get_bgs_target_measure_interpolate(ny=None)
+        else:
+            self.get_bgs_target_measure(nextra=nextra)
         
     def _multifloat_pattern(self, mincnt, maxcnt=None):
         if maxcnt is None:
@@ -117,6 +120,8 @@ class DataLoader:
     def get_bgs_target_measure(self,nextra=0):
         '''
         This function returns seed locations and target masses given input data, physical parameters, and simulation parameters.
+        Point masses in (Z, theta) coords are defined by mapping the finite mass of boxes in (PV, theta) to their positions in (Z, theta) space.
+        The mass point nearest the North Pole is distributed across nextra+1 point masses in target space to provide greater resolution near the pole.
         '''
         # extract input data from the dictionary
         latitudes = self.data_dict['LATITUDES ON GAUSSIAN GRID']
@@ -278,6 +283,169 @@ class DataLoader:
         
         # assign seeds and masses to the class instance
         self.epv = pv_mid
+        self.y = y
+        self.tm = tm
+        self.tmn = tmn
+        
+        return y, tm, tmn
+
+    def get_bgs_target_measure_interpolate(self, ny=None):
+        '''
+        This function returns seed locations and target masses given input data, physical parameters, and simulation parameters.
+        On each Theta-level, define the stretched coordinate Y = (1-Z/Z_max)^{1/2}. (When U=0, this is sin(latitude).) 
+        On each Theta-level, point masses in (Q,Theta) are mapped into (Y, Theta), linearly interpolated onto a regular 1d grid, and then mapped into (Z,Theta).
+        The parameter 'ny' is the number of intervals used for the linear interpolation on each isentropic surface above ground.
+        Since relative zonal wind is much less than the planetary rotation, the deviations from a grid that would be regular in mu are small.
+        '''
+        # extract input data from the dictionary
+        latitudes = self.data_dict['LATITUDES ON GAUSSIAN GRID']
+        pvlev = self.data_dict['TRACER MIXING RATIO CONTOURS']
+        thlev = self.data_dict['ISENTROPIC LEVELS']
+        lait2pv = self.data_dict['FACTOR TO CONVERT FROM LAIT TO ERTEL PV']
+        bscirc = self.data_dict['CIRCULATION INTEGRALS IN PV-THETA COORDINATES']
+        bsmass = self.data_dict['MASS INTEGRALS IN PV-THETA COORDINATES']
+        bsarea = self.data_dict['AREA INTEGRALS IN PV-THETA COORDINATES']    
+
+        # get physical and simulation parameters
+        pp = self.pp
+
+        earthradius = pp.a
+        eartharea = 4*np.pi*pp.a**2
+        omega = pp.Omega
+
+        if ny is None:
+            ny = latitudes.shape[0]
+            self.ny = ny
+        npvlev = np.shape(pvlev)[0]
+        nthlev = np.shape(thlev)[0]
+
+        # reshape and rescale circulation and areas vectors
+        bscirc = np.reshape(bscirc,(nthlev, npvlev)).T
+        bsmass = np.reshape(bsmass,(nthlev,npvlev)).T
+        bsarea = np.reshape(bsarea,(nthlev,npvlev)).T
+
+        # find theta half-levels and layer depth in terms of theta
+        dth = -np.diff(thlev) # this should be positive
+        dth = np.ravel(np.append(dth,dth[-1])) # dth is the weighting to obtain mass of each isentropic layer
+        thlevh = thlev + 0.5*dth
+        thlevh = np.ravel(np.append(thlevh,thlev[-1]-0.5*dth[-1]))
+
+        massweight = np.zeros([ny,nthlev])
+        angmom = np.zeros([ny,nthlev])
+        pvmid = np.zeros([ny,nthlev])
+        laitpvfield = np.zeros([ny,nthlev])
+        sigma = np.zeros([ny,nthlev])
+        y2d = np.zeros([ny,nthlev])
+
+        nabove = np.where(bsmass[0,:] > 0)[0]
+
+        for m in nabove:
+            aonqk = bsarea[:,m]
+            monqk = bsmass[:,m]
+            zonqk = bscirc[:,m]
+
+            # area and circulation integrals at intersection
+            # of isentropic surface with lower boundary or equator
+            amax = 2*bsarea[0,m]  
+            zmax = bscirc[0,m]
+            epvfield = np.ravel(pvlev)*lait2pv[m]
+
+
+            # Find points where same mass and circ assigned to a range of PV values.
+            # Force mass and circulation to decrease monotonically with PV.
+            masslast = monqk[0]
+            circlast = zonqk[0]
+            tiny = 1.e-7
+            offsetz = circlast*tiny
+            offsetm = masslast*tiny
+
+            for k in np.arange(1,npvlev):
+                massk = monqk[k]
+                circk = zonqk[k]
+                if circk == circlast:
+                    zonqk[k] = circlast - offsetz
+                    monqk[k] = masslast - offsetm
+                    offsetz = offsetz + circlast*tiny
+                    offsetm = offsetm + masslast*tiny  
+                else:
+                    circlast = circk
+                    masslast = massk
+                    offsetz = circlast*tiny
+                    offsetm = masslast*tiny
+
+            # Remove points where PV levels exceed max(Q) on the theta level
+            abovemaxq = np.where(np.ravel(monqk)==0)[0]
+
+            if abovemaxq.shape[0] == 0:
+                print('level',m,'has some PV levels above max(q)')
+                inrange = np.where(np.ravel(monqk) > 0)[0]
+                epvfield = epvfield[inrange]
+                monqk = monqk[inrange]
+                zonqk = zonqk[inrange]
+
+            # rescale angular momentum in a stretched coordinate, Y, range 0 -> 1.
+            yonqk = np.sqrt(1-zonqk/zmax)
+
+            # Define a regular grid in the stretched coordinate Y.
+            # Number of intervals depends on (1-mu_es)*ny where 
+            # mu_es is an estimate of surface equivalent latitude from bsarea.
+            # Normalisation is such that (1-mu_es)=amax.
+            nyred = int(np.floor(amax*ny))
+            nyred = np.max([nyred,3]) # minimum number of intervals is 3.
+            dy = 1/nyred
+            ynodes = np.linspace(0,1,nyred + 1)
+            ymids = np.linspace(0.5*dy,1-0.5*dy,nyred)
+            y2d[:nyred,m] = ymids
+
+            # Now re-grid functions of Y at the points corresponding to 
+            # PV-levels Q_k onto the regular grid of points in Y.
+            #
+            # From mass integrals on the nodes of the Y-grid calculate
+            # the mass difference for each interval.
+            massint = np.interp(ynodes,yonqk,monqk)
+            #plt.plot(ynodes,massint,yonqk,monqk+0.5,marker='x') # plot to check that this line works as intended
+            massweight[:nyred,m] = -eartharea*np.diff(massint)*dth[m]
+
+            # Re-grid PV and calculate zonal angular momentum at the interval
+            # midpoints in Y-coordinate.
+            pvmid[:nyred,m] = np.interp(ymids,yonqk,epvfield)
+            laitpvfield[:nyred,m] = pvmid[:nyred,m]/lait2pv[m]
+            angmom[:nyred,m] = zmax*(1-ymids*ymids)*eartharea/(2*np.pi)
+
+        # potential temperature
+        th = np.matlib.repmat(thlev,ny,1) # ((num_pv_lev+nextra-1),num_th_lev) numpy array of potential temperature values
+
+        # ravel the data
+        pvmid = np.ravel(pvmid)
+        angmom = np.ravel(angmom)
+        th = np.ravel(th)
+        massweight = np.ravel(massweight)
+
+        # find indices of seeds with zero angular momentum or zero mass and delete these seeds
+        idx_mom = angmom == 0
+        idx_mass = massweight == 0
+        idx = idx_mom | idx_mass
+
+        pvmid = np.delete(pvmid,idx)
+        angmom = np.delete(angmom,idx)
+        th = np.delete(th,idx)
+        massweight = np.delete(massweight,idx)
+        
+        # create seed and mass arrays
+        y = np.append(angmom[:,None],th[:,None],1)
+        tm = massweight
+
+        # eliminate duplicate seeds
+        _, i = np.unique(y,axis = 0,return_index = True)
+        i = np.sort(i)
+        y = y[i]
+        tm = tm[i]
+
+        # normalise the masses
+        tmn = tm / np.sum(tm) * (pp.p00 - self.pmin) * (self.smax - self.smin)
+
+        # assign seeds and masses to the class instance
+        self.epv = pvmid
         self.y = y
         self.tm = tm
         self.tmn = tmn
