@@ -86,7 +86,7 @@ class DataLoader:
         
         # get seeds and masses
         if interpolate:
-            self.get_bgs_target_measure_interpolate(ny=None)
+            self.get_bgs_target_measure_interpolate(ny=ny)
         else:
             self.get_bgs_target_measure(nextra=nextra)
         
@@ -315,7 +315,7 @@ class DataLoader:
 
         if ny is None:
             ny = latitudes.shape[0]
-            self.ny = ny
+        self.ny = ny
         npvlev = np.shape(pvlev)[0]
         nthlev = np.shape(thlev)[0]
 
