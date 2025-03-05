@@ -150,8 +150,7 @@ class DataLoader:
         
         d_mass_all = np.diff(bs_mass,axis=0)
         if (d_mass_all > 0).any():
-            None
-            #raise ValueError('Mass data is inconsistent')
+            raise ValueError('Input mass data is inconsistent')
 
         # find theta half-levels and layer depth in terms of theta
         d_th = -np.diff(th_lev) # this should be positive
