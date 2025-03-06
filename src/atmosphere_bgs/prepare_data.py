@@ -5,7 +5,7 @@ import re
 
 class DataLoader:
     
-    def __init__(self, path, pmin=10, nextra=0, ny=None, load_all=False, interpolate=True):
+    def __init__(self, path, pmin=10, nextra=0, ny=None, smin=None, smax=None, load_all=False, interpolate=True):
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:
@@ -79,8 +79,23 @@ class DataLoader:
         self.pp = _atmosphere_bgs.PhysicalParameters()
         
         # get max and min s values
-        self.smax = np.sin(2*np.pi*np.max(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
-        self.smin = np.sin(2*np.pi*np.min(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
+        if smin is None:
+            self.smin = np.sin(2*np.pi*np.min(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
+        else:
+            self.smin = smin
+
+        if interpolate is False:
+            if smax is None or smax == 'critical':
+                self.smax = np.sin(2*np.pi*np.max(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
+            else:
+                self.smax = smax
+        elif smax == 'critical':
+            self.smax = 'critical'
+        elif smax is None:
+            self.smax = np.sin(2*np.pi*np.max(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
+        else:
+            self.smax = smax
+
         self.pmin = pmin
         self.nextra = nextra
         
@@ -277,7 +292,10 @@ class DataLoader:
         y = y[i]
         tm = tm[i]
         
-        # normalise the masses
+        # normalise the masses (and set smax to critical value if this option is chosen)
+        if self.smax == 'critical':
+            zmin = np.min(y[:,0])
+            self.smax = np.sqrt(1-zmin/earth_radius**2/Omega)
         tmn = tm / np.sum(tm) * (pp.p00 - self.pmin) * (self.smax - self.smin)
         
         # assign seeds and masses to the class instance
@@ -441,6 +459,10 @@ class DataLoader:
         tm = tm[i]
 
         # normalise the masses
+        if self.smax == 'critical':
+            zmin = np.min(y[:,0])
+            self.smax = np.sqrt(1-zmin/pp.a**2/omega)
+            
         tmn = tm / np.sum(tm) * (pp.p00 - self.pmin) * (self.smax - self.smin)
 
         # assign seeds and masses to the class instance
