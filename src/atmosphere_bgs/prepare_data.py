@@ -363,7 +363,8 @@ class DataLoader:
 
             # area and circulation integrals at intersection
             # of isentropic surface with lower boundary or equator
-            amax = 2*bsarea[0,m]  
+            amax = 2*bsarea[0,m] 
+            emus = 1-amax 
             zmax = bscirc[0,m]
             epvfield = np.ravel(pvlev)*lait2pv[m]
 
@@ -399,38 +400,70 @@ class DataLoader:
                 epvfield = epvfield[inrange]
                 monqk = monqk[inrange]
                 zonqk = zonqk[inrange]
-
-            # rescale angular momentum in a stretched coordinate, Y, range 0 -> 1.
-            yonqk = np.sqrt(1-zonqk/zmax)
-
-            # Define a regular grid in the stretched coordinate Y.
-            # Number of intervals depends on (1-mu_es)*ny where 
-            # mu_es is an estimate of surface equivalent latitude from bsarea.
-            # Normalisation is such that (1-mu_es)=amax.
-            nyred = int(np.floor(amax*ny))
-            nyred = np.max([nyred,3]) # minimum number of intervals is 3.
-            dy = 1/nyred
-            ynodes = np.linspace(0,1,nyred + 1)
-            ymids = np.linspace(0.5*dy,1-0.5*dy,nyred)
-            y2d[:nyred,m] = ymids
-
+            #
+            # Re-grid distribution of masses in the conserved variable coordinates (Z, theta).
+            #
+            # Rescale zonal angular momentum, Z, in a stretched coordinate, Y, range 0 -> 1.
+            # Y would equal s (sin(lat)) in the case where u=0. However, typically u ne 0 and 
+            # so Z is quadratic in Y, but Y is not equal to s. The interpolation from the 
+            # masses defined at PV levels Q_k to the new regular arrangement is linear in Y.
+            # Since the mass integrals are approximately linear in Y (for uniform density) this
+            # means that the interpolation from the irregular points to the new grid is accurate.
+            # Also the point mass weightings found by differencing mass integrals are accurate.
+            #
+            # Define a regular grid in the stretched coordinate Y which matches on all isentropic levels.
+            # On isentropic surfaces which intersect the ground, use emus as first guess of the position
+            # of the ground in the Y-coordinate. This is needed to line up the cells approximately in 
+            # columns in source space (s, p).
+            #
+            yonqk = np.sqrt(1-(zonqk/zmax)*(1-emus**2))            
+            #
+            # ylim is set to the expected limit of s-coordinate space in the OT solution (s_crit).
+            # The closest mass point on the regular grid would be close to Y=1-0.5*dy
+            # Set the final interval mass weight proportional to ylim-(1-dy).
+            #
+            dy = 1.0/ny
+            ylim = 1-0.5*dy
+            ynodes = np.linspace(0,1,ny+1)
+            ynodes[ny] = ylim
+            ymids = np.linspace(0.5*dy,1-0.5*dy,ny)
+            ymids[ny-1] = ylim
+            y2d[:,m] = ymids      
+            #
+            # Find mid-points on isentropic surface above ground.
+            # Find nodes between mass points, with the first node on the LB at Y=emus.
+            #
+            inmids=np.where(ymids > emus)[0]
+            ymidcut=ymids[inmids]
+            ynodecut=np.append(emus,ynodes[inmids+1])            
+            #
             # Now re-grid functions of Y at the points corresponding to 
             # PV-levels Q_k onto the regular grid of points in Y.
+            # Only interpolate over the interval emus < Y < 1.            
             #
             # From mass integrals on the nodes of the Y-grid calculate
             # the mass difference for each interval.
-            massint = np.interp(ynodes,yonqk,monqk)
-            #plt.plot(ynodes,massint,yonqk,monqk+0.5,marker='x') # plot to check that this line works as intended
-            massweight[:nyred,m] = -eartharea*np.diff(massint)*dth[m]
-
+            #
+            massint = np.interp(ynodecut,yonqk,monqk)
+            massweight[inmids,m] = -eartharea*np.diff(massint)*dth[m]
+            #
             # Re-grid PV and calculate zonal angular momentum at the interval
             # midpoints in Y-coordinate.
-            pvmid[:nyred,m] = np.interp(ymids,yonqk,epvfield)
-            laitpvfield[:nyred,m] = pvmid[:nyred,m]/lait2pv[m]
-            angmom[:nyred,m] = zmax*(1-ymids*ymids)*eartharea/(2*np.pi)
+            #
+            pvmid[inmids,m] = np.interp(ymidcut,yonqk,epvfield)
+            laitpvfield[inmids,m] = pvmid[inmids,m]/lait2pv[m]
+            angmom[inmids,m] = zmax*(1-ymidcut**2)*eartharea/(2*np.pi*(1-emus*emus))         
 
         # potential temperature
         th = np.matlib.repmat(thlev,ny,1) # ((num_pv_lev+nextra-1),num_th_lev) numpy array of potential temperature values
+
+        #fig, ax = plt.subplots(1,1,dpi=100)
+        #ax.plot(angmom, th, 'bo')
+        #ax.set_xlabel('Z')
+        #ax.set_ylabel('Potential temperature (K)')
+        #ax.set_title('point masses (Z, theta)')
+        #ax.legend()
+        #plt.savefig('figs/testing/target_masspoints.png', dpi=300)
 
         # ravel the data
         pvmid = np.ravel(pvmid)
@@ -461,8 +494,10 @@ class DataLoader:
         # normalise the masses
         if self.smax == 'critical':
             zmin = np.min(y[:,0])
-            self.smax = np.sqrt(1-zmin/pp.a**2/omega)
+            beta = 1.0
+            self.smax = np.sqrt(1-beta*zmin/pp.a**2/omega)
             
+
         tmn = tm / np.sum(tm) * (pp.p00 - self.pmin) * (self.smax - self.smin)
 
         # assign seeds and masses to the class instance
