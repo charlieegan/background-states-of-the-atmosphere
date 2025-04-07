@@ -1,10 +1,11 @@
 import pytest
 import numpy as np
+import pathlib
 import atmosphere_bgs
 
 @pytest.mark.parametrize("ot_tol", [1e-1, 1e-2, 1e-3, 1e-4, 1e-5])
 def test_precision_n20(ot_tol):
-    data = atmosphere_bgs.DataLoader("data/bs_lc1low2001010000", pmin=1000, nextra=17)
+    data = atmosphere_bgs.DataLoader(pathlib.Path(__file__).parent.resolve() / "../data/bs_lc1low2001010000", pmin=1000, nextra=17)
 
     # restrict to subsample
     np.random.seed(42)
@@ -39,7 +40,7 @@ def test_precision_n20(ot_tol):
 @pytest.mark.parametrize("ot_tol, n", [(1e-1, 20), (1e-2, 20), (1e-3, 20), (1e-4, 20), (1e-5, 20),
                                        (1e-1, 50), (1e-2, 30), (1e-3, 20), (1e-4, 10), (1e-5, 5)])
 def test_precision_bootstrap(ot_tol, n):
-    data = atmosphere_bgs.DataLoader("data/bs_lc1low2001010000", pmin=1000, nextra=17)
+    data = atmosphere_bgs.DataLoader(pathlib.Path(__file__).parent.resolve() / "../data/bs_lc1low2001010000", pmin=1000, nextra=17)
 
     # restrict to subsample
     np.random.seed(42)
