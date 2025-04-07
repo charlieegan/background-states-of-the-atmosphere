@@ -12,6 +12,8 @@ jobs:
   env:
     CIBW_BUILD: "cp*"
     CIBW_SKIP: "cp{36,37,38,39}* *_i686 *-win32"
+    CIBW_TEST_REQUIRES: pytest
+    CIBW_TEST_COMMAND: pytest {package}/tests
   
   build_wheels:
     name: build wheels on ${{ matrix.os }}
