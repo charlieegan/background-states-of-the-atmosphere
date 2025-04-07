@@ -20,7 +20,7 @@ jobs:
           submodules: true
 
       - name: install Doxygen
-        run: sudo apk add doxygen
+        run: sudo apt install doxygen
 
       - name: run Doxygen
         run: doxygen Doxyfile
