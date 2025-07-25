@@ -9,7 +9,7 @@ This repository contains a python package to solve a 2d semi-discrete optimal tr
 Clone the repository, change into the directory and install with pip
 
 ```
-git clone --recurse-submodules https://gitlab.gwdg.de/egan2/background-states-of-the-atmosphere.git
+git clone --recurse-submodules https://github.com/charlieegan/background-states-of-the-atmosphere.git
 cd background-states-of-the-atmosphere
 pip install .
 ```
