@@ -20,7 +20,7 @@ class OTSolver:
                                                       smin=input_data.smin,
                                                       smax=input_data.smax,
                                                       pmin=input_data.pmin,
-                                                      pmax=self.pp.p00 * 1e2)
+                                                      pmax=self.pp.p00 * 1e6)
         self.ot_tol = ot_tol
         self.n = self.y.shape[0]
         self.runstats = None

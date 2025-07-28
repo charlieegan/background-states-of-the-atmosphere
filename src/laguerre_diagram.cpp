@@ -363,6 +363,7 @@ laguerre_diagram<T>::VecX laguerre_diagram<T>::touching_dual(bool randomize) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> dis(0.25, 0.75);
+  T top_cell_shift = 1e4; // max amount by which to shift top cell when calculating touching value
 
   for (int pi = 0; pi < n; ++pi) {
     if (hs.mesh.pneigh(pi + 6).size() == 0) {
@@ -418,11 +419,14 @@ laguerre_diagram<T>::VecX laguerre_diagram<T>::touching_dual(bool randomize) {
       mx = std::min(mx, -d0 - os);
       mn = std::min(mn, -v - os);
     }
+    py::print(mn, mx);
     if (randomize) {
       double w = dis(gen);
-      res[n] = (w * mn + (1 - w) * mx);
+      // res[n] = (w * mn + (1 - w) * mx);
+      res[n] = (w * mn + (1 - w) * std::max(mx, mn - top_cell_shift));
     } else {
-      res[n] = 0.5 * (mn + mx);
+      // res[n] = 0.5 * (mn + mx);
+      res[n] = 0.5 * (mn + std::max(mx, mn - top_cell_shift));
     }
   }
 
