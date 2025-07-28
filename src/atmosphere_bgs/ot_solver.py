@@ -20,7 +20,7 @@ class OTSolver:
                                                       smin=input_data.smin,
                                                       smax=input_data.smax,
                                                       pmin=input_data.pmin,
-                                                      pmax=self.pp.p00 * 1e6)
+                                                      pmax=self.pp.p00 * 1e2)
         self.ot_tol = ot_tol
         self.n = self.y.shape[0]
         self.runstats = None
@@ -42,7 +42,7 @@ class OTSolver:
         t_0 = 0.5 * E_max
         t_1 = self.pp.tf(_atmosphere_bgs.SimulationParameters().spmin)
 
-        lmbd = 0.9 * 2 * min(1, np.min(np.array(self.pp.tf(self.sp.spmax)) - np.array(t_1))) / np.max(E_max - E_min, axis=0)
+        lmbd = 0.9 * 2 * min(1, np.min(np.array(self.pp.tf([self.sp.smax, self.pp.p00])) - np.array(t_1))) / np.max(E_max - E_min, axis=0)
         t = lmbd * t_0 + t_1
 
         phi = E @ t - lmbd * 0.25 * np.linalg.norm(E, axis=1)**2
