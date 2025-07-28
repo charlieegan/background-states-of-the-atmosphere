@@ -419,7 +419,6 @@ laguerre_diagram<T>::VecX laguerre_diagram<T>::touching_dual(bool randomize) {
       mx = std::min(mx, -d0 - os);
       mn = std::min(mn, -v - os);
     }
-    py::print(mn, mx);
     if (randomize) {
       double w = dis(gen);
       // res[n] = (w * mn + (1 - w) * mx);
