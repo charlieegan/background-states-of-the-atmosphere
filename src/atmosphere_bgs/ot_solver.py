@@ -6,7 +6,7 @@ from scipy.sparse.linalg import spsolve
 import time
 
 class OTSolver:
-    def __init__(self, input_data, ot_tol=1e-4, boundary_res=2000):
+    def __init__(self, input_data, ot_tol=1e-4, boundary_res=10000):
         
         self.y = input_data.y
         self.tm = input_data.tm
