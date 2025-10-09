@@ -295,13 +295,15 @@ rasterizer::~rasterizer() {
 
 Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
 rasterizer::rasterize(const Eigen::Ref<const Eigen::VectorXd> &val,
-                      const Eigen::Ref<const Eigen::Array2i> &res) {
+                      const Eigen::Ref<const Eigen::Array2i> &res,
+                      const bool &calc_inverse) {
   
 #ifdef PROFILING
   setup_timer();
   time->start_section(idx_time_rasterize_prepare);
 #endif
-    
+
+  this->calc_inverse = calc_inverse;
   this->val = val;
     
   *cur_x = bounds(0);
@@ -310,6 +312,12 @@ rasterizer::rasterize(const Eigen::Ref<const Eigen::VectorXd> &val,
   // reset out
   out = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Zero(res(0), res(1));
   fill = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Zero(res(0), res(1));
+
+  if (calc_inverse) {
+    inverse = std::vector<std::vector<std::map<int, double>>>(res(0), std::vector<std::map<int, double>>(res(1)));
+  } else {
+    inverse.clear();
+  }
 
   // calculate step spacings
   step = {(bounds(1) - bounds(0)) / res(0), (bounds(3) - bounds(2)) / res(1)};
@@ -694,6 +702,9 @@ void rasterizer::add_area_between(const rasterizer::segment *s0, rasterizer::seg
       if (s1->idx >= 0 && s1->idx < val.size()) {
         out(i, j) += std::clamp(A / pixA, 0.0, 1.0) * val[s1->idx];
         fill(i, j) += std::clamp(A / pixA, 0.0, 1.0);
+
+        if (calc_inverse)
+          inverse[i][j][s1->idx] += std::clamp(A / pixA, 0.0, 1.0);
       }
     }
   }
@@ -735,7 +746,7 @@ void rasterizer::bind(py::module_ &m) {
          const Eigen::Ref<const Eigen::Array4d>&>(),
          py::arg("seg"), py::arg("bounds"))
     .def("rasterize", &rasterizer::rasterize,
-         py::arg("val"), py::arg("res"))
+         py::arg("val"), py::arg("res"), py::arg("calc_inverse")=false)
     .def_property_readonly("line", [](const rasterizer &rast) {
       std::vector<rasterizer::segment> res;
       for (auto &it : rast.line)
@@ -745,6 +756,8 @@ void rasterizer::bind(py::module_ &m) {
 #ifdef PROFILING
     .def_readonly("time", &rasterizer::time)
 #endif
+    .def_readonly("calc_inverse", &rasterizer::calc_inverse)
+    .def_readonly("inverse", &rasterizer::inverse)
     .def_readonly("events", &rasterizer::events)
     .def_readonly("out", &rasterizer::out)
     .def_readonly("fill", &rasterizer::fill)

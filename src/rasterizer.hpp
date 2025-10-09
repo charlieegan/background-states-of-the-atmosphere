@@ -120,6 +120,8 @@ public:
   
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> out;  //!< rasterized output
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> fill; //!< pixel fill amount in output
+  std::vector<std::vector<std::map<int, double>>> inverse; //!< indices and weights for each cell
+  bool calc_inverse; //!< should the inverse be calculated?
   Eigen::Array4d bounds;                    //!< domain boundaries [xmin, xmax, ymin, ymax]
   Eigen::Array2d lb;                        //!< left lower corner [xmin, ymin]
   Eigen::Array2d step;                      //!< pixel width and height
@@ -177,7 +179,8 @@ public:
    */
   Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
   rasterize(const Eigen::Ref<const Eigen::VectorXd> &val,
-            const Eigen::Ref<const Eigen::Array2i> &res);
+            const Eigen::Ref<const Eigen::Array2i> &res,
+            const bool &calc_inverse);
 
   /*! Add python bindings to given module m. */
   static void bind(py::module_ &m);
