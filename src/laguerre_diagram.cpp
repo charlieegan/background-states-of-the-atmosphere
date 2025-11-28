@@ -54,7 +54,7 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
                                       const Eigen::Ref<const VecX> &duals,
                                       std::shared_ptr<physical_parameters> phys,
                                       const simulation_parameters &sim) :
-  parent(NULL), n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + sim.boundary_res, -1) {
+  parent(NULL), n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + std::abs(sim.boundary_res), -1) {
 
 #ifdef PROFILING
   setup_timer();
@@ -125,27 +125,144 @@ void laguerre_diagram<T>::do_hs_intersect() {
     hints[i] = hs.add_halfspace(H, hints[i]);
   }
 
-#ifdef DEBUG_CHECKS
-  if (sim.boundary_res < 2)
-    throw std::runtime_error(FORMAT("sim.boundary_res too small: {}", sim.boundary_res));
-#endif
+// #ifdef DEBUG_CHECKS
+//   if (sim.boundary_res < 2)
+//     throw std::runtime_error(FORMAT("sim.boundary_res too small: {}", sim.boundary_res));
+// #endif
 
   // add boundary halfspaces
-  for (int i = 0; i < sim.boundary_res; i++) {
-    T s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / (sim.boundary_res - 1);
-    T z0 = 1. / (1 - s * s);
-
-    Vec4 H(-0.5 * sqr(phys->Omega * phys->a / z0),
-           0.0,
-           1.0,
-           duals(n) + sqr(phys->Omega * phys->a) / z0);
-
+  if (sim.boundary_res >= 2) {
+    boundary_spt.resize(std::abs(sim.boundary_res));
+    
+    // evenly spaced halfspaces
+    for (int i = 0; i < std::abs(sim.boundary_res); i++) {
+      T s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / (std::abs(sim.boundary_res) - 1);
+      T z0 = 1. / (1 - s * s);
+      boundary_spt[i] = z0;
+      
+      Vec4 H(-0.5 * sqr(phys->Omega * phys->a / z0), 0.0, 1.0, duals(n) + sqr(phys->Omega * phys->a) / z0);
+      
 #ifdef DEBUG_CHECKS
-    if (n + i < 0 || n + i >= hints.size())
-      throw std::runtime_error(FORMAT("index in hints oob : {} >= {}", n + i, hints.size()));
+      if (n + i < 0 || n + i >= hints.size())
+        throw std::runtime_error(FORMAT("index in hints oob : {} >= {}", n + i, hints.size()));
 #endif
+      
+      hints[n + i] = hs.add_halfspace(H, hints[n + i]);
+    }
+  } else {
+    // halfspaces on intersections
 
-    hints[n + i] = hs.add_halfspace(H, hints[n + i]);
+    // positions at which to add halfspaces (later)
+    T z0min = 1. / (1 - sqr(sim.spmin(0)));
+    T z0max = 1. / (1 - sqr(sim.spmax(0)));
+    std::vector<T> z0s({z0min, z0max});
+    
+    // go over all edges
+    for (int i = 0; i < n; i++) {
+      for (const auto &e : hs.mesh.pneigh(i + 6)) {
+        // only consider edges with pi < pj (so each edge only appears once)
+        if (e.pi > e.pj)
+          continue;
+
+        // do not consider edges on top boundary
+        if (e.pi >= n + 6 || e.pj >= n + 6)
+          continue;
+        
+        // only consider inside edges
+        if (e.pi < 6 || e.pj < 6)
+          continue;
+        
+        // calculate intersection
+        auto yi = ys.row(e.pi - 6);
+        auto yj = ys.row(e.pj - 6);
+        auto dy = yi - yj;
+        auto psii = duals[e.pi - 6];
+        auto psij = duals[e.pj - 6];
+        auto psitop = duals[n];
+
+        auto [z1min, z1max] = std::minmax(hs.mesh.dvert[e.di][1], hs.mesh.dvert[e.dj][1]);
+        
+        if (dy[1] == 0) {
+          // vertical line segment
+          T z0 = 2 * sqr(phys->a) * (phys->Omega * dy[0] + psii - psij) / (sqr(yi[0]) - sqr(yj[0]));
+          T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0) - sqr(yi[0]) / (2 * sqr(phys->a)) * z0 + psii - psitop) / (phys->cp * yi[1]);
+          if (z1min <= z1 && z1 <= z1max) {
+            if (z0s.size() >= std::abs(sim.boundary_res))
+              break;
+            z0s.push_back(z0);
+          }
+        } else {
+          // non-vertical line segment
+          T c0 = (sqr(yj[0]) * yi[1] - sqr(yi[0]) * yj[1]) / (2 * sqr(phys->a) * yi[1] * dy[1]);
+          T c1 = (yi[1] * (phys->Omega * dy[0] + psii - psij) + dy[1] * (-phys->Omega * yi[0] + psitop - psii)) / (yi[1] * dy[1]);
+          T c2 = sqr(phys->Omega * phys->a) / (2 * yi[1]);
+          // intersections are at c0 * z0**2 + c1 * z0 + c2 = 0
+
+          // solutions are at z0 = p +- sqrt(q)
+          T p = -0.5 * c1 / c0;
+          T q = sqr(p) - c2 / c0;
+
+          if (q > 0) {
+            // two intersections
+            q = std::sqrt(q);
+            T z0 = p - q;
+            if (z0min <= z0 && z0 <= z0max) {
+              T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0)
+                      - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
+                      + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
+              if (z1min <= z1 && z1 <= z1max) {
+                if (z0s.size() >= std::abs(sim.boundary_res))
+                  break;
+                z0s.push_back(z0);
+              }
+            }
+            z0 = p + q;
+            if (z0min <= z0 && z0 <= z0max) {
+              T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0)
+                      - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
+                      + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
+              if (z1min <= z1 && z1 <= z1max) {
+                if (z0s.size() >= std::abs(sim.boundary_res))
+                  break;
+                z0s.push_back(z0);
+              }
+            }
+          } else if (q == 0) {
+            // one intersection
+            T z0 = p;
+            if (z0min <= z0 && z0 <= z0max) {
+              T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0)
+                      - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
+                      + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
+              if (z1min <= z1 && z1 <= z1max) {
+                if (z0s.size() >= std::abs(sim.boundary_res))
+                  break;
+                z0s.push_back(z0);
+              }
+            }
+          } else {
+            // no intersections
+          }
+        }
+      }
+    }
+
+    // sort cells and remove duplicates (just in case)
+    std::sort(z0s.begin(), z0s.end());
+    int unique = std::unique(z0s.begin(), z0s.end()) - z0s.begin();
+    py::print(std::format("found {} intersections of which {} are unique", z0s.size(), unique));
+    z0s.resize(unique);
+
+    boundary_spt.resize(z0s.size());
+    for (int i = 0; i < z0s.size(); ++i)
+      boundary_spt[i] = z0s[i];
+    
+    // add halfspaces
+    for (auto &z0 : z0s) {
+      Vec4 H(-0.5 * sqr(phys->Omega * phys->a / z0), 0.0, 1.0, duals(n) + sqr(phys->Omega * phys->a) / z0);
+      hs.add_halfspace(H);
+    }
+
   }
 
 #ifdef PROFILING
@@ -657,6 +774,7 @@ void laguerre_diagram<T>::bind(py::module_ &m) {
     .def_readonly("dfacets", &laguerre_diagram<T>::dfacets)
     .def_readonly("areas", &laguerre_diagram<T>::areas)
     .def_readonly("areaerrs", &laguerre_diagram<T>::areaerrs)
+    .def_readonly("boundary_spt", &laguerre_diagram<T>::boundary_spt)
 #ifdef PROFILING
     .def_readonly("time", &laguerre_diagram<T>::time)
 #endif

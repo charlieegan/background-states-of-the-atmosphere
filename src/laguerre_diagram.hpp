@@ -80,6 +80,8 @@ public:
   Eigen::VectorXd areas; //!< diagram face areas
   Eigen::VectorXd areaerrs; //!< diagram face area error bounds (based on discretization)
 
+  Eigen::VectorXd boundary_spt; //!< points where the boundary is supported
+
 #ifdef PROFILING
   std::shared_ptr<timer> time = NULL; //!< timer used for profiling
   int idx_time_halfspace_intersection = -1,
