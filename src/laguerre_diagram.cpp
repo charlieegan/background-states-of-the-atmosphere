@@ -250,7 +250,7 @@ void laguerre_diagram<T>::do_hs_intersect() {
     // sort cells and remove duplicates (just in case)
     std::sort(z0s.begin(), z0s.end());
     int unique = std::unique(z0s.begin(), z0s.end()) - z0s.begin();
-    py::print(std::format("found {} intersections of which {} are unique", z0s.size(), unique));
+    // py::print(FORMAT("found {} intersections of which {} are unique", z0s.size(), unique));
     z0s.resize(unique);
 
     boundary_spt.resize(z0s.size());
