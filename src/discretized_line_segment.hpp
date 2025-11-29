@@ -17,6 +17,7 @@ public:
   Vector2 start; //!< start of segment in linear coords
   Vector2 end; //!< end of segment in linear coords
   Vector2 direction; //!< normalized direction of segment in linear coords
+  T curve; //!< curviness factor in linear coords (0 for internal edges, -0.5 * (Omega * a)**2 / (cp * y[1]) for top edges)
 
   std::shared_ptr<physical_parameters> phys; //!< physical parameters defining the coordinate transform
   int max_resolution; //!< maximal resolution (number of points) for the approximation
@@ -41,7 +42,8 @@ public:
   discretized_line_segment(const Eigen::Ref<const Vector2> &zeta_s, // start point in linear coords
                            const Eigen::Ref<const Vector2> &zeta_e, // end point in linear coords
                            std::shared_ptr<physical_parameters> phys,
-                           const simulation_parameters &sim);
+                           const simulation_parameters &sim,
+                           const T &curve = 0);
 
   /*! evaluate linear coords at point along segment
    * \param lam parameter along segment in [0,1]

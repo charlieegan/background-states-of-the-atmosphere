@@ -10,8 +10,9 @@ template <typename T>
 DLS::discretized_line_segment(const Eigen::Ref<const DLS::Vector2> &zeta_s,
                               const Eigen::Ref<const DLS::Vector2> &zeta_e,
                               std::shared_ptr<physical_parameters> phys,
-                              const simulation_parameters &sim) :
-  start(zeta_s), end(zeta_e), direction((zeta_e - zeta_s).normalized()),
+                              const simulation_parameters &sim,
+                              const T &curve) :
+  start(zeta_s), end(zeta_e), direction((zeta_e - zeta_s).normalized()), curve(curve),
   phys(phys), 
   max_resolution(sim.max_line_resolution), aspect(sim.spmax(1) - sim.spmin(1), sim.spmax(0) - sim.spmin(0)),
   lams(sim.min_line_resolution), x(sim.min_line_resolution, 2),
@@ -48,7 +49,10 @@ DLS::discretized_line_segment(const Eigen::Ref<const DLS::Vector2> &zeta_s,
 
 template <typename T>
 DLS::Vector2 DLS::get_z(const T &lam) const {
-  return start * (1 - lam) + end * lam;
+  DLS::Vector2 z = start * (1 - lam) + end * lam;
+  if (curve != 0)
+    z += DLS::Vector2(0, curve * (1. / z[0] - (1 - lam) / start[0] - lam / end[0]));
+  return z;
 }
 
 template <typename T>
@@ -58,7 +62,11 @@ DLS::Vector2 DLS::get_x(const T &lam) const {
 
 template <typename T>
 DLS::Vector2 DLS::get_t(const T &lam) const {
-  return phys->ditf<T>(get_z(lam)).array() * direction.array();
+  DLS::Vector2 z = get_z(lam);
+  DLS::Vector2 d = end - start;
+  if (curve != 0)
+    d += DLS::Vector2(0, curve * (-d[0] / sqr(z[0]) + 1. / start[0] - 1 / end[0]));
+  return phys->ditf<T>(z).array() * d.array();
 }
 
 template <typename T>
@@ -160,10 +168,12 @@ void DLS::bind(py::module_ &m) {
     .def(py::init<const Eigen::Ref<const DLS::Vector2> &,
          const Eigen::Ref<const DLS::Vector2> &,
          std::shared_ptr<physical_parameters>,
-         const simulation_parameters &>())
+         const simulation_parameters &,
+         const T &>())
     .def_readonly("start", &DLS::start)
     .def_readonly("end", &DLS::end)
     .def_readonly("direction", &DLS::direction)
+    .def_readonly("curve", &DLS::curve)
     // .def_readonly("z", &DLS::z)
     .def_readonly("lams", &DLS::lams)
     .def_readonly("x", &DLS::x)

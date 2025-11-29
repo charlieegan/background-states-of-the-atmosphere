@@ -8,7 +8,7 @@ struct simulation_parameters
   Eigen::Vector2d spmin; //!< lower bounds of s and p in a single vector
   Eigen::Vector2d spmax; //!< upper bounds of s and p in a single vector
 
-  int boundary_res; //!< number of cells to divide top cell into (i.e. resolution of top boundary)
+  int boundary_res; //!< number of cells to divide top cell into (i.e. resolution of top boundary); set negative for automatic / error controlled boundary
   double area_tolerance; //!< relative area error to try to reach with discretization
   int max_refine_steps; //!< maximal number of times to refine to try to reach error
   double line_tolerance; //!< relative area error to try to reach for every single discretized line
@@ -21,7 +21,7 @@ struct simulation_parameters
    * \param smax upper bound for s
    * \param pmin lower bound for p
    * \param pmax upper bound for p
-   * \param boundary_res number of cells to divide top cell into (i.e. resolution of top boundary)
+   * \param boundary_res number of cells to divide top cell into (i.e. resolution of top boundary); set negative for automatic / error controlled boundary
    * \param area_tolerance relative area error to try to reach with discretization
    * \param max_refine_steps maximal number of times to refine to try to reach error
    * \param line_tolerance relative area error to try to reach for every single discretized line

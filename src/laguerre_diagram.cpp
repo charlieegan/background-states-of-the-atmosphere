@@ -54,7 +54,7 @@ laguerre_diagram<T>::laguerre_diagram(const seeds_t &ys,
                                       const Eigen::Ref<const VecX> &duals,
                                       std::shared_ptr<physical_parameters> phys,
                                       const simulation_parameters &sim) :
-  parent(NULL), n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + std::abs(sim.boundary_res), -1) {
+  parent(NULL), n(ys.rows()), ys(ys), duals(duals), phys(phys), sim(sim), hints(n + std::max(0, sim.boundary_res), -1) {
 
 #ifdef PROFILING
   setup_timer();
@@ -125,18 +125,13 @@ void laguerre_diagram<T>::do_hs_intersect() {
     hints[i] = hs.add_halfspace(H, hints[i]);
   }
 
-// #ifdef DEBUG_CHECKS
-//   if (sim.boundary_res < 2)
-//     throw std::runtime_error(FORMAT("sim.boundary_res too small: {}", sim.boundary_res));
-// #endif
-
   // add boundary halfspaces
-  if (sim.boundary_res >= 2) {
-    boundary_spt.resize(std::abs(sim.boundary_res));
+  if (sim.boundary_res >= 0) {
+    boundary_spt.resize(sim.boundary_res);
     
     // evenly spaced halfspaces
-    for (int i = 0; i < std::abs(sim.boundary_res); i++) {
-      T s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / (std::abs(sim.boundary_res) - 1);
+    for (int i = 0; i < sim.boundary_res; i++) {
+      T s = sim.spmin(0) + (sim.spmax(0) - sim.spmin(0)) * i / std::max(1, sim.boundary_res - 1);
       T z0 = 1. / (1 - s * s);
       boundary_spt[i] = z0;
       
@@ -187,8 +182,6 @@ void laguerre_diagram<T>::do_hs_intersect() {
           T z0 = 2 * sqr(phys->a) * (phys->Omega * dy[0] + psii - psij) / (sqr(yi[0]) - sqr(yj[0]));
           T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0) - sqr(yi[0]) / (2 * sqr(phys->a)) * z0 + psii - psitop) / (phys->cp * yi[1]);
           if (z1min <= z1 && z1 <= z1max) {
-            if (z0s.size() >= std::abs(sim.boundary_res))
-              break;
             z0s.push_back(z0);
           }
         } else {
@@ -203,7 +196,7 @@ void laguerre_diagram<T>::do_hs_intersect() {
           T q = sqr(p) - c2 / c0;
 
           if (q > 0) {
-            // two intersections
+            // two intersection candidates - check and add
             q = std::sqrt(q);
             T z0 = p - q;
             if (z0min <= z0 && z0 <= z0max) {
@@ -211,8 +204,6 @@ void laguerre_diagram<T>::do_hs_intersect() {
                       - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
                       + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
               if (z1min <= z1 && z1 <= z1max) {
-                if (z0s.size() >= std::abs(sim.boundary_res))
-                  break;
                 z0s.push_back(z0);
               }
             }
@@ -222,26 +213,22 @@ void laguerre_diagram<T>::do_hs_intersect() {
                       - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
                       + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
               if (z1min <= z1 && z1 <= z1max) {
-                if (z0s.size() >= std::abs(sim.boundary_res))
-                  break;
                 z0s.push_back(z0);
               }
             }
           } else if (q == 0) {
-            // one intersection
+            // one intersection candidates - check and add
             T z0 = p;
             if (z0min <= z0 && z0 <= z0max) {
               T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0)
                       - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
                       + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
               if (z1min <= z1 && z1 <= z1max) {
-                if (z0s.size() >= std::abs(sim.boundary_res))
-                  break;
                 z0s.push_back(z0);
               }
             }
           } else {
-            // no intersections
+            // no intersections - nothing to do
           }
         }
       }
@@ -254,13 +241,14 @@ void laguerre_diagram<T>::do_hs_intersect() {
     z0s.resize(unique);
 
     boundary_spt.resize(z0s.size());
-    for (int i = 0; i < z0s.size(); ++i)
+    for (int i = 0; i < (int)z0s.size(); ++i)
       boundary_spt[i] = z0s[i];
     
-    // add halfspaces
+    // add halfspaces (use previous as hint as they are neighboring, first hs is added without hint)
+    int hint = -1;
     for (auto &z0 : z0s) {
       Vec4 H(-0.5 * sqr(phys->Omega * phys->a / z0), 0.0, 1.0, duals(n) + sqr(phys->Omega * phys->a) / z0);
-      hs.add_halfspace(H);
+      hint = hs.add_halfspace(H, hint);
     }
 
   }
@@ -294,8 +282,26 @@ void laguerre_diagram<T>::extract_diagram() {
   for (int i = 0; i < n; i++)
     for (const auto &e : hs.mesh.padj[i + 6])
       if (e.pj < 6 || e.pi < e.pj) {
-        edglist.push_back({e.pi, e.pj, e.di, e.dj,
-            discretized_line_segment<double>(verts.row(e.di), verts.row(e.dj), phys, sim), 0});
+
+        if (sim.boundary_res < 0 && e.pj >= n + 6) {
+          // top edge
+          double z0 = verts.row(e.di)[0]; // one end first coordinate
+          double z1 = verts.row(e.dj)[0]; // other end first coordinate
+          auto yi = ys.row(e.pi - 6); // seed position
+          double curve = -0.5 * sqr(phys->Omega * phys->a) / (phys->cp * yi[1]); // inverse factor
+          double lin = -0.5 * sqr(yi[0] / phys->a) / (phys->cp * yi[1]); // linear factor
+          double cons = (phys->Omega * yi[0] + duals[e.pi - 6] - duals[n]) / (phys->cp * yi[1]); // constant offset
+          discretized_line_segment<double>::Vector2 start
+            = discretized_line_segment<double>::Vector2(z0, curve / z0 + lin * z0 + cons); // start point of segment
+          discretized_line_segment<double>::Vector2 end
+            = discretized_line_segment<double>::Vector2(z1, curve / z1 + lin * z1 + cons); // end point of segment
+          edglist.push_back({e.pi, e.pj, e.di, e.dj,
+              discretized_line_segment<double>(start, end, phys, sim, curve), 0});
+        } else {
+          // inside edge
+          edglist.push_back({e.pi, e.pj, e.di, e.dj,
+              discretized_line_segment<double>(verts.row(e.di), verts.row(e.dj), phys, sim), 0});
+        }
 
         faces[e.pi].push_back(edglist.size() - 1);
         faces[e.pj].push_back(edglist.size() - 1);
