@@ -116,11 +116,11 @@ struct physical_parameters : public std::enable_shared_from_this<physical_parame
       .def("__repr__", &physical_parameters::repr)
       .def("itf", &physical_parameters::itf<double>, py::arg("zeta"))
       .def("tf", &physical_parameters::tf<double>, py::arg("x"))
-      .def_readonly("a", &physical_parameters::a)
-      .def_readonly("Omega", &physical_parameters::Omega)
-      .def_readonly("p00", &physical_parameters::p00)
-      .def_readonly("kappa", &physical_parameters::kappa)
-      .def_readonly("cp", &physical_parameters::cp);
+      .def_readwrite("a", &physical_parameters::a)
+      .def_readwrite("Omega", &physical_parameters::Omega)
+      .def_readwrite("p00", &physical_parameters::p00)
+      .def_readwrite("kappa", &physical_parameters::kappa)
+      .def_readwrite("cp", &physical_parameters::cp);
   }
 };
 
