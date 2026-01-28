@@ -126,7 +126,7 @@ void laguerre_diagram<T>::do_hs_intersect() {
   }
 
   // add boundary halfspaces
-  if (sim.boundary_res >= 0) {
+  if (sim.boundary_res > 0) {
     boundary_spt.resize(sim.boundary_res);
     
     // evenly spaced halfspaces
@@ -180,7 +180,9 @@ void laguerre_diagram<T>::do_hs_intersect() {
         if (dy[1] == 0) {
           // vertical line segment
           T z0 = 2 * sqr(phys->a) * (phys->Omega * dy[0] + psii - psij) / (sqr(yi[0]) - sqr(yj[0]));
-          T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0) - sqr(yi[0]) / (2 * sqr(phys->a)) * z0 + psii - psitop) / (phys->cp * yi[1]);
+          T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0)
+                      - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
+                      + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
           if (z1min <= z1 && z1 <= z1max) {
             z0s.push_back(z0);
           }
@@ -245,10 +247,12 @@ void laguerre_diagram<T>::do_hs_intersect() {
       boundary_spt[i] = z0s[i];
     
     // add halfspaces (use previous as hint as they are neighboring, first hs is added without hint)
-    int hint = -1;
-    for (auto &z0 : z0s) {
-      Vec4 H(-0.5 * sqr(phys->Omega * phys->a / z0), 0.0, 1.0, duals(n) + sqr(phys->Omega * phys->a) / z0);
-      hint = hs.add_halfspace(H, hint);
+    if (sim.boundary_res != 0) {
+      int hint = -1;
+      for (auto &z0 : z0s) {
+        Vec4 H(-0.5 * sqr(phys->Omega * phys->a / z0), 0.0, 1.0, duals(n) + sqr(phys->Omega * phys->a) / z0);
+        hint = hs.add_halfspace(H, hint);
+      }
     }
 
   }
