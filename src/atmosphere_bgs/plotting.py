@@ -3,16 +3,19 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from scipy.ndimage import gaussian_filter
 
-def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, transform = None, invert_yaxis=False, plot_lines = True, line_clr = 'white', title = None, background = False):
+def plot_lag_tess(ld, cmap=None, val = None, res=[1000,1000], contour_levels = 0, transform = None, invert_yaxis=False, plot_lines = True, line_clr = 'k', title = None, background = False):
     '''
     ld - Laguerre diagram class
     val - value to assign to each cell
     res - resolution of rasterized image
     bw - bandwidth of Gaussian blur kernel
     '''    
-    # check to see if git branch works
+
     rast = None
 
+    if val is None:
+        val = np.nan*np.zeros(ld.ys.shape[0])
+        
     if val is not None:
         
         if transform is not None:
@@ -23,22 +26,12 @@ def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, t
         rv = rast.rasterize(val, res).copy()
         fill = rast.fill
         rv = np.where(fill > 0.5, np.divide(rv, fill, where=(fill > 0.5)), np.nan)
-        
-        if bw > 0:
-            tmp0 = rv.copy()
-            tmp0[np.isnan(tmp0)] = 0
-            tmp1 = 1. - np.isnan(rv)
-            rvc = gaussian_filter(tmp0, bw) / gaussian_filter(tmp1, bw)
-            rvc[np.isnan(rv)] = np.nan
-            rv = rvc
 
     fig, ax = plt.subplots(1, 1, figsize=(10,5), dpi=500, tight_layout = True)
 
-    sp = ld.sim
-
     if val is not None:
         im = plt.imshow(rv.T, origin="lower", aspect="auto",
-                   extent=rast.bounds) #[sp.spmin[0], sp.spmax[0], sp.spmin[1], sp.spmax[1]])
+                   extent=rast.bounds,cmap=cmap) #[sp.spmin[0], sp.spmax[0], sp.spmin[1], sp.spmax[1]])
 
         if contour_levels > 0:
         
