@@ -10,7 +10,7 @@ def plot_lag_tess(ld, val = None, res=[1000,1000], bw = 0, contour_levels = 0, t
     res - resolution of rasterized image
     bw - bandwidth of Gaussian blur kernel
     '''    
-
+    # check to see if git branch works
     rast = None
 
     if val is not None:
