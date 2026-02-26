@@ -99,7 +99,7 @@ class OTSolver:
         E_min, E_max = np.min(E, axis=0), np.max(E, axis=0)
 
         slim = np.array([sp.smin,sp.smax])
-        plim = np.array([sp.pmin,sp.pmax])
+        plim = np.array([sp.pmin,pp.p00])
         x0lim = 1/(1-slim**2)
         x1lim=(plim/pp.p00)**pp.kappa
         xdims = np.ravel(np.array([np.diff(x0lim),np.diff(x1lim)]))
@@ -112,7 +112,7 @@ class OTSolver:
         
         t = lmbd * t_0 + t_1
 
-        phi = E @ t - lmbd * 0.25 * np.linalg.norm(E, axis=1)**2
+        phi = E @ t - lmbd * 0.25 * np.linalg.norm(E, axis=1)**2  + pp.Omega*self.y[:,0]
 
         phi = np.append(phi, phi_0)
         
