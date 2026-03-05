@@ -6,11 +6,21 @@ from scipy.sparse.linalg import spsolve
 import time
 
 class OTSolver:
-    def __init__(self, input_data, ot_tol=1e-4, boundary_res=10000):
+    def __init__(self, input_data, ot_tol=1e-4, boundary_res=10000, initial_weights=None):
+        '''
+        initial_weights -  specified how to initialise damped Newton method
+                           can be None (use defualt depending on whether data
+                           has been interpolated onto a grid) or 'Voro' (use 
+                           translation and rescaling corresponding to Voronoi
+                           tessellation).
+        '''
         
+        # assign point masses and locations to solver
         self.y = input_data.y
         self.tm = input_data.tm
         self.tmn = input_data.tmn
+        
+        # assign physical and simulation parameters to solver
         self.pp = input_data.pp
         self.sp = _atmosphere_bgs.SimulationParameters(area_tolerance=.2*ot_tol, 
                                                       line_tolerance=1e-4,
@@ -21,75 +31,87 @@ class OTSolver:
                                                       smax=input_data.smax,
                                                       pmin=input_data.pmin,
                                                       pmax=self.pp.p00 * 1e6)
+        
+        # if data has been interpolated onto grid then assign this to the solver
+        # for use when initialising weights
+        self.interpolate_onto_grid = input_data.interpolate_onto_grid
+        if self.interpolate_onto_grid:
+            self.zam_grid = input_data.zam_grid
+            self.th_grid = input_data.th_grid
+            self.mass_grid = input_data.mass_grid
+        
+        # assign solver tolerance and number of target masses to solver and
+        # intialise runstats as None
         self.ot_tol = ot_tol
         self.n = self.y.shape[0]
         self.runstats = None
+        self.initial_weights = initial_weights
         
-    # initialisation
-    def initialise_weights_orig(self, phi_0=-1e+4):
+    def initialise_weights_grid(self):
+        '''Initialises weights for target measure with support on a rectangular grid.
+        Initialisation corresponds to mass density in (Z,theta) being uniform
+        between each successive pair of Z-levels and being uniform between each
+        successive pair of theta levels.
+        Z values in the matrix should be constant along each row (except at 
+        estimated intersection with ground) and increasing with column index.
+        Theta values in matrix should be constant along each column and 
+        decreasing with row index.
+        '''
+        # Get data in array-grid format
+        zam_grid = self.zam_grid
+        th_grid = self.th_grid
+        mass_grid = self.mass_grid
+        J, K = zam_grid.shape
+        
+        # Compute cumulative masses
+        idx = np.isnan(zam_grid)
+        mass_grid[idx] = 0
+        mass_zam = np.cumsum(np.sum(mass_grid,axis=1))
+        mass_th = np.cumsum(np.sum(mass_grid,axis=0))
+        total_mass = np.max(mass_th)
+        
+        # Initialise weights psi as a matrix with rows corresponding to Z-levels
+        # and columns corresponding to Theta-level
+        psi = np.zeros(zam_grid.shape)
+        
+        for k in np.arange(K):
+            if k>0:
+                p = self.sp.pmin + (mass_th[k-1]/total_mass)*(self.pp.p00-self.sp.pmin)
+                psi[0,k] = psi[0,k-1] + self.c_enth(p,th_grid[0,k]) - self.c_enth(p,th_grid[0,k-1])
+            if k == K-1 and ~np.isnan(zam_grid[0,k]):
+                psi_ext = psi[0,k] + self.c_KE(self.sp.smax,zam_grid[0,k]) - self.pp.cp*th_grid[0,k]*(1.5)**self.pp.kappa
+            for j in np.arange(J-1):
+                s = self.sp.smax - (mass_zam[j]/total_mass)*(self.sp.smax - self.sp.smin)
+                psi[j+1,k] = psi[j,k] + self.c_KE(s,zam_grid[j+1,k]) - self.c_KE(s,zam_grid[j,k])
+                if k==K-1 and ~np.isnan(zam_grid[j+1,k]) and ~np.isnan(psi[j+1,k]):
+                    psi_ext = np.max([psi_ext, psi[j+1,k] + self.c_KE(s,zam_grid[j+1,k]) - self.pp.cp*th_grid[0,k]*(1.1)**self.pp.kappa])
+        
+        # filter out weights for points with no mass or zonal angular momentum
+        idx = ~np.isnan(zam_grid)
+        psi = psi[idx]
+        
+        psi = np.append(psi,psi_ext)
+        
+        return psi
+    
+    def c_KE(self,s,zam):
+        '''Pointwise kinetic energy as function of s=sin(lat) and zonal angular momentum'''
+        a = self.pp.a
+        Omega = self.pp.Omega
+        return (1/(1-s**2))*(zam**2/2/a**2) - Omega*zam + (1-s**2)*Omega**2*a**2/2
+
+    def c_enth(self,p,th):
+        '''Pointwise enthalpy as function of pressure p and potential temperature theta'''
+        cp = self.pp.cp
+        p00 = self.pp.p00
+        kappa = self.pp.kappa
+        return cp*th*(p/p00)**kappa
+    
+    def initialise_weights_Voro(self, phi_0=-1e+10):
         '''
         Given an (N,2) array of seeds y in (Z,Theta) coordinates, this function returns a weight vector phi such that 
         all cells in the dot-product-Laguerre tessellation generated by phi and the transformed seeds E 
         (defined in this function) are non-empty.
-
-        Physical parameters used are a and Cp
-        Simulation parameters used are zeta_max and zeta_min, the extents of the transformed source space lifted to 3d
-        '''
-        # define weights
-        E = np.array([(0.5 / self.pp.a**2) * self.y[:,0]**2, self.pp.cp * self.y[:,1]]).T
-        E_min, E_max = np.min(E, axis=0), np.max(E, axis=0)
-
-        t_0 = 0.5 * E_max
-        t_1 = self.pp.tf(_atmosphere_bgs.SimulationParameters().spmin)
-
-        lmbd = 0.9 * 2 * min(1, np.min(np.array(self.pp.tf([self.sp.smax, self.pp.p00])) - np.array(t_1))) / np.max(E_max - E_min, axis=0)
-        t = lmbd * t_0 + t_1
-
-        phi = E @ t - lmbd * 0.25 * np.linalg.norm(E, axis=1)**2
-
-        phi = np.append(phi, phi_0)
-        return phi
-
-    def initialise_weights2(self, phi_0=-1e4):
-        c = np.array([(1 / (2*self.pp.a**2)) * self.y[:,0]**2, 
-                      self.pp.cp * self.y[:,1],
-                      -self.pp.Omega * self.y[:,0]]).T
-        
-        c_max = np.max(c[:,:2], axis=0)
-        c_min = np.min(c[:,:2], axis=0)
-        
-        z_min = self.pp.tf([max(0.01, self.sp.spmin[0]), np.maximum(10000, self.sp.spmin[1])])
-        z_max = self.pp.tf([min(0.99, self.sp.spmax[0]), self.pp.p00])
-        
-        a = (z_max - z_min) / (c_max - c_min)
-        b = z_min / a + c_max
-        
-        phi = -0.5 * np.sum(a[None,:] * (b[None,:] - c[:,:2])**2, axis=1) + c[:,2]
-        
-        return np.append(phi, phi_0)
-    
-    def initialise_weights_3(self,psi_0=-1e4):
-        
-        z = self.y[:,0]
-        th = self.y[:,1]
-        
-        scale = -(np.max(z)**2-np.min(z)**2)/2/self.pp.a**2
-        translate = np.array([self.sp.smin,self.sp.pmin])
-        
-        zeta = -scale*np.array([z**2/2/self.pp.a**2, self.pp.cp*th]).T + translate
-        
-        psi = -1/2/self.pp.a * np.sum(zeta**2,axis=1) - self.pp.Omega*z
-        
-        return np.append(psi,psi_0)
-    
-    def initialise_weights(self, phi_0=-1e+4):
-        '''
-        Given an (N,2) array of seeds y in (Z,Theta) coordinates, this function returns a weight vector phi such that 
-        all cells in the dot-product-Laguerre tessellation generated by phi and the transformed seeds E 
-        (defined in this function) are non-empty.
-
-        Physical parameters used are a and Cp
-        Simulation parameters used are zeta_max and zeta_min, the extents of the transformed source space lifted to 3d
         '''
         sp = self.sp
         pp=self.pp
@@ -102,12 +124,10 @@ class OTSolver:
         plim = np.array([sp.pmin,pp.p00])
         x0lim = 1/(1-slim**2)
         x1lim=(plim/pp.p00)**pp.kappa
-        xdims = np.ravel(np.array([np.diff(x0lim),np.diff(x1lim)]))
 
         t_0 = 0.5 * E_max
-        t_1 = np.array([x0lim[0],x1lim[0]]) #+ np.append(np.diff(x0lim)/2,0)
+        t_1 = np.array([x0lim[0],x1lim[0]])
 
-        #lmbd = 0.9 * 2 * min(1, np.min(np.array(self.pp.tf([self.sp.smax, self.pp.p00])) - np.array(t_1))) / np.max(E_max - E_min, axis=0)
         lmbd = np.min(np.array([np.diff(x0lim)/(E_max[0]/2-E_min[0]/2),np.diff(x1lim)/(E_max[1]/2-E_min[1]/2)]))
         
         t = lmbd * t_0 + t_1
@@ -116,8 +136,9 @@ class OTSolver:
 
         phi = np.append(phi, phi_0)
         
-        # Voronoi tessellation generated by seeds G = -lmbd*E/2 + t
-        
+        # Laguerre tesselation generated by phi is equal to Voronoi 
+        # tessellation generated by seeds G = -lmbd*E/2 + t, which are defined to
+        # lie in the source domain. Here is a plot to check that they lie in the source domain
         plot = False
         
         if plot:
@@ -138,9 +159,6 @@ class OTSolver:
             ax.plot(x0lim,2*[x1lim[1]],c='k')
             ax.plot(2*[x0lim[0]],x1lim,c='k')
             ax.plot(2*[x0lim[1]],x1lim,c='k')
-            
-            ld = _atmosphere_bgs.LaguerreDiagram(self.y, phi, self.pp, self.sp)
-            #ld.sim.pmax=1e+10
         
         return phi
 
@@ -174,8 +192,15 @@ class OTSolver:
             max_lost_areas = int(np.ceil(self.n / 1000))
             
         lr = lr_init
-
-        psi = self.initialise_weights(phi_0 = -1e10)
+        
+        # initialise weights
+        if self.initial_weights == None:
+            if self.interpolate_onto_grid:
+                psi = self.initialise_weights_grid()
+            else:
+                psi = self.initialise_weights_Voro()
+        else:
+            psi = self.initialise_weights_Voro()
 
         if use_long_double:
             psi = psi.astype(np.float128)
