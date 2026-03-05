@@ -199,8 +199,10 @@ class OTSolver:
                 psi = self.initialise_weights_grid()
             else:
                 psi = self.initialise_weights_Voro()
-        else:
+        elif type(self.initial_weights) == str:
             psi = self.initialise_weights_Voro()
+        else:
+            psi = self.initial_weights
 
         if use_long_double:
             psi = psi.astype(np.float128)

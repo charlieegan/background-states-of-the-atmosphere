@@ -372,11 +372,11 @@ class DataLoader:
             smin = 1-smax
             
             # Define vectorised seeds, masses and normalised masses to be used in OT routine
-            idx = ~np.isnan(self.zam_grid)
-            zam = self.zam_grid[idx]
-            th = self.th_grid[idx]
-            tm = self.mass_grid[idx]
-            source_mass = (self.pp.p00 - self.pmin)*(self.smax - self.smin)
+            idx = ~np.isnan(zam_grid)
+            zam = zam_grid[idx]
+            th = th_grid[idx]
+            tm = mass_grid[idx]
+            source_mass = (self.pp.p00 - self.pmin)*(smax - smin)
             
             y = np.vstack([zam,th]).T
             tmn = source_mass*tm/np.sum(tm)
