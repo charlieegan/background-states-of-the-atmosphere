@@ -66,7 +66,12 @@ DLS::Vector2 DLS::get_t(const T &lam) const {
   DLS::Vector2 d = end - start;
   if (curve != 0)
     d += DLS::Vector2(0, curve * (-d[0] / sqr(z[0]) + 1. / start[0] - 1 / end[0]));
-  return phys->ditf<T>(z).array() * d.array();
+  DLS::Vector2 t = phys->ditf<T>(z).array() * d.array();
+  if (std::isinf(t(0)))
+    return DLS::Vector2((t(0) < 0 ? -1 : 1), 0);
+  if (std::isinf(t(1)))
+    return DLS::Vector2(0, (t(1) < 0 ? -1 : 1));
+  return t;
 }
 
 template <typename T>
