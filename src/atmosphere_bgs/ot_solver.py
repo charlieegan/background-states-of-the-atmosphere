@@ -47,7 +47,7 @@ class OTSolver:
         self.runstats = None
         self.initial_weights = initial_weights
         
-    def initialise_weights_grid(self):
+    def initialise_weights_grid(self,top_scale=1.001,initial_weights_perturbation=1e-11):
         '''Initialises weights for target measure with support on a rectangular grid.
         Initialisation corresponds to mass density in (Z,theta) being uniform
         between each successive pair of Z-levels and being uniform between each
@@ -79,17 +79,17 @@ class OTSolver:
                 p = self.sp.pmin + (mass_th[k-1]/total_mass)*(self.pp.p00-self.sp.pmin)
                 psi[0,k] = psi[0,k-1] + self.c_enth(p,th_grid[0,k]) - self.c_enth(p,th_grid[0,k-1])
             if k == K-1 and ~np.isnan(zam_grid[0,k]):
-                psi_ext = psi[0,k] + self.c_KE(self.sp.smax,zam_grid[0,k]) - self.pp.cp*th_grid[0,k]*(1.5)**self.pp.kappa
+                psi_ext = psi[0,k] + self.c_KE(self.sp.smax,zam_grid[0,k]) - self.pp.cp*th_grid[0,k]*top_scale**self.pp.kappa
             for j in np.arange(J-1):
                 s = self.sp.smax - (mass_zam[j]/total_mass)*(self.sp.smax - self.sp.smin)
                 psi[j+1,k] = psi[j,k] + self.c_KE(s,zam_grid[j+1,k]) - self.c_KE(s,zam_grid[j,k])
                 if k==K-1 and ~np.isnan(zam_grid[j+1,k]) and ~np.isnan(psi[j+1,k]):
-                    psi_ext = np.max([psi_ext, psi[j+1,k] + self.c_KE(s,zam_grid[j+1,k]) - self.pp.cp*th_grid[0,k]*(1.1)**self.pp.kappa])
+                    psi_ext = np.max([psi_ext, psi[j+1,k] + self.c_KE(s,zam_grid[j+1,k]) - self.pp.cp*th_grid[0,k]*top_scale**self.pp.kappa])
         
         # filter out weights for points with no mass or zonal angular momentum
         idx = ~np.isnan(zam_grid)
         psi = psi[idx]
-        
+        psi = psi + np.random.rand(len(psi))*np.mean(psi)*initial_weights_perturbation
         psi = np.append(psi,psi_ext)
         
         return psi
@@ -167,7 +167,7 @@ class OTSolver:
                 max_its=1000, descent_accept_thresh=0.01,
                 min_area=0, max_lost_areas=None,
                 lr_up=2.0, lr_down=0.5, lr_max=1.0, lr_min=1e-20, lr_init=1e-5,
-                max_loss_fraction=1e-3):
+                max_loss_fraction=1e-3, initial_weights_perturbation=1e-11, top_scale=1.001):
         """
         run the modified damped Newton solver
         
@@ -196,7 +196,7 @@ class OTSolver:
         # initialise weights
         if self.initial_weights is None:
             if self.interpolate_onto_grid:
-                psi = self.initialise_weights_grid()
+                psi = self.initialise_weights_grid(top_scale=top_scale,initial_weights_perturbation=initial_weights_perturbation)
             else:
                 psi = self.initialise_weights_Voro()
         elif type(self.initial_weights) == str:
