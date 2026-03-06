@@ -1,11 +1,10 @@
 import numpy as np
-from numpy import matlib
 import _atmosphere_bgs
 import re
 
 class DataLoader:
     
-    def __init__(self, path, pmin=10, nextra=0, ny=None, smin=None, smax=None, load_all=False, interpolate=True):
+    def __init__(self,path,pmin=10,load_all=False,interpolate_onto_grid=True,skip=0,split_param=None):
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:
@@ -77,33 +76,15 @@ class DataLoader:
         
         # get physical parameters
         self.pp = _atmosphere_bgs.PhysicalParameters()
-        
-        # get max and min s values
-        if smin is None:
-            self.smin = np.sin(2*np.pi*np.min(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
-        else:
-            self.smin = smin
 
-        if interpolate is False:
-            if smax is None or smax == 'critical':
-                self.smax = np.sin(2*np.pi*np.max(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
-            else:
-                self.smax = smax
-        elif smax == 'critical':
-            self.smax = 'critical'
-        elif smax is None:
-            self.smax = np.sin(2*np.pi*np.max(self.data_dict['LATITUDES ON GAUSSIAN GRID'])/360)
-        else:
-            self.smax = smax
-
+        # assign minimum pressure level to class
         self.pmin = pmin
-        self.nextra = nextra
         
-        # get seeds and masses
-        if interpolate:
-            self.get_bgs_target_measure_interpolate(ny=ny)
-        else:
-            self.get_bgs_target_measure(nextra=nextra)
+        # get target measure
+        self.get_target_measure(interpolate_onto_grid=interpolate_onto_grid,skip=skip,split_param=split_param)
+        
+        # record whether or not interpolation has been used
+        self.interpolate_onto_grid = interpolate_onto_grid
         
     def _multifloat_pattern(self, mincnt, maxcnt=None):
         if maxcnt is None:
@@ -132,188 +113,70 @@ class DataLoader:
         except StopIteration:
             print(f"WARNING: could not find block {title}")
             
-    def get_bgs_target_measure(self,nextra=0):
-        '''
-        This function returns seed locations and target masses given input data, physical parameters, and simulation parameters.
-        Point masses in (Z, theta) coords are defined by mapping the finite mass of boxes in (PV, theta) to their positions in (Z, theta) space.
-        The mass point nearest the North Pole is distributed across nextra+1 point masses in target space to provide greater resolution near the pole.
-        '''
-        # extract input data from the dictionary
-        latitudes = self.data_dict['LATITUDES ON GAUSSIAN GRID']
-        pv_lev = self.data_dict['TRACER MIXING RATIO CONTOURS']
-        th_lev = self.data_dict['ISENTROPIC LEVELS']
-        lait_to_pv = self.data_dict['FACTOR TO CONVERT FROM LAIT TO ERTEL PV']
-        bs_circ = self.data_dict['CIRCULATION INTEGRALS IN PV-THETA COORDINATES']
-        bs_mass = self.data_dict['MASS INTEGRALS IN PV-THETA COORDINATES']
-
-        # get physical and simulation parameters
-        pp = self.pp
+    def get_target_measure(self,interpolate_onto_grid=True,skip=0,split_param=None):
         
-        earth_radius = pp.a
-        earth_area = 4*np.pi*pp.a**2
-        Omega = pp.Omega
-
-        # parameter used to place extra mass points near the North Pole in target space
-        ang_mom_min = Omega*earth_radius**2*(1-self.smax**2) # planetary zonal ang mom at polar cap latitude
-
-        # number of pv and theta levels
-        num_pv_lev = pv_lev.shape[0]; num_th_lev = th_lev.shape[0]
-
-        # reshape and rescale circulation and areas vectors
-        bs_circ = np.reshape(bs_circ,(num_th_lev, num_pv_lev)).T
-        bs_mass = np.reshape(bs_mass,(num_th_lev,num_pv_lev)).T
+        '''Function that defines target measure to be used in the OT problem. 
         
-        d_mass_all = np.diff(bs_mass,axis=0)
-        if (d_mass_all > 0).any():
-            raise ValueError('Input mass data is inconsistent')
-
-        # find theta half-levels and layer depth in terms of theta
-        d_th = -np.diff(th_lev) # this should be positive
-        d_th = np.ravel(np.append(d_th,d_th[-1])) # dth is the weighting to obtain mass of each isentropic layer
-        th_lev_h = th_lev + 0.5*d_th
-        th_lev_h = np.ravel(np.append(th_lev_h,th_lev[-1]-0.5*d_th[-1]))
-
-        # get target masses and angular momentum (horizontal coordinates of seeds)
-        epv_field = np.outer(pv_lev,lait_to_pv) # (num_pv_lev,num_th_lev) numpy array of Ertel PV values
-
-        ang_mom = np.zeros([num_pv_lev + nextra -1,num_th_lev])
-        mass_weight = np.zeros([num_pv_lev + nextra -1,num_th_lev])
-        pv_mid = np.zeros([num_pv_lev + nextra - 1,num_th_lev])
+        Default is to interpolate mass on each theta level linearly in the 'pseudo-s'
+        coordinate
         
-        neg_mass_1 = np.zeros([num_pv_lev + nextra -1,num_th_lev])
-        neg_mass_2 = np.zeros([num_pv_lev + nextra -1,num_th_lev])
-        
-        for m in np.arange(num_th_lev):
-
-            d_pv = np.diff(epv_field[:,m])
-            d_mass = np.diff(bs_mass[:,m])
-            d_circ = np.diff(bs_circ[:,m])
-
-            pv_mid[np.arange(num_pv_lev-1),m] = epv_field[np.arange(num_pv_lev-1),m] + 0.5*d_pv
-            c_mid = bs_circ[np.arange(num_pv_lev-1),m] + 0.5*d_circ
-
-            ang_mom[np.arange(num_pv_lev-1),m] = earth_area*c_mid/(2*np.pi)
-            mass_weight[np.arange(num_pv_lev-1),m] = -earth_area*d_mass*d_th[m] # d_mass should be negative
+            spseudo = (1-Z/Omega/a**2)**(1/2).
             
-            if mass_weight[np.arange(num_pv_lev-1),m].any() < 0:
-                None
-                #raise ValueError('negative mass at location 0')
-
-            # Find lowest full PV level for which bs_circ=0, if it exists (i.e., at North Pole).
-            # Introduce a new mass point at position Z_min to make sure
-            # that there is a column of points next to pole.
-            # Shift the position of the closest existing point so that the mass is 
-            # re-distributed across these two points (total mass is unchanged).
-            elz = np.where(bs_circ[:,m] == 0)
-            if elz[0].shape[0]>0:
-                kp = int(elz[0][0])
-            else:
-                kp = 0
-
-            if kp > 0:
-                zkpm1 = earth_area*bs_circ[kp-1,m]/(2*np.pi)
-                if zkpm1 > ang_mom_min:
-                    dmom = zkpm1/(nextra+1.)
-                    pvtop = epv_field[kp,m]
-                    massscal = bs_mass[kp-1,m]/zkpm1
-
-                    qscal = (epv_field[kp-1,m]-pvtop)/zkpm1
-                    zextra = np.zeros([nextra+2])
-                    mextra = np.zeros([nextra+2])
-
-                    # Find angular momentum at new introduced points
-                    # between Z(kp-1) and Z_min.
-
-                    for i in np.arange(nextra+2):
-                        zextra[i] = zkpm1 - i*dmom
-
-                    #m,thlev(m),zextra
-                    mextra = massscal*zextra
-
-                    # Find mass weights, and midpoint Z and Q corresponding to each
-                    # introduced interval.
-
-                    for i in np.arange(nextra+1):
-                        zmid = zextra[i]-0.5*dmom
-                        ang_mom[kp-1+i,m] = zmid
-                        pv_mid[kp-1+i,m] = pvtop + qscal*zmid
-                        mass_weight[kp-1+i,m] = earth_area*(mextra[i]-mextra[i+1])*d_th[m]
-                        if np.min(mass_weight) < 0:
-                            None
-                            #raise ValueError('negative mass location 1')
-
-            # Find repeated points in (M, theta) space.
-            # Occurs where same mass and circ assigned to a range of PV values.
-            elz = np.argwhere((d_circ == 0) & (c_mid != 0))
-
-            num_elz = elz.shape
-            if num_elz[0] > 1:
-                # Where this occurs, sum the mass
-                sum_mass_weight = np.sum(mass_weight[elz,m])            
-                mass_weight[elz,m] = 0
-                mass_weight[elz[0],m] = sum_mass_weight
-                
-                if np.min(mass_weight) < 0:
-                    None
-                    #raise ValueError('negative mass location 2')
-
-        mass_check = np.sum(mass_weight)
-        #print('Total mass of point masses: ', mass_check)
-
-        # potential temperature
-        th = np.matlib.repmat(th_lev,num_pv_lev+nextra-1,1) # ((num_pv_lev+nextra-1),num_th_lev) numpy array of potential temperature values
-
-        # ravel the data
-        pv_mid = np.ravel(pv_mid)
-        ang_mom = np.ravel(ang_mom)
-        th = np.ravel(th)
-        mass_weight = np.ravel(mass_weight)
-
-        # find indices of seeds with zero angular momentum
-        idx_mom = ang_mom == 0
-
-        # find indices of seeds corresponding to zero target masses
-        idx_mass = mass_weight == 0
-
-        # delete seeds with zero momentum or zero mass
-        idx = idx_mom | idx_mass
-        pv_mid = np.delete(pv_mid,idx)
-        ang_mom = np.delete(ang_mom,idx)
-        th = np.delete(th,idx)
-        mass_weight = np.delete(mass_weight,idx)
-
-        # create seed and mass arrays
-        y = np.append(ang_mom[:,None],th[:,None],1)
-        tm = mass_weight
-
-        # eliminate duplicate seeds
-        _, i = np.unique(y,axis = 0,return_index = True)
-        i = np.sort(i)
-        y = y[i]
-        tm = tm[i]
+        This is chosen because it is equal to s if u=0, and mass is linear in (s,p) 
+        because it is proportional to area. The interpolation nodes in 
+        pseudo-s are from a Gaussian grid in latitude. If the minimum speudo on
+        a given theta level is greater than the minimum grid point then it is 
+        used as an interpolation node and smaller interpolation nodes are discarded.
+        This effectively deals with theta levels that intersect the ground.
+        smin and smax that define the lateral extent of the (s,p) domain that is
+        to be tessellated are also defined here.
+        smax is defined to to avoid large negative pressure gradients at the pole.
+        Specifically, it is chosen as the turning point of the pressure 'kernel'
+        for the minimum Z value on the lowest theta level. This excludes a 
+        spherical cap around the pole. smin is defined to exclude a band from the 
+        equator of the same mass as this cap.
         
-        # normalise the masses (and set smax to critical value if this option is chosen)
-        if self.smax == 'critical':
-            zmin = np.min(y[:,0])
-            self.smax = np.sqrt(1-zmin/earth_radius**2/Omega)
-        tmn = tm / np.sum(tm) * (pp.p00 - self.pmin) * (self.smax - self.smin)
+        Data is typically truncated at some theta level. A row of masses is 
+        added on a theta level that is above the top theta level of the data 
+        to represent the missing data. The input data contains the zonal average 
+        pressure on the top theta level from the 3-d state as a function of latitude. 
+        This is used is used to approximate the mass above the top theta level
+        and between sucessive grid points in s.
+        For each grid point s, a corresponding mass point is added at Z satisfying 
         
-        # assign seeds and masses to the class instance
-        self.epv = pv_mid
-        self.y = y
-        self.tm = tm
-        self.tmn = tmn
+            s=(1-Z/Omega/a**2)**(1/2).
         
-        return y, tm, tmn
-
-    def get_bgs_target_measure_interpolate(self, ny=None):
+        If mass is not interpolated then point masses are defined directly from
+        input data by differencing cumulative mass integrals to get masses and
+        by differencing and rescaling circulation integrals to get zonal angular
+        momentum values. Theta levels are retained.
+        
+        To do:
+            - interpolate PV and laitPV and assign these variables to the class instance
+            - add masses for top boundary to non-interpolant version
+        
+        Inputs:
+            
+            interpolate_onto_grid - boolean; determines whether or not input data is interpolated onto a grid
+            skip - integer; number of nodes to skip in interpolation in order to reduce the resolution of the interpolation
+            split_param - float or None; number between 0 and 1 used to force mass 
+                          and circulation integrals to be strictly decreasing with 
+                          PV on every theta level; bigger value means bigger enforced increase
+                          
+        Outputs (assigned to class instance):
+            
+            if interpolate_onto_grid is True:
+                zam_grid - (nnodes,(nthlev+1)) numpy array; gridded zonal angular momentum values; constant along each row (except at estimated intersection with ground) and increasing with column index
+                th_grid - (nnodes,(nthlev+1)) numpy array; gridded theta values; constant along each column and decreasing with row index
+                mass_grid - (nnodes,(nthlev+1)) numpy array; gridded masses
+            in any case:
+                smin - float; minimum s
+                smax - float; maximum s
+                y - (N,2) numpy array; 2-d locations of point masses in (Z,theta)
+                tm - (N,) numpy array; target masses associated to points y
+                tmn - (N,) numpy array; target masses associated to points y normalised to sum to area of (s,p) domain [smin,smax]x[pmin,pmax]
         '''
-        This function returns seed locations and target masses given input data, physical parameters, and simulation parameters.
-        On each Theta-level, define the stretched coordinate Y = (1-Z/Z_max)^{1/2}. (When U=0, this is sin(latitude).) 
-        On each Theta-level, point masses in (Q,Theta) are mapped into (Y, Theta), linearly interpolated onto a regular 1d grid, and then mapped into (Z,Theta).
-        The parameter 'ny' is the number of intervals used for the linear interpolation on each isentropic surface above ground.
-        Since relative zonal wind is much less than the planetary rotation, the deviations from a grid that would be regular in mu are small.
-        '''
+        
         # extract input data from the dictionary
         latitudes = self.data_dict['LATITUDES ON GAUSSIAN GRID']
         pvlev = self.data_dict['TRACER MIXING RATIO CONTOURS']
@@ -321,187 +184,211 @@ class DataLoader:
         lait2pv = self.data_dict['FACTOR TO CONVERT FROM LAIT TO ERTEL PV']
         bscirc = self.data_dict['CIRCULATION INTEGRALS IN PV-THETA COORDINATES']
         bsmass = self.data_dict['MASS INTEGRALS IN PV-THETA COORDINATES']
-        bsarea = self.data_dict['AREA INTEGRALS IN PV-THETA COORDINATES']    
-
+        
         # get physical and simulation parameters
         pp = self.pp
-
-        earthradius = pp.a
+        a = pp.a
         eartharea = 4*np.pi*pp.a**2
-        omega = pp.Omega
-
-        if ny is None:
-            ny = latitudes.shape[0]
-        self.ny = ny
-        npvlev = np.shape(pvlev)[0]
-        nthlev = np.shape(thlev)[0]
-
-        # reshape and rescale circulation and areas vectors
+        Omega = pp.Omega
+        
+        # reshape data to have rows as pvlevels and columns as theta levels
+        npvlev = pvlev.shape[0]
+        nthlev = thlev.shape[0]
         bscirc = np.reshape(bscirc,(nthlev, npvlev)).T
         bsmass = np.reshape(bsmass,(nthlev,npvlev)).T
-        bsarea = np.reshape(bsarea,(nthlev,npvlev)).T
-
-        # find theta half-levels and layer depth in terms of theta
-        dth = -np.diff(thlev) # this should be positive
-        dth = np.ravel(np.append(dth,dth[-1])) # dth is the weighting to obtain mass of each isentropic layer
-        thlevh = thlev + 0.5*dth
-        thlevh = np.ravel(np.append(thlevh,thlev[-1]-0.5*dth[-1]))
-
-        massweight = np.zeros([ny,nthlev])
-        angmom = np.zeros([ny,nthlev])
-        pvmid = np.zeros([ny,nthlev])
-        laitpvfield = np.zeros([ny,nthlev])
-        sigma = np.zeros([ny,nthlev])
-        y2d = np.zeros([ny,nthlev])
-
-        nabove = np.where(bsmass[0,:] > 0)[0]
-
-        for m in nabove:
-            aonqk = bsarea[:,m]
-            monqk = bsmass[:,m]
-            zonqk = bscirc[:,m]
-
-            # area and circulation integrals at intersection
-            # of isentropic surface with lower boundary or equator
-            amax = 2*bsarea[0,m] 
-            emus = 1-amax 
-            zmax = bscirc[0,m]
-            epvfield = np.ravel(pvlev)*lait2pv[m]
-
-
-            # Find points where same mass and circ assigned to a range of PV values.
-            # Force mass and circulation to decrease monotonically with PV.
-            masslast = monqk[0]
-            circlast = zonqk[0]
-            tiny = 1.e-7
-            offsetz = circlast*tiny
-            offsetm = masslast*tiny
-
-            for k in np.arange(1,npvlev):
-                massk = monqk[k]
-                circk = zonqk[k]
-                if circk == circlast:
-                    zonqk[k] = circlast - offsetz
-                    monqk[k] = masslast - offsetm
-                    offsetz = offsetz + circlast*tiny
-                    offsetm = offsetm + masslast*tiny  
-                else:
-                    circlast = circk
-                    masslast = massk
-                    offsetz = circlast*tiny
-                    offsetm = masslast*tiny
-
-            # Remove points where PV levels exceed max(Q) on the theta level
-            abovemaxq = np.where(np.ravel(monqk)==0)[0]
-
-            if abovemaxq.shape[0] == 0:
-                print('level',m,'has some PV levels above max(q)')
-                inrange = np.where(np.ravel(monqk) > 0)[0]
-                epvfield = epvfield[inrange]
-                monqk = monqk[inrange]
-                zonqk = zonqk[inrange]
-            #
-            # Re-grid distribution of masses in the conserved variable coordinates (Z, theta).
-            #
-            # Rescale zonal angular momentum, Z, in a stretched coordinate, Y, range 0 -> 1.
-            # Y would equal s (sin(lat)) in the case where u=0. However, typically u ne 0 and 
-            # so Z is quadratic in Y, but Y is not equal to s. The interpolation from the 
-            # masses defined at PV levels Q_k to the new regular arrangement is linear in Y.
-            # Since the mass integrals are approximately linear in Y (for uniform density) this
-            # means that the interpolation from the irregular points to the new grid is accurate.
-            # Also the point mass weightings found by differencing mass integrals are accurate.
-            #
-            # Define a regular grid in the stretched coordinate Y which matches on all isentropic levels.
-            # On isentropic surfaces which intersect the ground, use emus as first guess of the position
-            # of the ground in the Y-coordinate. This is needed to line up the cells approximately in 
-            # columns in source space (s, p).
-            #
-            yonqk = np.sqrt(1-(zonqk/zmax)*(1-emus**2))            
-            #
-            # ylim is set to the expected limit of s-coordinate space in the OT solution (s_crit).
-            # The closest mass point on the regular grid would be close to Y=1-0.5*dy
-            # Set the final interval mass weight proportional to ylim-(1-dy).
-            #
-            dy = 1.0/ny
-            ylim = 1-0.5*dy
-            ynodes = np.linspace(0,1,ny+1)
-            ynodes[ny] = ylim
-            ymids = np.linspace(0.5*dy,1-0.5*dy,ny)
-            ymids[ny-1] = ylim
-            y2d[:,m] = ymids      
-            #
-            # Find mid-points on isentropic surface above ground.
-            # Find nodes between mass points, with the first node on the LB at Y=emus.
-            #
-            inmids=np.where(ymids > emus)[0]
-            ymidcut=ymids[inmids]
-            ynodecut=np.append(emus,ynodes[inmids+1])            
-            #
-            # Now re-grid functions of Y at the points corresponding to 
-            # PV-levels Q_k onto the regular grid of points in Y.
-            # Only interpolate over the interval emus < Y < 1.            
-            #
-            # From mass integrals on the nodes of the Y-grid calculate
-            # the mass difference for each interval.
-            #
-            massint = np.interp(ynodecut,yonqk,monqk)
-            massweight[inmids,m] = -eartharea*np.diff(massint)*dth[m]
-            #
-            # Re-grid PV and calculate zonal angular momentum at the interval
-            # midpoints in Y-coordinate.
-            #
-            pvmid[inmids,m] = np.interp(ymidcut,yonqk,epvfield)
-            laitpvfield[inmids,m] = pvmid[inmids,m]/lait2pv[m]
-            angmom[inmids,m] = zmax*(1-ymidcut**2)*eartharea/(2*np.pi*(1-emus*emus))         
-
-        # potential temperature
-        th = np.matlib.repmat(thlev,ny,1) # ((num_pv_lev+nextra-1),num_th_lev) numpy array of potential temperature values
-
-        #fig, ax = plt.subplots(1,1,dpi=100)
-        #ax.plot(angmom, th, 'bo')
-        #ax.set_xlabel('Z')
-        #ax.set_ylabel('Potential temperature (K)')
-        #ax.set_title('point masses (Z, theta)')
-        #ax.legend()
-        #plt.savefig('figs/testing/target_masspoints.png', dpi=300)
-
-        # ravel the data
-        pvmid = np.ravel(pvmid)
-        angmom = np.ravel(angmom)
-        th = np.ravel(th)
-        massweight = np.ravel(massweight)
-
-        # find indices of seeds with zero angular momentum or zero mass and delete these seeds
-        idx_mom = angmom == 0
-        idx_mass = massweight == 0
-        idx = idx_mom | idx_mass
-
-        pvmid = np.delete(pvmid,idx)
-        angmom = np.delete(angmom,idx)
-        th = np.delete(th,idx)
-        massweight = np.delete(massweight,idx)
         
-        # create seed and mass arrays
-        y = np.append(angmom[:,None],th[:,None],1)
-        tm = massweight
-
-        # eliminate duplicate seeds
-        _, i = np.unique(y,axis = 0,return_index = True)
-        i = np.sort(i)
-        y = y[i]
-        tm = tm[i]
-
-        # normalise the masses
-        if self.smax == 'critical':
-            zmin = np.min(y[:,0])
-            beta = 1.0
-            self.smax = np.sqrt(1-beta*zmin/pp.a**2/omega)
+        # keep only theta levels that have some mass and circulation
+        idx = (bsmass[0] > 0)*(bscirc[0] > 0)
+        bscirc = bscirc[:,idx]
+        bsmass = bsmass[:,idx]
+        thlev = thlev[idx]
+        nthlev = thlev.shape[0]
+        
+        # Define mass scale factors on each level (final theta level depth is repeated)
+        dth = np.absolute(np.append(np.diff(thlev),thlev[-1]-thlev[-2]))
+        mass_scale_factor = eartharea*dth
+        
+        # Define angular momentum scale factor for converting circulation
+        zam_scale_factor = eartharea/2/np.pi
+        
+        # if interpolating, make circulation integrals strictly decreasing on every theta level
+        # otherwise, ignore flat parts by setting split_param to 0
+        if interpolate_onto_grid:
+            if split_param is None or split_param == 0:
+                split_param = 1e-2
+        elif split_param is None:
+            split_param = 0
             
-
-        tmn = tm / np.sum(tm) * (pp.p00 - self.pmin) * (self.smax - self.smin)
-
-        # assign seeds and masses to the class instance
-        self.epv = pvmid
+        for k, (circ_k, mass_k) in enumerate(zip(bscirc.T,bsmass.T)):
+            # find where cumulative mass or circulation are flat as function of PV
+            zero_mass = np.hstack([False,np.diff(mass_k) == 0])
+            zero_circ = np.hstack([False,np.diff(circ_k) == 0])
+            zero_mass_or_circ = np.where(zero_mass+zero_circ)[0]
+            
+            if len(zero_mass_or_circ)>0:
+                # Could have several places on same theta level where this happens
+                # Split indices into blocks of consecutive numbers
+                split = np.where((zero_mass_or_circ - np.roll(zero_mass_or_circ,shift=1))>1)[0]
+                zms = np.split(zero_mass_or_circ,split)
+            
+                # for each block of consecutive indices, share mass and circulation across them
+                for zms_i in zms:
+                    # only split mass where it exists
+                    if zms_i[-1]<len(mass_k)-2:
+                        mass_to_split = split_param*(mass_k[zms_i[0]]-mass_k[zms_i[-1]+1])
+                        circ_to_split = split_param*(circ_k[zms_i[0]]-circ_k[zms_i[-1]+1])
+                        
+                        split_mass = mass_to_split*np.arange(1,len(zms_i)+1)/len(zms_i)
+                        split_circ = circ_to_split*np.arange(1,len(zms_i)+1)/len(zms_i)
+                        
+                        mass_k[zms_i] = mass_k[zms_i] - split_mass
+                        circ_k[zms_i] = circ_k[zms_i] - split_circ
+                        
+            bscirc[:,k] = circ_k
+            bsmass[:,k] = mass_k
+        
+        if not interpolate_onto_grid:
+            # define matrix of theta values
+            th = np.vstack(npvlev*[thlev])
+            # define masses by differencing cumulative mass and rescaling
+            mass = np.vstack([-np.diff(bsmass,axis=0),bsmass[-1][None,:]])*mass_scale_factor
+            # define zonal angular momentum by rescaling circulation
+            bscirc_diff = np.diff(bscirc,axis=0)
+            bscirc_diff = np.vstack([bscirc_diff,bscirc_diff[-1]])
+            zam = zam_scale_factor*(bscirc + .5*bscirc_diff)
+            # define smin and smax
+            smin = np.min(latitudes)
+            smax = np.max(latitudes)
+            # define vectorised seeds, masses and normalised masses to be used in OT routine
+            y = np.hstack([np.ravel(zam),np.ravel(th)]).T
+            tm = np.ravel(mass)
+            tmn = tm/np.sum(tm)
+        else:
+            
+            # Interpolate mass linearly in pseudo-s coordinate onto Gaussian grid of latitudes
+            ## Get maximum of Omega*a**2 and maximum zonal angular momentum from the data
+            bscirc_max = np.max([np.max(bscirc),Omega*a**2/zam_scale_factor])
+                
+            ## Define pseudo-s coordinate
+            spseudo = np.sqrt(1-(bscirc/bscirc_max))
+            
+            ## Define interpolation nodes to be sine of the given latitudes in ascending order
+            snodes = np.flip(np.sin(np.deg2rad(latitudes)))
+            if skip>0:
+                snodes = snodes[::skip]
+                
+            ## set up matrices to store angmom and mass with one extra level for theta above the data
+            nnodes = len(snodes)
+            zam_grid = np.nan*np.zeros([nnodes,nthlev+1])
+            mass_grid = np.nan*np.zeros([nnodes,nthlev+1])
+            
+            ## do interpolation on each theta level
+            for k, cum_mass_k in enumerate(bsmass.T):
+                # get points in pseudo-s on k-th theta level, select interpolation
+                # nodes that are above the minimum and append the minimium
+                spseudo_k = spseudo[:,k]
+                sk_min = spseudo_k[0]
+                idx = snodes>sk_min            
+                snodes_k = np.hstack([sk_min,snodes[idx]])
+                
+                # append zero mass at pole for interpolation and differencing
+                spseudo_k = np.append(spseudo_k,1)
+                cum_mass_k = np.append(cum_mass_k,0)
+                snodes_k = np.append(snodes_k,1)
+                
+                # interpolate cumulative mass linearly in s onto interpolation nodes and
+                # difference cumulative mass and rescale to get mass density
+                cm_interp_k = np.interp(snodes_k,spseudo_k,cum_mass_k)
+                mass_k = -mass_scale_factor[k]*np.diff(cm_interp_k)
+                
+                # get midpoints in s and define corresponding angular momentum values
+                smids_k = .5*(snodes_k + np.roll(snodes_k,shift=1))[1:]
+                zam_k = zam_scale_factor*bscirc_max*(1-smids_k**2)
+                
+                # flip angmom and mass vectors to be ordered increasing in zonal angular
+                # momentum (effectively from pole to equator) and assign to matrices
+                nk = len(mass_k)
+                zam_grid[:nk,k+1] = np.flip(zam_k)
+                mass_grid[:nk,k+1] = np.flip(mass_k)
+                
+                # check that no mass is lost
+                rel_mass_loss_k = (np.sum(mass_k)/mass_scale_factor[k] - cum_mass_k[0])/cum_mass_k[0]
+                if np.abs(rel_mass_loss_k) > 1e-11:
+                    raise ValueError('Some mass is lost during interpolation on level '+str(k))
+                
+                # add masses to represent the missing theta levels using the same
+                # interpolation nodes as for the top theta level
+                if thlev[k] == np.max(thlev):
+                    # estimate masses and zonal angular momentum using zonal average pressure from 3-d data
+                    ptop = self.data_dict['BACKGROUND PRESSURE ON TOP BOUNDARY']
+                    ptop = np.flip(ptop) # flip to be ordered accending with latitude
+                    sgrid = np.sin(np.deg2rad(self.data_dict['LATITUDES ON GAUSSIAN GRID']))
+                    sgrid = np.flip(sgrid) # order to be acsending
+                    
+                    # interpolate zonal average pressure onto interpolation nodes
+                    ptop = np.interp(snodes_k,sgrid,ptop)
+                    
+                    # Compute areas using trapezium rule and assign to midpoints in s.
+                    # These areas are later rescaled to be masses, and the midpoints in s
+                    # are converted to Z values assuming u=0
+                    areas_top = np.diff(snodes_k)*((ptop[:-1]-self.pmin)+(ptop[1:] - self.pmin))/2
+                    s_top = smids_k
+                    
+                    # rescale top areas by mass per pascal to get the appropriate masses
+                    total_mass = np.sum(bsmass[0]*mass_scale_factor)
+                    mass_per_pascal = total_mass/(self.pp.p00-self.pmin)
+                    mass_top = mass_per_pascal*areas_top
+                    
+                    ## define zonal angular momentum values for top assuming u=0 as a first guess
+                    zam_top = self.pp.Omega*self.pp.a**2*(1-s_top**2)
+    
+                    ## define theta value at top to be the maximum theta value plus a level depth
+                    th_top = thlev[0] + (thlev[0]-thlev[1])
+                    
+                    # flip angmom and mass vectors to be ordered increasing in zonal angular momentum (effectively from pole to equator)
+                    nt = len(mass_top)
+                    zam_grid[:nt,k] = np.flip(zam_top)
+                    mass_grid[:nt,k] = np.flip(mass_top)
+                    
+            # define theta matrix such that each column corresponds to a theta level and
+            # each row corresponds (roughly) to a Z-level
+            th_grid = np.vstack(nnodes*[np.hstack([th_top,thlev])])
+                    
+            # check total mass is conserved
+            total_mass = np.sum(bsmass[0]*mass_scale_factor)
+            masses = mass_grid[:,1:][~np.isnan(mass_grid[:,1:])]
+            rel_mass_loss = np.abs((total_mass - np.sum(masses))/total_mass)
+            
+            if rel_mass_loss > 1e-11:
+                raise ValueError('Some mass is lost during interpolation')
+                
+            # Define smin and smax such that smax is at turning point of p-surface
+            # corresponding to minimal zonal angular momentum on lowest theta level
+            idx = ~np.isnan(zam_grid[:,-1])
+            zmin = np.min(zam_grid[idx,-1])
+            smax = np.sqrt(1-zmin/Omega/a**2)
+            
+            # Define smin so that areas in (s,p) excluded at pole and equator are the same
+            smin = 1-smax
+            
+            # Define vectorised seeds, masses and normalised masses to be used in OT routine
+            idx = ~np.isnan(zam_grid)
+            zam = zam_grid[idx]
+            th = th_grid[idx]
+            tm = mass_grid[idx]
+            source_mass = (self.pp.p00 - self.pmin)*(smax - smin)
+            
+            y = np.vstack([zam,th]).T
+            tmn = source_mass*tm/np.sum(tm)
+            
+            # Assign variables to the class
+            self.zam_grid = zam_grid
+            self.th_grid = th_grid
+            self.mass_grid = mass_grid
+        
+        # Assign variables to the class
+        self.smin = smin
+        self.smax = smax
         self.y = y
         self.tm = tm
         self.tmn = tmn
