@@ -194,7 +194,7 @@ class OTSolver:
         lr = lr_init
         
         # initialise weights
-        if self.initial_weights == None:
+        if self.initial_weights is None:
             if self.interpolate_onto_grid:
                 psi = self.initialise_weights_grid()
             else:
