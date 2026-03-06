@@ -225,6 +225,9 @@ class OTSolver:
         
         psi -= np.mean(psi)
         
+        # initialise list to keep track of weights
+        psis = [psi]
+        
         ld = _atmosphere_bgs.LaguerreDiagram(ld, psi)
         self.ld = ld
         err = np.abs(self.tmn - ld.areas)
@@ -292,6 +295,8 @@ class OTSolver:
                     ld.detach()
                     err = err2
                     good_areas = good_areas2
+                    
+                    psis.append(psi)
                     break
 
                 else:
@@ -345,7 +350,7 @@ class OTSolver:
         # assign variables to class
         ld.detach()
         self.ld = ld
-        return ld
+        return ld, psis
     
     def plot_runstats(self):
         """
