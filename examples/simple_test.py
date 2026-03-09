@@ -17,17 +17,12 @@ dtime = '0000'
 filepath = '../data/'
 filename = 'bs_'+data_type+date+dtime
 
-skip = 2
-input_data = atmosphere_bgs.DataLoader(filepath+filename,load_all=True,skip=skip)
+skip = 0
+input_data = atmosphere_bgs.DataLoader(filepath+filename,p00=1e+5,load_all=True,skip=skip)
 solv = atmosphere_bgs.OTSolver(input_data)
 solv.get_bgs(verbose=True)
 ld = solv.ld
 solv.ld.sim.pmax=140000
-
-# ld = atmosphere_bgs.LaguerreDiagram(input_data.y,psi,solv.pp,solv.sp)
-# ld.sim.pmax = 140000
-
-# print(np.min(ld.areas))
 
 # plot resulting Laguerre diagrams coloured by zonal angular momentum and potential temperature
 th = ld.ys[:,1].copy()

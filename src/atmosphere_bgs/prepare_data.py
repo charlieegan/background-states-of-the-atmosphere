@@ -4,7 +4,7 @@ import re
 
 class DataLoader:
     
-    def __init__(self,path,pmin=10,load_all=False,interpolate_onto_grid=True,skip=0,split_param=None):
+    def __init__(self,path,pmin=10,p00=None,load_all=True,interpolate_onto_grid=True,skip=0,split_param=None):
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:
@@ -36,6 +36,7 @@ class DataLoader:
         self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "MASS INTEGRALS IN PV-THETA COORDINATES")
         self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
         self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "CIRCULATION INTEGRALS IN PV-THETA COORDINATES")
+        self.parse_block(self.latitudes_cnt, "BACKGROUND PRESSURE ON TOP BOUNDARY")
 
         if load_all:
             try:
@@ -70,15 +71,16 @@ class DataLoader:
             self.parse_block(self.isentropic_level_cnt, "AREA INTEGRAL OVER POLAR SHELLS THETA COORDINATES")
             self.parse_block(self.isentropic_level_cnt, "MASS INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
             self.parse_block(self.isentropic_level_cnt, "CIRCULATION INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
-            self.parse_block(self.latitudes_cnt, "BACKGROUND PRESSURE ON TOP BOUNDARY")
             self.parse_block(self.latitudes_cnt, "BACKGROUND SURFACE GEOPOTENTIAL")
             self.parse_block(self.isentropic_level_cnt, r"BACKGROUND u\*cos\(phi\) AT EQUATOR ON THETA LEVELS")
         
         # get physical parameters
         self.pp = _atmosphere_bgs.PhysicalParameters()
 
-        # assign minimum pressure level to class
+        # assign minimum pressure level and reference pressure to class
         self.pmin = pmin
+        if p00 is not None:
+            self.pp.p00 = p00
         
         # get target measure
         self.get_target_measure(interpolate_onto_grid=interpolate_onto_grid,skip=skip,split_param=split_param)
