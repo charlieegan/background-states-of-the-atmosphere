@@ -259,12 +259,13 @@ class DataLoader:
             bscirc_diff = np.vstack([bscirc_diff,bscirc_diff[-1]])
             zam = zam_scale_factor*(bscirc + .5*bscirc_diff)
             # define smin and smax
-            smin = np.min(latitudes)
-            smax = np.max(latitudes)
+            smin = np.min(np.sin(np.deg2rad(latitudes)))
+            smax = np.max(np.sin(np.deg2rad(latitudes)))
             # define vectorised seeds, masses and normalised masses to be used in OT routine
-            y = np.hstack([np.ravel(zam),np.ravel(th)]).T
+            y = np.vstack([np.ravel(zam),np.ravel(th)]).T
             tm = np.ravel(mass)
-            tmn = tm/np.sum(tm)
+            source_mass = (self.pp.p00 - self.pmin)*(smax - smin)
+            tmn = source_mass*tm/np.sum(tm)
         else:
             
             # Interpolate mass linearly in pseudo-s coordinate onto Gaussian grid of latitudes
