@@ -280,7 +280,7 @@ class DataLoader:
                 snodes = snodes[::skip]
                 
             ## set up matrices to store angmom and mass with one extra level for theta above the data
-            nnodes = len(snodes)
+            nnodes = len(snodes)+1
             zam_grid = np.nan*np.zeros([nnodes,nthlev+1])
             mass_grid = np.nan*np.zeros([nnodes,nthlev+1])
             
