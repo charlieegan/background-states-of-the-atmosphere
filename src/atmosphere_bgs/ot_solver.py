@@ -274,7 +274,7 @@ class OTSolver:
                 
                 # calculate ld after step
                 ld2 = _atmosphere_bgs.LaguerreDiagram(ld, psi2)
-                err2 = get_err(self.tmn,ld2.areas) #np.abs(self.tmn - ld2.areas)
+                #err2 = get_err(self.tmn,ld2.areas) #np.abs(self.tmn - ld2.areas)
                 good_areas2 = (ld2.areas > min_area)
 
                 # if self.sp.negative_area_scaling <= 0:
@@ -297,10 +297,13 @@ class OTSolver:
                 #         = (1 - lr) * areas + lr * tmn
                 # => ||areas' - tmn||_1 ~= (1 - lr) ||areas - tmn||_1
                 if self.sp.negative_area_scaling <= 0:
-                    err_good = get_err(self.tmn[good_areas],ld.areas[good_areas])
-                    err2_good = get_err(self.tmn[good_areas2],ld.areas[good_areas2])
-                
-                descent_good = err2_good < (1 - descent_accept_thresh * min(0.1, lr)) * err_good
+                    err = get_err(self.tmn[good_areas],ld.areas[good_areas])
+                    err2 = get_err(self.tmn[good_areas2],ld2.areas[good_areas2])
+                else:
+                    err = get_err(self.tmn,ld.areas)
+                    err2 = get_err(self.tmn,ld2.areas)
+                    
+                descent_good = err2 < (1 - descent_accept_thresh * min(0.1, lr)) * err
 
                 if areas_good and descent_good:
                     self.timer += ld.time
