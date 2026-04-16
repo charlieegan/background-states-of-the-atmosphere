@@ -287,13 +287,20 @@ class DataLoader:
             
             ## do interpolation on each theta level
             for k, cum_mass_k in enumerate(bsmass.T):
-                # get points in pseudo-s on k-th theta level, select interpolation
-                # nodes that are above the minimum and append the minimium
+                # Get points in pseudo-s on k-th theta level, select interpolation
+                # nodes that are above the minimum and append the minimium.
+                # If the gap to the minimum node is small, this can create 
+                # prohibitively small masses. In case, discard the minimum node.
                 spseudo_k = spseudo[:,k]
                 sk_min = spseudo_k[0]
-                idx = snodes>sk_min            
-                snodes_k = np.hstack([sk_min,snodes[idx]])
-                
+                idx = snodes>sk_min
+                snodes_k = snodes[idx]
+                if (snodes_k[0]-sk_min)/(snodes_k[1]-snodes_k[0])>.1:
+                    snodes_k = np.hstack([sk_min,snodes_k])
+                else:
+                    snodes_k = snodes_k[1:] # discard minimum node
+                    snodes_k = np.hstack([sk_min,snodes_k])
+                    
                 # append zero mass at pole for interpolation and differencing
                 spseudo_k = np.append(spseudo_k,1)
                 cum_mass_k = np.append(cum_mass_k,0)
