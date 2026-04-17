@@ -218,6 +218,9 @@ class OTSolver:
 
         if use_long_double:
             psi = psi.astype(np.float128)
+            LD = _atmosphere_bgs.LaguerreDiagram_float128
+        else:
+            LD = _atmosphere_bgs.LaguerreDiagram_float64
 
         self.runstats = {"na" : [],  "lr" : [], "maxerr" : [], "l2err" : [], "meanerr" : [], "good" : [], "bad" : [], "tries" : []}
         self.timer = _atmosphere_bgs.Timer([])
@@ -225,7 +228,7 @@ class OTSolver:
         if verbose:
             print(f'initial duals calculated', flush=True)
         
-        ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
+        ld = LD(self.y, psi, self.pp, self.sp)
         self.ld = ld
 
         if verbose:
@@ -240,7 +243,7 @@ class OTSolver:
         # initialise list to keep track of weights
         psis = [psi]
         
-        ld = _atmosphere_bgs.LaguerreDiagram(ld, psi)
+        ld = LD(ld, psi)
         self.ld = ld
         err = get_err(self.tmn,ld.areas)#np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
@@ -273,7 +276,7 @@ class OTSolver:
                     self.timer += ld2.hs.time
                 
                 # calculate ld after step
-                ld2 = _atmosphere_bgs.LaguerreDiagram(ld, psi2)
+                ld2 = LD(ld, psi2)
                 #err2 = get_err(self.tmn,ld2.areas) #np.abs(self.tmn - ld2.areas)
                 good_areas2 = (ld2.areas > min_area)
 
@@ -333,7 +336,7 @@ class OTSolver:
                 psi = ld.touching_dual(randomize=True)
                 self.timer += ld.time
                 self.timer += ld.hs.time
-                ld = _atmosphere_bgs.LaguerreDiagram(ld, psi, False)
+                ld = LD(ld, psi, False)
                 err = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
 
