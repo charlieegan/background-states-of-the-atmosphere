@@ -349,8 +349,9 @@ class DataLoader:
                     mass_per_pascal = total_mass/(self.pp.p00-self.pmin)
                     mass_top = mass_per_pascal*areas_top
                     
-                    ## define zonal angular momentum values for top assuming u=0 as a first guess
-                    zam_top = self.pp.Omega*self.pp.a**2*(1-s_top**2)
+                    ## define zonal angular momentum values for extra theta level
+                    ## assuming that they match those of the top theta level in the data
+                    zam_top = zam_scale_factor*bscirc_max*(1-s_top**2)
     
                     ## define theta value at top to be the maximum theta value plus a level depth
                     th_top = thlev[0] + (thlev[0]-thlev[1])

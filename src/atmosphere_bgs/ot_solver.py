@@ -47,7 +47,7 @@ class OTSolver:
         self.runstats = None
         self.initial_weights = initial_weights
         
-    def initialise_weights_grid(self,top_scale=1.01,initial_weights_perturbation=1e-11):
+    def initialise_weights_grid(self,top_scale=2,initial_weights_perturbation=1e-14):
         '''Initialises weights for target measure with support on a rectangular grid.
         Initialisation corresponds to mass density in (Z,theta) being uniform
         between each successive pair of Z-levels and being uniform between each
@@ -89,7 +89,7 @@ class OTSolver:
         # filter out weights for points with no mass or zonal angular momentum
         idx = ~np.isnan(zam_grid)
         psi = psi[idx]
-        psi = psi + np.random.rand(len(psi))*np.mean(psi)*initial_weights_perturbation
+        psi = psi + .5*np.random.uniform(-1,1,len(psi))*np.max(psi - np.min(psi))*initial_weights_perturbation
         psi = np.append(psi,psi_ext)
         
         return psi
@@ -164,10 +164,10 @@ class OTSolver:
 
     def get_bgs(self,
                 use_long_double=False, verbose=False,
-                max_its=1000, descent_accept_thresh=0.01, err_type=None,
-                min_area=0, max_lost_areas=None,
+                max_its=1000, descent_accept_thresh=0.01,
+                min_area=1e-10, max_lost_areas=None,
                 lr_up=2.0, lr_down=0.5, lr_max=1.0, lr_min=1e-20, lr_init=1e-5,
-                max_loss_fraction=1e-3, initial_weights_perturbation=1e-11, top_scale=1.01):
+                max_loss_fraction=1e-4, initial_weights_perturbation=1e-14, top_scale=2):
         """
         run the modified damped Newton solver
         
@@ -187,21 +187,12 @@ class OTSolver:
         
         err_goal = self.ot_tol/2
         
-        # define functions returning errors
-        get_err_max = lambda a0, a1 : np.max(np.abs(a0-a1)/a0)
-        get_err_RMS = lambda a0, a1 : (1/len(a0))*(np.sum((np.abs(a0-a1)/a0)**2))**.5
-        get_err_mean = lambda a0, a1 : np.mean(np.abs(a0-a1)/a0)
-        
-        if err_type is None:
-            get_err = get_err_max
-        elif err_type=='RMS':
-            get_err = get_err_RMS
-        elif err_type=='mean':
-            get_err = get_err_mean
+        # define functions returning mean error
+        get_err = lambda a0, a1 : np.mean(np.abs(a0-a1)/a0)
         
         # maximum number of areas to allow to be lost in an accepted step
         if max_lost_areas is None:
-            max_lost_areas = int(np.ceil(self.n / 1000))
+            max_lost_areas = int(np.ceil(self.n))*max_loss_fraction
             
         lr = lr_init
         
@@ -288,8 +279,9 @@ class OTSolver:
                 #     aerr2 = np.sum((err2/self.tmn))
 
                 cnt_lost_areas = np.sum(good_areas & ~good_areas2)
+                
                 if self.sp.negative_area_scaling <= 0:
-                    areas_good = cnt_lost_areas <= max_loss_fraction * self.n or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
+                    areas_good = cnt_lost_areas <= max_lost_areas # max_loss_fraction * self.n or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
                 else:
                     areas_good = True
                 cnt_lost_areas_prev = cnt_lost_areas
@@ -319,6 +311,11 @@ class OTSolver:
                     good_areas = good_areas2
                     
                     psis.append(psi)
+                    
+                    # if some areas are lost and step is accepted, reset learning rate to its initial value
+                    if cnt_lost_areas > 0:
+                        lr = lr_init
+                        
                     break
 
                 else:
@@ -337,7 +334,6 @@ class OTSolver:
                 self.timer += ld.time
                 self.timer += ld.hs.time
                 ld = LD(ld, psi, False)
-                err = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
 
                 if verbose:
@@ -348,10 +344,11 @@ class OTSolver:
 
             self.ld = ld
             
+            abs_errs = np.abs(self.tmn - ld.areas)
             self.runstats["lr"] += [lr]
-            self.runstats["maxerr"] += [np.max(err / self.tmn)]
-            self.runstats["l2err"] += [np.sum((err / self.tmn)**2)**.5]
-            self.runstats["meanerr"] += [np.mean(err / self.tmn)]
+            self.runstats["maxerr"] += [np.max(abs_errs / self.tmn)]
+            self.runstats["l2err"] += [np.sum((abs_errs / self.tmn)**2)**.5]
+            self.runstats["meanerr"] += [np.mean(abs_errs / self.tmn)]
             self.runstats["good"] += [np.sum(good_areas)]
             self.runstats["bad"] += [good_areas.shape[0] - self.runstats["good"][-1]]
             self.runstats["tries"] += [cnt_tries]
@@ -359,7 +356,7 @@ class OTSolver:
             if verbose:
                 print(f'it={it}, lr={lr:.2e}, good_areas={self.runstats["good"][-1]}/{good_areas.shape[0]}, meanerr={self.runstats["meanerr"][-1]:.6e}, l2err = {self.runstats["l2err"][-1]:.6e}, max_err={self.runstats["maxerr"][-1]:.6e}', flush=True)
 
-            if np.max(err / self.tmn) < err_goal:
+            if err < err_goal:
                 break
 
         t11 = time.time()
