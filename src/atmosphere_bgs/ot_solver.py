@@ -330,7 +330,6 @@ class OTSolver:
                 self.timer += ld.time
                 self.timer += ld.hs.time
                 ld = _atmosphere_bgs.LaguerreDiagram(ld, psi, False)
-                abs_errs = np.abs(self.tmn - ld.areas)
                 good_areas = (ld.areas > min_area)
 
                 if verbose:
@@ -341,6 +340,7 @@ class OTSolver:
 
             self.ld = ld
             
+            abs_errs = np.abs(self.tmn - ld.areas)
             self.runstats["lr"] += [lr]
             self.runstats["maxerr"] += [np.max(abs_errs / self.tmn)]
             self.runstats["l2err"] += [np.sum((abs_errs / self.tmn)**2)**.5]
