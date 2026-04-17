@@ -277,10 +277,6 @@ class OTSolver:
 
                 cnt_lost_areas = np.sum(good_areas & ~good_areas2)
                 
-                # if some areas are lost, reset learning rate to its initial value
-                if cnt_lost_areas > 0:
-                    lr = lr_init
-                
                 if self.sp.negative_area_scaling <= 0:
                     areas_good = cnt_lost_areas <= max_lost_areas # max_loss_fraction * self.n or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
                 else:
@@ -312,6 +308,11 @@ class OTSolver:
                     good_areas = good_areas2
                     
                     psis.append(psi)
+                    
+                    # if some areas are lost and step is accepted, reset learning rate to its initial value
+                    if cnt_lost_areas > 0:
+                        lr = lr_init
+                        
                     break
 
                 else:
