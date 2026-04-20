@@ -47,7 +47,7 @@ class OTSolver:
         self.runstats = None
         self.initial_weights = initial_weights
         
-    def initialise_weights_grid(self,top_scale=1.1,initial_weights_perturbation=1e-14):
+    def initialise_weights_grid(self,top_scale=2,initial_weights_perturbation=1e-14):
         '''Initialises weights for target measure with support on a rectangular grid.
         Initialisation corresponds to mass density in (Z,theta) being uniform
         between each successive pair of Z-levels and being uniform between each
@@ -79,12 +79,12 @@ class OTSolver:
                 p = self.sp.pmin + (mass_th[k-1]/total_mass)*(self.pp.p00-self.sp.pmin)
                 psi[0,k] = psi[0,k-1] + self.c_enth(p,th_grid[0,k]) - self.c_enth(p,th_grid[0,k-1])
             if k == K-1 and ~np.isnan(zam_grid[0,k]):
-                psi_ext = psi[0,k] - self.c_KE(self.sp.smax,zam_grid[0,k]) - self.pp.cp*th_grid[0,k]*top_scale**self.pp.kappa
+                psi_ext = psi[0,k] + self.c_KE(self.sp.smax,zam_grid[0,k]) - self.pp.cp*th_grid[0,k]*top_scale**self.pp.kappa
             for j in np.arange(J-1):
                 s = self.sp.smax - (mass_zam[j]/total_mass)*(self.sp.smax - self.sp.smin)
                 psi[j+1,k] = psi[j,k] + self.c_KE(s,zam_grid[j+1,k]) - self.c_KE(s,zam_grid[j,k])
                 if k==K-1 and ~np.isnan(zam_grid[j+1,k]) and ~np.isnan(psi[j+1,k]):
-                    psi_ext = np.max([psi_ext, psi[j+1,k] - self.c_KE(s,zam_grid[j+1,k]) - self.pp.cp*th_grid[0,k]*top_scale**self.pp.kappa])
+                    psi_ext = np.max([psi_ext, psi[j+1,k] + self.c_KE(s,zam_grid[j+1,k]) - self.pp.cp*th_grid[0,k]*top_scale**self.pp.kappa])
         
         # filter out weights for points with no mass or zonal angular momentum
         idx = ~np.isnan(zam_grid)
@@ -167,7 +167,7 @@ class OTSolver:
                 max_its=1000, descent_accept_thresh=0.01,
                 min_area=1e-10, max_lost_areas=None,
                 lr_up=2.0, lr_down=0.5, lr_max=1.0, lr_min=1e-20, lr_init=1e-5,
-                initial_weights_perturbation=1e-14, top_scale=1.1):
+                max_loss_fraction=1e-4, initial_weights_perturbation=1e-14, top_scale=2):
         """
         run the modified damped Newton solver
         
@@ -176,26 +176,23 @@ class OTSolver:
         verbose : bool -- output information about the procedure during execution (default False)
         max_its : int -- maximal number of iterations to run the solver for (default 1000)
         descent_accept_thresh : float < 1 -- threshold of relative descent to accept step (default 0.01)
-        min_area : float >= 0.0 -- minimal area to treat as non-empty (default 1e-10)
+        min_area : float >= 0.0 -- minimal area to treat as non-empty (default 0)
         max_lost_areas : int >= 0 -- maximal number of cells that may be lost during an accepted step (default None, chosen based on problem size)
         lr_up : float > 1.0 -- factor by which to increase the learning rate (aka. step size) at the start of each iteration (default 2.0)
         lr_down : float < 1.0 -- factor by which to decrease the learning rate after a failed step (default 0.5)
         lr_max : float <= 1.0 -- upper bound for the learning rate (default 1.0)
         lr_min : float > 0 -- lower bound for the learning rate, when it falls below this, the solver is terminated (default 1e-20)
         lr_init : 0 < float <= 1 -- initial learning rate (default 1e-5)
-        initial_weights_perturbation: 0 < float -- (for gridded data) scale of perturbation to add to initial weights to avoid non-generic cell vertices (default 1e-14)
-        top_scale: 1 < float -- (for gridded data) top_scale*p_r is a lower bound on the initial surface pressure ensuring no empty cells on initialisation (default 1.1)
         """
         
         err_goal = self.ot_tol/2
         
-        # define functions returning mean and max error
-        get_mean_err = lambda a0, a1 : np.mean(np.abs(a0-a1)/a0)
-        get_max_err = lambda a0, a1 : np.max(np.abs(a0-a1)/a0)
+        # define functions returning mean error
+        get_err = lambda a0, a1 : np.mean(np.abs(a0-a1)/a0)
         
         # maximum number of areas to allow to be lost in an accepted step
         if max_lost_areas is None:
-            max_lost_areas = int(np.ceil(self.n))*1e-4
+            max_lost_areas = int(np.ceil(self.n))*max_loss_fraction
             
         lr = lr_init
         
@@ -212,6 +209,9 @@ class OTSolver:
 
         if use_long_double:
             psi = psi.astype(np.float128)
+            LD = _atmosphere_bgs.LaguerreDiagram_float128
+        else:
+            LD = _atmosphere_bgs.LaguerreDiagram_float64
 
         self.runstats = {"na" : [],  "lr" : [], "maxerr" : [], "l2err" : [], "meanerr" : [], "good" : [], "bad" : [], "tries" : []}
         self.timer = _atmosphere_bgs.Timer([])
@@ -219,7 +219,7 @@ class OTSolver:
         if verbose:
             print(f'initial duals calculated', flush=True)
         
-        ld = _atmosphere_bgs.LaguerreDiagram(self.y, psi, self.pp, self.sp)
+        ld = LD(self.y, psi, self.pp, self.sp)
         self.ld = ld
 
         if verbose:
@@ -234,8 +234,9 @@ class OTSolver:
         # initialise list to keep track of weights
         psis = [psi]
         
-        ld = _atmosphere_bgs.LaguerreDiagram(ld, psi)
+        ld = LD(ld, psi)
         self.ld = ld
+        err = get_err(self.tmn,ld.areas)#np.abs(self.tmn - ld.areas)
         good_areas = (ld.areas > min_area)
         if verbose:
             print(f'it={-1}, lr={lr:.2e}, good_areas={np.sum(good_areas)}/{good_areas.shape[0]}', flush=True)
@@ -266,7 +267,8 @@ class OTSolver:
                     self.timer += ld2.hs.time
                 
                 # calculate ld after step
-                ld2 = _atmosphere_bgs.LaguerreDiagram(ld, psi2)
+                ld2 = LD(ld, psi2)
+                #err2 = get_err(self.tmn,ld2.areas) #np.abs(self.tmn - ld2.areas)
                 good_areas2 = (ld2.areas > min_area)
 
                 # if self.sp.negative_area_scaling <= 0:
@@ -279,7 +281,7 @@ class OTSolver:
                 cnt_lost_areas = np.sum(good_areas & ~good_areas2)
                 
                 if self.sp.negative_area_scaling <= 0:
-                    areas_good = cnt_lost_areas <= max_lost_areas
+                    areas_good = cnt_lost_areas <= max_lost_areas # max_loss_fraction * self.n or (cnt_lost_areas >= cnt_lost_areas_prev and cnt_lost_areas <= max_lost_areas)
                 else:
                     areas_good = True
                 cnt_lost_areas_prev = cnt_lost_areas
@@ -290,11 +292,11 @@ class OTSolver:
                 #         = (1 - lr) * areas + lr * tmn
                 # => ||areas' - tmn||_1 ~= (1 - lr) ||areas - tmn||_1
                 if self.sp.negative_area_scaling <= 0:
-                    err = get_mean_err(self.tmn[good_areas],ld.areas[good_areas])
-                    err2 = get_mean_err(self.tmn[good_areas2],ld2.areas[good_areas2])
+                    err = get_err(self.tmn[good_areas],ld.areas[good_areas])
+                    err2 = get_err(self.tmn[good_areas2],ld2.areas[good_areas2])
                 else:
-                    err = get_mean_err(self.tmn,ld.areas)
-                    err2 = get_mean_err(self.tmn,ld2.areas)
+                    err = get_err(self.tmn,ld.areas)
+                    err2 = get_err(self.tmn,ld2.areas)
                     
                 descent_good = err2 < (1 - descent_accept_thresh * min(0.1, lr)) * err
 
@@ -310,9 +312,9 @@ class OTSolver:
                     
                     psis.append(psi)
                     
-                    # if some areas are lost and step is accepted, decrease the learning rate
+                    # if some areas are lost and step is accepted, reset learning rate to its initial value
                     if cnt_lost_areas > 0:
-                        lr *= lr_down
+                        lr = lr_init
                         
                     break
 
@@ -331,7 +333,7 @@ class OTSolver:
                 psi = ld.touching_dual(randomize=True)
                 self.timer += ld.time
                 self.timer += ld.hs.time
-                ld = _atmosphere_bgs.LaguerreDiagram(ld, psi, False)
+                ld = LD(ld, psi, False)
                 good_areas = (ld.areas > min_area)
 
                 if verbose:
@@ -353,9 +355,8 @@ class OTSolver:
 
             if verbose:
                 print(f'it={it}, lr={lr:.2e}, good_areas={self.runstats["good"][-1]}/{good_areas.shape[0]}, meanerr={self.runstats["meanerr"][-1]:.6e}, l2err = {self.runstats["l2err"][-1]:.6e}, max_err={self.runstats["maxerr"][-1]:.6e}', flush=True)
-            
-            max_err = get_max_err(self.tmn,ld.areas)
-            if max_err < err_goal:
+
+            if err < err_goal:
                 break
 
         t11 = time.time()

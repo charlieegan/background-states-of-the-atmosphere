@@ -98,6 +98,10 @@ void DLS::refine(int newlen) {
   }
   T totlen = lens(oldlen - 1);
 
+  // don't refine extremely short paths
+  if (totlen < 1e-16)
+    return;
+
   // calculate new lam positions to be approx evenly spaced in s-p-coords
   VectorX oldlams = lams;
   lams.resize(newlen);

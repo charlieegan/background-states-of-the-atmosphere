@@ -148,10 +148,10 @@ void laguerre_diagram<T>::do_hs_intersect() {
     // halfspaces on intersections
 
     // positions at which to add halfspaces (later)
-    T z0min = 1. / (1 - sqr(sim.spmin(0)));
-    T z0max = 1. / (1 - sqr(sim.spmax(0)));
-    std::vector<T> z0s({z0min, z0max});
-    
+    T z0gmin = 1. / (1 - sqr(sim.spmin(0)));
+    T z0gmax = 1. / (1 - sqr(sim.spmax(0)));
+    std::vector<T> z0s({z0gmin, z0gmax});
+
     // go over all edges
     for (int i = 0; i < n; i++) {
       for (const auto &e : hs.mesh.pneigh(i + 6)) {
@@ -175,26 +175,31 @@ void laguerre_diagram<T>::do_hs_intersect() {
         auto psij = duals[e.pj - 6];
         auto psitop = duals[n];
 
+        //   z0 * (yi[0]**2 / (2 * a**2)) + z1 * cp * yi[1] - Omega * yi[0] - psii
+        // = z0 * (yj[0]**2 / (2 * a**2)) + z1 * cp * yj[1] - Omega * yj[0] - psij
+        // = -Omega**2 * a**2 / (2 * z0) - psitop
+
         auto [z1min, z1max] = std::minmax(hs.mesh.dvert[e.di][1], hs.mesh.dvert[e.dj][1]);
-        
-        if (dy[1] == 0) {
-          // vertical line segment
-          T z0 = 2 * sqr(phys->a) * (phys->Omega * dy[0] + psii - psij) / (sqr(yi[0]) - sqr(yj[0]));
+        auto [z0min, z0max] = std::minmax(hs.mesh.dvert[e.di][0], hs.mesh.dvert[e.dj][0]);
+
+        if (dy[1] == 0 || hs.mesh.dvert[e.di][0] == hs.mesh.dvert[e.dj][0]) {
+          // vertical line segment (horizontal y, normals)
+          T z0 = hs.mesh.dvert[e.di][0]; // 2 * sqr(phys->a) * (phys->Omega * dy[0] + psii - psij) / (sqr(yi[0]) - sqr(yj[0])); // = hs.mesh.dvert[e.di][0]
           T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0)
-                      - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
-                      + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
+                  - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
+                  + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
           if (z1min <= z1 && z1 <= z1max) {
             z0s.push_back(z0);
           }
         } else {
           // non-vertical line segment
-          T c0 = (sqr(yj[0]) * yi[1] - sqr(yi[0]) * yj[1]) / (2 * sqr(phys->a) * yi[1] * dy[1]);
-          T c1 = (yi[1] * (phys->Omega * dy[0] + psii - psij) + dy[1] * (-phys->Omega * yi[0] + psitop - psii)) / (yi[1] * dy[1]);
-          T c2 = sqr(phys->Omega * phys->a) / (2 * yi[1]);
-          // intersections are at c0 * z0**2 + c1 * z0 + c2 = 0
+          T c0 = (sqr(yj[0]) * yi[1] - sqr(yi[0]) * yj[1]) / (sqr(phys->a) * dy[1]);
+          T c1 = (yi[1] * (phys->Omega * dy[0] + psii - psij) + dy[1] * (-phys->Omega * yi[0] + psitop - psii)) / dy[1];
+          T c2 = sqr(phys->Omega * phys->a);
+          // intersections are at solutions to c0 * z0**2 + 2 * c1 * z0 + c2 = 0
 
           // solutions are at z0 = p +- sqrt(q)
-          T p = -0.5 * c1 / c0;
+          T p = -c1 / c0;
           T q = sqr(p) - c2 / c0;
 
           if (q > 0) {
@@ -205,6 +210,7 @@ void laguerre_diagram<T>::do_hs_intersect() {
               T z1 = (-sqr(phys->Omega * phys->a) / (2 * z0)
                       - sqr(yi[0]) / (2 * sqr(phys->a)) * z0
                       + phys->Omega * yi[0] + psii - psitop) / (phys->cp * yi[1]);
+              // T z1 = (phys->Omega * dy[0] + psii - psij - z0 * (sqr(yi) - sqr(yj)) / (2 * phys->a)) / (phys->cp * dy[1]);
               if (z1min <= z1 && z1 <= z1max) {
                 z0s.push_back(z0);
               }
