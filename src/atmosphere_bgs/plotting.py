@@ -44,8 +44,13 @@ def plot_lag_tess(ld, cmap=None, val = None, res=[1000,1000], contour_levels = 0
         plt.colorbar(im)
 
     if plot_lines:
-        lc = LineCollection([[p for p in e.ls.x] for e in ld.edglist], 
-                            alpha=0.8, linewidth=0.2, colors=line_clr)
+        if transform is not None:
+            lc = LineCollection([[transform(p) for p in e.ls.x] for e in ld.edglist], 
+                                alpha=0.8, linewidth=0.2, colors=line_clr)
+        else:
+            lc = LineCollection([[p for p in e.ls.x] for e in ld.edglist], 
+                                alpha=0.8, linewidth=0.2, colors=line_clr)
+        
         ax.add_collection(lc)
 
     if rast is not None:
