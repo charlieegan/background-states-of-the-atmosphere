@@ -121,6 +121,7 @@ public:
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> out;  //!< rasterized output
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> fill; //!< pixel fill amount in output
   std::vector<std::vector<std::map<int, double>>> inverse; //!< indices and weights for each cell
+  Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> approx_inverse; //!< indices with maximum weight for each cell
   bool calc_inverse; //!< should the inverse be calculated?
   Eigen::Array4d bounds;                    //!< domain boundaries [xmin, xmax, ymin, ymax]
   Eigen::Array2d lb;                        //!< left lower corner [xmin, ymin]

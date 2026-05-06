@@ -315,8 +315,10 @@ rasterizer::rasterize(const Eigen::Ref<const Eigen::VectorXd> &val,
 
   if (calc_inverse) {
     inverse = std::vector<std::vector<std::map<int, double>>>(res(0), std::vector<std::map<int, double>>(res(1)));
+    approx_inverse = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::Zero(res(0), res(1));
   } else {
     inverse.clear();
+    approx_inverse = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::Zero(0,0);
   }
 
   // calculate step spacings
@@ -444,6 +446,21 @@ rasterizer::rasterize(const Eigen::Ref<const Eigen::VectorXd> &val,
   if (!line.empty())
     throw std::runtime_error("line not empty at the end");
 #endif
+
+  if (calc_inverse) {
+    for (int i = 0; i < res(0); ++i)
+      for (int j = 0; j < res(1); ++j) {
+        int k = -1;
+        double maxval = 0;
+        for (auto p : inverse[i][j]) {
+          if (p.second > maxval) {
+            maxval = p.second;
+            k = p.first;
+          }
+        }
+        approx_inverse(i,j) = k;
+      }
+  } 
 
   return out;
 }
@@ -758,6 +775,7 @@ void rasterizer::bind(py::module_ &m) {
 #endif
     .def_readonly("calc_inverse", &rasterizer::calc_inverse)
     .def_readonly("inverse", &rasterizer::inverse)
+    .def_readonly("approx_inverse", &rasterizer::approx_inverse)
     .def_readonly("events", &rasterizer::events)
     .def_readonly("out", &rasterizer::out)
     .def_readonly("fill", &rasterizer::fill)
