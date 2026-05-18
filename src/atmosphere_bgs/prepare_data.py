@@ -266,6 +266,11 @@ class DataLoader:
             tm = np.ravel(mass)
             source_mass = (self.pp.p00 - self.pmin)*(smax - smin)
             tmn = source_mass*tm/np.sum(tm)
+            # Retain only points where mass and zonal angular momentum are positive
+            idx = np.where((tmn>0)*(y[:,0]>0))
+            y = y[idx]
+            tm = tm[idx]
+            tmn = tmn[idx]
         else:
             
             # Interpolate mass linearly in pseudo-s coordinate onto Gaussian grid of latitudes
