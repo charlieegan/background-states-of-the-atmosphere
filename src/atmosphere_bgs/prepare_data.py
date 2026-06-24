@@ -221,6 +221,23 @@ class DataLoader:
         elif split_param is None:
             split_param = 0
             
+        ## force difference in cumulative masses on each theta level to be positive
+        for k, mass_k in enumerate(bsmass.T):
+            if np.any(np.diff(mass_k)>0):
+                idx = np.where(np.diff(mass_k)>0)[0]
+                for i in np.flip(idx):
+                    mass_k[idx] = mass_k[idx+1]
+            bsmass[:,k] = mass_k
+            
+        ## force difference in circulations on each theta level to be positive
+        for k, circ_k in enumerate(bscirc.T):
+            if np.any(np.diff(circ_k)>0):
+                idx = np.where(np.diff(circ_k)>0)[0]
+                for i in np.flip(idx):
+                    circ_k[idx] = circ_k[idx+1]
+            bscirc[:,k] = circ_k
+            
+        ## force both mass and circulation to be strictly decreasing on each theta level
         for k, (circ_k, mass_k) in enumerate(zip(bscirc.T,bsmass.T)):
             # find where cumulative mass or circulation are flat as function of PV
             zero_mass = np.hstack([False,np.diff(mass_k) == 0])
