@@ -206,10 +206,6 @@ class DataLoader:
         thlev = thlev[idx]
         nthlev = thlev.shape[0]
         
-        self.bscirc = bscirc
-        self.pvlevs = pvlev
-        self.thlevs = thlev
-        
         # Define mass scale factors on each level (final theta level depth is repeated)
         dth = np.absolute(np.append(np.diff(thlev),thlev[-1]-thlev[-2]))
         mass_scale_factor = eartharea*dth
@@ -269,6 +265,10 @@ class DataLoader:
                         
             bscirc[:,k] = circ_k
             bsmass[:,k] = mass_k
+            
+        self.bscirc = bscirc
+        self.pvlevs = pvlev
+        self.thlevs = thlev
         
         if not interpolate_onto_grid:
             # define matrix of theta values
