@@ -7,7 +7,7 @@ from scipy import sparse
 from scipy.interpolate import PchipInterpolator
 
 class SmoothSolution:
-    def __init__(self,solv,bscirc,pvlevs,thlevs,\
+    def __init__(self,solv,bscirc,pvlevs,thlevs,pvmaxth,\
                  res=[200,200],eps=1e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_4',n_nb_th_levs=None,\
                  adjust_surface_Z=True,adjust_surface_th=True,d_Z_surf_adj=2,d_th_surf_adj=2,plot=False,\
                      adjust_weights=False,verbose=False):
@@ -70,6 +70,7 @@ class SmoothSolution:
         self.bscirc = bscirc
         self.pvlevs = pvlevs
         self.thlevs = thlevs
+        self.pvmaxth = pvmaxth
         self.push_foward_to_insentropic_coords()
         self.get_q_isentropic()
         
@@ -656,9 +657,8 @@ class SmoothSolution:
         
         transform = lambda x : [s2lat(x[0]), p2h(x[1])]
         rast = ld.get_rasterizer(transform)
-        
-        rast.rasterize(th,res,calc_inverse=True);
-        cell_idx = np.flip(rast.approx_inverse.copy().T,axis=0)
+        pts = np.vstack([np.ravel(lg),np.ravel(hg)]).T
+        cell_idx = rast.indices(pts)
 
         ld.sim.pmin = pmin_orig
         ld.sim.pmax = pmax_orig
@@ -685,7 +685,7 @@ class SmoothSolution:
         for i in i_genuine: # exclude fictitious cells
                 
             # Get the points that are in the ith cell
-            ig = np.where(np.ravel(cell_idx)==i)[0]
+            ig = np.where(cell_idx==i)[0]
             si = sg[ig]
             pi = pg[ig]
             
@@ -939,7 +939,11 @@ class SmoothSolution:
         return p_isentropic, Z_isentropic, u_isentropic, r_isentropic
     
     def get_q_isentropic(self):
-                
+        '''Function obtains PV on isentropic levels by linear interpolation of 
+        PV as a function of circulation on each isentropic level. Known data 
+        points come from the 3-d data. Points of evaluation represent zonal angular 
+        momentum of the MLM, which is proportional to circulation by zonal symmetry.
+        '''
         eartharea = 4*np.pi*self.pp.a**2
         zam_scale_factor = eartharea/2/np.pi
         
@@ -952,8 +956,9 @@ class SmoothSolution:
         for k, thlev in enumerate(self.thlevs):
             zmom_k = zmom[:,k]
             i0 = np.where(zmom_k>0)
-            q_isentropic[k] = np.interp(self.Z_isentropic[k],zmom_k[i0],pvlevs[i0])
-            #q_isentropic[k] = q_interp(self.Z_isentropic[k])
+            zmom_k = np.hstack([0,zmom_k[i0]])
+            pvlevs_k = np.hstack([self.pvmaxth[k],pvlevs[i0]])
+            q_isentropic[k] = np.interp(self.Z_isentropic[k],zmom_k,pvlevs_k)
             
         self.q_isentropic = q_isentropic
             
