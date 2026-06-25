@@ -68,14 +68,23 @@ public:
 
   /*! A functor struct to compare two segments by their y-value at a point x. */
   struct segment_cmp {
+    using is_transparent = void;
+      
     double *cur_x; //!< x-coordinate to use for comparison
 
     segment_cmp() = delete;
     segment_cmp(const segment_cmp &c);
     segment_cmp(double *cur_x);
-    
+
+    // compare segments at *cur_x
     bool operator()(const segment &a, const segment &b) const;
     bool operator()(const segment *a, const segment *b) const;
+
+    // compare point and segment, ignore *cur_x using point coords instead
+    bool operator()(const segment &a, const Eigen::Ref<const Eigen::Vector2d> &b) const;
+    bool operator()(const segment *a, const Eigen::Ref<const Eigen::Vector2d> &b) const;
+    bool operator()(const Eigen::Ref<const Eigen::Vector2d> &b, const segment &a) const;
+    bool operator()(const Eigen::Ref<const Eigen::Vector2d> &b, const segment *a) const;
   };
 
   /*! A struct to hold line-sweep events.
@@ -182,6 +191,15 @@ public:
   rasterize(const Eigen::Ref<const Eigen::VectorXd> &val,
             const Eigen::Ref<const Eigen::Array2i> &res,
             const bool &calc_inverse);
+
+  /*!
+   * Find cell indices at given points
+   * 
+   * \param pts matrix containing the 2d points in its rows
+   * 
+   * \return vector containing integer index each point is in
+   */
+  Eigen::VectorXi indices(const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2>> &pts);
 
   /*! Add python bindings to given module m. */
   static void bind(py::module_ &m);

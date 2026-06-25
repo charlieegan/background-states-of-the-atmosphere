@@ -4,16 +4,16 @@
 #include "rasterizer.hpp"
 
 inline double rasterizer::y_at(const double &x0, const double &y0,
-                                      const double &x1, const double &y1,
-                                      const double &x) {
+                               const double &x1, const double &y1,
+                               const double &x) {
   double t = (x - x0) / (x1 - x0);
   return (1 - t) * y0 + t * y1;
   // return std::lerp(y0, y1, t);
 }
 // calculate x-coordinate of segment (extended to line) (x0, y0) -- (x1, y1) at y-coord y
 inline double rasterizer::x_at(const double &x0, const double &y0,
-                                      const double &x1, const double &y1,
-                                      const double &y) {
+                               const double &x1, const double &y1,
+                               const double &y) {
   if (y1 == y0 && y == y0) return 0.5 * (x1 + x0);
   double t = (y - y0) / (y1 - y0);
   return (1 - t) * x0 + t * x1;
@@ -21,8 +21,8 @@ inline double rasterizer::x_at(const double &x0, const double &y0,
 }
 
 inline double rasterizer::rect_intersect_area(const double &xlo, const double &xhi,
-                                                     const double &ylo, const double &yhi,
-                                                     const double &syl, const double &syr) {
+                                              const double &ylo, const double &yhi,
+                                              const double &syl, const double &syr) {
   if (syl < ylo)
     if (syr < ylo) // both sides below -> no intersect
       return 0;
@@ -163,7 +163,18 @@ bool rasterizer::segment_cmp::operator()(const rasterizer::segment &a, const ras
 bool rasterizer::segment_cmp::operator()(const rasterizer::segment *a, const rasterizer::segment *b) const {
   return (*this)(*a, *b);
 }
-
+bool rasterizer::segment_cmp::operator()(const segment &a, const Eigen::Ref<const Eigen::Vector2d> &b) const {
+  return a.y_at(b(0)) < b(1);
+}
+bool rasterizer::segment_cmp::operator()(const segment *a, const Eigen::Ref<const Eigen::Vector2d> &b) const {
+  return (*this)(*a, b);
+}
+bool rasterizer::segment_cmp::operator()(const Eigen::Ref<const Eigen::Vector2d> &b, const segment &a) const {
+  return b(1) < a.y_at(b(0));
+}
+bool rasterizer::segment_cmp::operator()(const Eigen::Ref<const Eigen::Vector2d> &b, const segment *a) const {
+  return (*this)(b, *a);
+}
 
 // ############################ event ##############################
 
@@ -730,6 +741,48 @@ void rasterizer::add_area_between(const rasterizer::segment *s0, rasterizer::seg
   s1->x0 = x1;
 }
 
+Eigen::VectorXi rasterizer::indices(const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2>> &pts) {
+  int n = pts.rows();
+  Eigen::VectorXi res(n);
+
+  // set default value
+  res.array() = -1;
+  
+  // find lexicogprahic order of input points
+  Eigen::VectorXi ord(n);
+  std::iota(ord.begin(), ord.end(), 0);
+  gfx::timsort(ord.begin(), ord.end(),
+               [&](const int &i, const int &j){
+                 return std::pair(pts(i,0), pts(i,1)) < std::pair(pts(j,0), pts(j,1));
+               });
+  int pt_i = 0;
+
+  // do line-sweep to find indices...
+  *cur_x = bounds(0);
+  // skip points before start
+  while (pt_i < n && pts(ord(pt_i),0) < *cur_x) ++pt_i;
+  // process events
+  for (auto &e : events) {
+    // update position
+    *cur_x = e.pos()(0);
+    // find points before this event
+    while (pt_i < n && pts(ord(pt_i),0) <= *cur_x) {
+      auto b = line.upper_bound(Eigen::Ref<const Eigen::Vector2d>(pts.row(ord[pt_i])));
+      if (b != line.end())
+        res(ord(pt_i)) = (*b)->idx;
+      ++pt_i;
+    }
+    // update line
+    auto ub = e.start() ? line.upper_bound(e.seg()) : std::next(e.seg()->self);
+    if (e.start()) {
+      e.seg()->self = line.insert(ub, e.seg());
+    } else {
+      line.erase(e.seg()->self);
+    }
+  }
+  
+  return res;
+}
 
 #ifdef PROFILING
 void rasterizer::setup_timer() {
@@ -782,7 +835,8 @@ void rasterizer::bind(py::module_ &m) {
     .def_readonly("bounds", &rasterizer::bounds)
     .def_readonly("lb", &rasterizer::lb)
     .def_readonly("step", &rasterizer::step)
-    .def_readonly("pixA", &rasterizer::pixA);
+    .def_readonly("pixA", &rasterizer::pixA)
+    .def("indices", &rasterizer::indices);
 }
 
 
