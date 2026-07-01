@@ -87,7 +87,7 @@ class DataLoader:
             sgrid = np.sin(np.deg2rad(self.data_dict['LATITUDES ON GAUSSIAN GRID']))
             sgrid = np.flip(sgrid) # order to be acsending
             
-            area_top = np.diff(sgrid)*((ptop[:-1]-self.pmin)+(ptop[1:] - self.pmin))/2
+            area_top = np.diff(sgrid)*(ptop[:-1]+ptop[1:])/2
             pmin = np.sum(area_top)
         self.pmin = pmin
         
