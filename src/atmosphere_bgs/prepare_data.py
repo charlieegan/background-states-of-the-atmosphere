@@ -175,7 +175,6 @@ class DataLoader:
                 smin - float; minimum s
                 smax - float; maximum s
                 y - (N,2) numpy array; 2-d locations of point masses in (Z,theta)
-                tm - (N,) numpy array; target masses associated to points y
                 tmn - (N,) numpy array; target masses associated to points y normalised to sum to area of (s,p) domain [smin,smax]x[pmin,pmax]
         '''
         
@@ -364,19 +363,11 @@ class DataLoader:
                     # interpolate zonal average pressure onto interpolation nodes
                     ptop = np.interp(snodes_k,sgrid,ptop)
                     
-                    # Compute areas using trapezium rule and assign to midpoints in s.
-                    # These areas are later rescaled to be masses, and the midpoints in s
-                    # are converted to Z values assuming u=0
-                    areas_top = np.diff(snodes_k)*((ptop[:-1]-self.pmin)+(ptop[1:] - self.pmin))/2
-                    s_top = smids_k
-                    
-                    # rescale top areas by mass per pascal to get the appropriate masses
-                    total_mass = np.sum(bsmass[0]*mass_scale_factor)
-                    mass_per_pascal = total_mass/(self.pp.p00-self.pmin)
-                    mass_top = mass_per_pascal*areas_top
+                    # Compute areas using trapezium rule
+                    mass_top = np.diff(snodes_k)*((ptop[:-1]-self.pmin)+(ptop[1:] - self.pmin))/2
                     
                     ## define zonal angular momentum values for extra theta level
-                    ## assuming that they match those of the top theta level in the data
+                    s_top = smids_k
                     zam_top = zam_scale_factor*bscirc_max*(1-s_top**2)
     
                     ## define theta value at top to be the maximum theta value plus a level depth
@@ -384,8 +375,8 @@ class DataLoader:
                     
                     # flip angmom and mass vectors to be ordered increasing in zonal angular momentum (effectively from pole to equator)
                     nt = len(mass_top)
-                    zam_grid[:nt,k] = np.flip(zam_top)
-                    mass_grid[:nt,k] = np.flip(mass_top)
+                    #zam_grid[:nt,k] = np.flip(zam_top)
+                    #mass_grid[:nt,k] = np.flip(mass_top)
                     
             # define theta matrix such that each column corresponds to a theta level and
             # each row corresponds (roughly) to a Z-level
@@ -398,7 +389,7 @@ class DataLoader:
             
             if rel_mass_loss > 1e-11:
                 raise ValueError('Some mass is lost during interpolation')
-                
+            
             # Define smin and smax such that smax is at turning point of p-surface
             # corresponding to minimal zonal angular momentum on lowest theta level
             idx = ~np.isnan(zam_grid[:,-1])
@@ -408,15 +399,20 @@ class DataLoader:
             # Define smin so that areas in (s,p) excluded at pole and equator are the same
             smin = 1-smax
             
+            # rescale mass and add top row
+            source_mass = (self.pp.p00 - self.pmin)*(smax - smin)
+            frac_top = np.sum(mass_top)/source_mass
+            mass_grid = mass_grid*source_mass*(1-frac_top)/np.sum(mass_grid[~np.isnan(mass_grid)])
+            mass_grid[:nt,0] = np.flip(mass_top)
+            zam_grid[:nt,0] = np.flip(zam_top)
+            
             # Define vectorised seeds, masses and normalised masses to be used in OT routine
             idx = ~np.isnan(zam_grid)
             zam = zam_grid[idx]
             th = th_grid[idx]
-            tm = mass_grid[idx]
-            source_mass = (self.pp.p00 - self.pmin)*(smax - smin)
             
             y = np.vstack([zam,th]).T
-            tmn = source_mass*tm/np.sum(tm)
+            tmn = mass_grid[idx]
             
             # Assign variables to the class
             self.zam_grid = zam_grid
@@ -427,7 +423,6 @@ class DataLoader:
         self.smin = smin
         self.smax = smax
         self.y = y
-        self.tm = tm
         self.tmn = tmn
         
-        return y, tm, tmn
+        return y, tmn
