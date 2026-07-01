@@ -17,7 +17,6 @@ class OTSolver:
         
         # assign point masses and locations to solver
         self.y = input_data.y
-        self.tm = input_data.tm
         self.tmn = input_data.tmn
         
         # assign physical and simulation parameters to solver
