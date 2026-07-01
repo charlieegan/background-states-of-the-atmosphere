@@ -4,7 +4,7 @@ import re
 
 class DataLoader:
     
-    def __init__(self,path,pmin=10,p00=None,load_all=True,interpolate_onto_grid=True,skip=0,split_param=None):
+    def __init__(self,path,pmin=None,p00=None,load_all=True,interpolate_onto_grid=True,skip=0,split_param=None):
         
         # parse the input data text file and make a dictionary of data arrays
         with open(path) as f:
@@ -78,7 +78,19 @@ class DataLoader:
         self.pp = _atmosphere_bgs.PhysicalParameters()
 
         # assign minimum pressure level and reference pressure to class
+        if pmin is None:
+            # Define minimum pressure to be the mean value of the zonal average
+            # pressure on the top isentropic level, copmuted as an integral over
+            # [0,1] using the trapezium rule
+            ptop = self.data_dict['BACKGROUND PRESSURE ON TOP BOUNDARY']
+            ptop = np.flip(ptop) # flip to be ordered accending with latitude
+            sgrid = np.sin(np.deg2rad(self.data_dict['LATITUDES ON GAUSSIAN GRID']))
+            sgrid = np.flip(sgrid) # order to be acsending
+            
+            area_top = np.diff(sgrid)*((ptop[:-1]-self.pmin)+(ptop[1:] - self.pmin))/2
+            pmin = np.sum(area_top)
         self.pmin = pmin
+        
         if p00 is not None:
             self.pp.p00 = p00
         
