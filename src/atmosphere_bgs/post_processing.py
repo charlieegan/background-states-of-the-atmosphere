@@ -6,7 +6,7 @@ from scipy.special import softmax
 from scipy import sparse
 from scipy.interpolate import PchipInterpolator
 
-class SmoothSolution:
+class PostProcessor:
     def __init__(self,solv,bscirc,pvlevs,thlevs,pvmaxth,\
                  res=[200,200],eps=1e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_4',n_nb_th_levs=None,\
                  adjust_surface_Z=True,adjust_surface_th=True,d_Z_surf_adj=2,d_th_surf_adj=2,plot=False,\
@@ -183,6 +183,11 @@ class SmoothSolution:
                 ax.set_title('Minimising 2nd derivative')
             if d==3:
                 ax.set_title('Minimising 3rd derivative')
+                
+            self.surf_u_orig = u_orig
+            self.surf_u_adj = u_adj
+            self.surf_u_lb = u_lb
+            self.surf_u_ub = u_ub
             
         return Z_adj, i_surf, s_mids
     
@@ -279,6 +284,11 @@ class SmoothSolution:
                 ax.set_title('Minimising 2nd derivative')
             if d==3:
                 ax.set_title('Minimising 3rd derivative')
+                
+            self.surf_th_orig = th_surf_orig
+            self.surf_th_adj = th_adj
+            self.surf_th_lb = th_lb
+            self.surf_th_ub = th_ub
             
         return th_adj, i_surf, s_mids
     
@@ -862,9 +872,6 @@ class SmoothSolution:
         self.r_lower_surf = r_lower_surf
                         
         return Phi_lower_surf, Z_lower_surf, th_lower_surf, u_lower_surf, r_lower_surf
-        
-    
-######### Copy over pusshforward to isentropic coords
     
     def push_foward_to_insentropic_coords(self):
 
