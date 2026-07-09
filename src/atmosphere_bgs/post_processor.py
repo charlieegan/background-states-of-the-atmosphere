@@ -8,7 +8,7 @@ from scipy.interpolate import PchipInterpolator
 
 class PostProcessor:
     def __init__(self,solv,bscirc,pvlevs,thlevs,pvmaxth,\
-                 res=[200,200],eps=1e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_4',n_nb_th_levs=None,\
+                 res=[200,200],eps=5e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_4',n_nb_th_levs=None,\
                  adjust_surface_Z=True,adjust_surface_th=True,d_Z_surf_adj=2,d_th_surf_adj=2,plot=False,\
                      adjust_weights=False,verbose=False):
         
@@ -433,7 +433,7 @@ class PostProcessor:
     # dZ_ds_fd = np.diff(Zr)/np.diff(srr)
     # dZ_ds_r = dZ2_ds[i0][i1]
 
-    def apply_smoothing_local(self,s,p,isub=None,eps=1e-3,adjust_weights=False):
+    def apply_smoothing_local(self,s,p,isub=None,eps=5e-3,adjust_weights=False):
         '''Function to apply smoothing on a given set of points (s,p) using the
         Laguerre cell neighbourhood isub to compute softmax with smoothing parameter
         eps. Returns evaluation of analytic formulas for smooth variables at (s,p).
@@ -586,7 +586,7 @@ class PostProcessor:
         return Phi_eps, Z_eps, th_eps, r_eps
 
 
-    def apply_smoothing(self,eps=1e-3,nb_threshold=1e-5,nbs=None,nb_type=None,n_nb_th_levs=None,adjust_weights=True,verbose=False):
+    def apply_smoothing(self,eps=5e-3,nb_threshold=1e-5,nbs=None,nb_type=None,n_nb_th_levs=None,adjust_weights=True,verbose=False):
 
         ld = self.ld
         th = ld.ys[:,1]
@@ -659,6 +659,8 @@ class PostProcessor:
         hg = hg[:-1] + np.diff(hg)/2 # midpoints
         sg = lat2s(lg)
         pg = h2p(hg)
+        sgu = sg.copy()
+        pgu = pg.copy()
         
         lg, hg = np.meshgrid(lg,hg)
         sg, pg = np.meshgrid(sg,pg)
@@ -717,9 +719,31 @@ class PostProcessor:
                     si = np.concatenate([si,sg[igextra]])
                     pi = np.concatenate([pi,pg[igextra]])
                     
+                    # It can be that a boundary cell contains some points but 
+                    # is so shallow at the ends that some columns are not 
+                    # extended beyond the boundary. This next block of code deals
+                    # with this case
+                    j=np.where(np.isin(pgu,pg[igextra]))
+                    
+                    igleft = np.where((smin<sgu)*(sgu<np.min(si)))[0]
+                    igright = np.where((np.max(si)<sgu)*(sgu<smax))[0]
+                    
+                    if any(igleft):
+                        i_s, i_p = np.meshgrid(igleft,j)
+                        igextra = np.ravel(i_p*200+i_s)
+                        ig = np.concatenate([ig,igextra])
+                        si = np.concatenate([si,sg[igextra]])
+                        pi = np.concatenate([pi,pg[igextra]])
+                    if any(igright):
+                        i_s, i_p = np.meshgrid(igright,j)
+                        igextra = i_p*200+i_s
+                        ig = np.concatenate([ig,igextra])
+                        si = np.concatenate([si,sg[igextra]])
+                        pi = np.concatenate([pi,pg[igextra]])    
+                
                     # Record Laguerre cell index as a function of latitude
                     # on the lower surface 
-                    s_lower.append([su,i,nbs[i]])
+                    s_lower.append([np.unique(si),i,nbs[i]])
                     
                 # if no grid point is in the cell, find latitude lines that intersect the cell
                 # and use cell nbhd to define smooth field below lower boundary
@@ -756,6 +780,16 @@ class PostProcessor:
         pg = np.reshape(pg,res)
         lg = np.reshape(lg,res)
         hg = np.reshape(hg,res)
+        
+        # Force Z_eps to decrease with latitude and th_eps to decrease with p
+        i_Z = np.where(np.isnan(Z_eps))
+        Z_eps[i_Z] = -np.inf
+        Z_eps = np.maximum.accumulate(Z_eps[:,::-1],axis=1)[:,::-1]
+        Z_eps[i_Z] = np.nan
+        i_th = np.where(np.isnan(th_eps))
+        th_eps[i_th] = -np.inf
+        th_eps = np.maximum.accumulate(th_eps[::-1],axis=0)[::-1]
+        th_eps[i_th] = np.nan
         
         # assign variables to the class
         self.Phi_eps = Phi_eps
@@ -815,7 +849,7 @@ class PostProcessor:
         
         return p_lower_surf, surf_mask
 
-    def get_smooth_lower_surface_vars(self,eps=1e-3):
+    def get_smooth_lower_surface_vars(self,eps=5e-3):
         '''
         Get smooth geopotential, zonal angular momentum and potential temperature
         on the lower boudary by evaluating smooth fields at surface pressure
@@ -887,24 +921,6 @@ class PostProcessor:
         for i in np.arange(self.res[1]):
             th_eps_i = self.th_eps[:,i]
             idx = np.where(~np.isnan(th_eps_i))[0]
-            if any(np.diff(th_eps_i[idx])>0):
-                # make theta decreasing (but not strictly decreasing)
-                th_eps_i_dec = np.nan*np.zeros(th_eps_i.shape)
-                min_th = np.inf
-                for k in idx:
-                    min_th = np.min([min_th,th_eps_i[k]])
-                    th_eps_i_dec[k] = min_th
-                th_eps_i = th_eps_i_dec
-                
-                # make theta strictly decreasing by splitting difference over flat parts
-                th_flat = np.where(np.diff(th_eps_i) == 0)[0] + 1
-                split = np.where((th_flat - np.roll(th_flat,shift=1))>1)[0]
-                split_blocks = np.split(th_flat,split)
-                diffs = [(th_eps_i[split_block[0]] - th_eps_i[split_block[-1]+1])/(len(split_block)+1) for split_block in split_blocks]
-                
-                for diff, split_block in zip(diffs,split_blocks):
-                    th_eps_i[split_block] = th_eps_i[split_block] - np.arange(1,len(split_block)+1)*diff
-            
             p_interp = PchipInterpolator(np.flip(th_eps_i[idx]),np.flip(self.pg[idx,i]),extrapolate=True)
             p_interps.append(p_interp)
         
