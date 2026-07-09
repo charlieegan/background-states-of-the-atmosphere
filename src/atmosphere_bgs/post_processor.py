@@ -708,6 +708,9 @@ class PostProcessor:
             if i in i_lower:
                 su = np.unique(si)
                 igextra = np.ones(0,dtype=np.int64)
+                poly = ld.get_poly(i)
+                smin, smax = np.min(poly[:,0]), np.max(poly[:,0])
+                pmin, pmax = np.min(poly[:,1]), np.max(poly[:,1])
                 
                 if len(su)>0:
                     for sii in su:
@@ -736,7 +739,7 @@ class PostProcessor:
                         pi = np.concatenate([pi,pg[igextra]])
                     if any(igright):
                         i_s, i_p = np.meshgrid(igright,j)
-                        igextra = i_p*200+i_s
+                        igextra = np.ravel(i_p*200+i_s)
                         ig = np.concatenate([ig,igextra])
                         si = np.concatenate([si,sg[igextra]])
                         pi = np.concatenate([pi,pg[igextra]])    
