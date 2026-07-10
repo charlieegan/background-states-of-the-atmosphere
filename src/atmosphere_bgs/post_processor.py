@@ -921,8 +921,9 @@ class PostProcessor:
         # at each latitude individually. Note that theta is extended smoothly below
         # ground and these values are used in the interpolation
         p_interps = []
+        th_eps = self.surf_mask*self.th_eps
         for i in np.arange(self.res[1]):
-            th_eps_i = self.th_eps[:,i]
+            th_eps_i = th_eps[:,i]
             idx = np.where(~np.isnan(th_eps_i))[0]
             p_interp = PchipInterpolator(np.flip(th_eps_i[idx]),np.flip(self.pg[idx,i]),extrapolate=True)
             p_interps.append(p_interp)
