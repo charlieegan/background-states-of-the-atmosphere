@@ -8,9 +8,8 @@ from scipy.interpolate import PchipInterpolator
 
 class PostProcessor:
     def __init__(self,solv,bscirc,pvlevs,thlevs,pvmaxth,\
-                 res=[200,200],eps=5e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_4',n_nb_th_levs=None,\
-                 adjust_surface_Z=True,adjust_surface_th=True,d_Z_surf_adj=2,d_th_surf_adj=2,plot=False,\
-                     adjust_weights=False,verbose=False):
+                 res=[200,200],eps=5e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_8',n_nb_th_levs=None,\
+                 make_surface_adjustments=False,adjust_weights=False,verbose=False):
         
         self.ld = solv.ld
         self.pp = solv.pp
@@ -27,21 +26,20 @@ class PostProcessor:
         
         # Adjust the surface zonal angular momentum to get rid of spurious
         # oscillations in the surface zonal wind
-        if adjust_surface_Z:
+        if make_surface_adjustments:
             if verbose:
                 print('Adjusting surface Z')
-            Z_adj_surf, i_surf, s_mids = self.adjust_Z_surf(d=d_Z_surf_adj,plot=plot,verbose=verbose)
+            Z_adj_surf, i_surf, s_mids = self.adjust_Z_surf(d=2,verbose=verbose)
             Z_adj = self.ld.ys[:,0].copy()
             Z_adj[i_surf] = Z_adj_surf
             self.surf_s_mids = s_mids
             self.i_surf = i_surf
             self.Z_adj = Z_adj
             
-        # Adjust the surface potential temperature to get rid of steps
-        if adjust_surface_th:
+            # Adjust the surface potential temperature to get rid of steps
             if verbose:
                 print('Adjusting surface theta')
-            th_adj_surf, i_surf, s_mids = self.adjust_th_surf(d=d_th_surf_adj,plot=plot,verbose=verbose)
+            th_adj_surf, i_surf, s_mids = self.adjust_th_surf(d=2,verbose=verbose)
             th_adj = self.ld.ys[:,0].copy()
             th_adj[i_surf] = th_adj_surf
             self.surf_s_mids = s_mids
@@ -66,12 +64,15 @@ class PostProcessor:
             print('Obtaining smooth lower surface variables')
         self.get_smooth_lower_surface_vars(eps=eps)
         
+        if make_surface_adjustments:
+            self.interpolate_adjusted_lower_surface_vars()
+        
         # Push to isentropic coordinates
         self.bscirc = bscirc
         self.pvlevs = pvlevs
         self.thlevs = thlevs
         self.pvmaxth = pvmaxth
-        self.push_foward_to_insentropic_coords()
+        self.push_forward_to_insentropic_coords()
         self.get_q_isentropic()
         
         
@@ -81,7 +82,7 @@ class PostProcessor:
         a = self.pp.a
         return Z/a/np.sqrt(1-s**2) - Omega*a*np.sqrt(1-s**2)
     
-    def adjust_Z_surf(self,d=2,verbose=False,plot=False):
+    def adjust_Z_surf(self,d=2,verbose=False):
         '''
         Function adjusts Laguerre-cell-based surface zonal angular momentum to
         remove spurious oscillations in surface wind. The (approximate) L2-norm of
@@ -168,30 +169,24 @@ class PostProcessor:
         a = self.pp.a
         Z_adj = Omega*a**2*(1-s_mids**2) + u_adj*a*np.sqrt(1-s_mids**2)
         
-        if plot:
-            fig, ax = plt.subplots(1,1,dpi=200)
-            ax.plot(s_mids,u_orig,lw=1,label='Original u',alpha=0.4)
-            ax.plot(s_mids,u_adj,label='Adjusted u',lw=1,alpha=0.9)
-            ax.plot(s_mids,u_ub,label='Max u',lw=1,alpha=0.4,ls='--',c='k')
-            ax.plot(s_mids,u_lb,label='Min u',lw=1,alpha=0.4,ls='--',c='k')
-            ax.set_ylabel('$u_s$')
-            ax.set_xlabel('$s$')
-            ax.legend()    
-            if d==1:
-                ax.set_title('Minimising 1st derivative')
-            if d==2:
-                ax.set_title('Minimising 2nd derivative')
-            if d==3:
-                ax.set_title('Minimising 3rd derivative')
+        # fig, ax = plt.subplots(1,1,dpi=200)
+        # ax.plot(s_mids,u_orig,lw=1,label='Original u',alpha=0.4)
+        # ax.plot(s_mids,u_adj,label='Adjusted u',lw=1,alpha=0.9)
+        # ax.plot(s_mids,u_ub,label='Max u',lw=1,alpha=0.4,ls='--',c='k')
+        # ax.plot(s_mids,u_lb,label='Min u',lw=1,alpha=0.4,ls='--',c='k')
+        # ax.set_ylabel('$u_s$')
+        # ax.set_xlabel('$s$')
+        # ax.legend()    
+        # ax.set_title('Minimising 2nd derivative')
                 
-            self.surf_u_orig = u_orig
-            self.surf_u_adj = u_adj
-            self.surf_u_lb = u_lb
-            self.surf_u_ub = u_ub
+        self.surf_adjustments_u = {'u_orig' : u_orig,
+                                   'u_adj' : u_adj,
+                                   'surf_u_lb' : u_lb,
+                                   'surf_u_ub' : u_ub}
             
         return Z_adj, i_surf, s_mids
     
-    def adjust_th_surf(self,d=1,verbose=False,plot=False):
+    def adjust_th_surf(self,d=1,verbose=False):
         '''
         Function adjusts Laguerre-cell-based surface theta to
         remove big steps. The (approximate) L2-norm of
@@ -269,27 +264,21 @@ class PostProcessor:
         # Define adjusted surface Z
         th_adj = opt_res.x
         
-        if plot:
-            fig, ax = plt.subplots(1,1,dpi=200)
-            ax.plot(s_mids,th_surf_orig,lw=1,label='Original $\\theta$',alpha=0.4)
-            ax.plot(s_mids,th_adj,label='Adjusted $\\theta$',lw=1,alpha=0.9)
-            ax.plot(s_mids,th_ub,label='Max $\\theta$',lw=1,alpha=0.4,ls='--',c='k')
-            ax.plot(s_mids,th_lb,label='Min $\\theta$',lw=1,alpha=0.4,ls='--',c='k')
-            ax.set_ylabel('$\\theta_s$')
-            ax.set_xlabel('$s$')
-            ax.legend()    
-            if d==1:
-                ax.set_title('Minimising 1st derivative')
-            if d==2:
-                ax.set_title('Minimising 2nd derivative')
-            if d==3:
-                ax.set_title('Minimising 3rd derivative')
-                
-            self.surf_th_orig = th_surf_orig
-            self.surf_th_adj = th_adj
-            self.surf_th_lb = th_lb
-            self.surf_th_ub = th_ub
-            
+        # fig, ax = plt.subplots(1,1,dpi=200)
+        # ax.plot(s_mids,th_surf_orig,lw=1,label='Original $\\theta$',alpha=0.4)
+        # ax.plot(s_mids,th_adj,label='Adjusted $\\theta$',lw=1,alpha=0.9)
+        # ax.plot(s_mids,th_ub,label='Max $\\theta$',lw=1,alpha=0.4,ls='--',c='k')
+        # ax.plot(s_mids,th_lb,label='Min $\\theta$',lw=1,alpha=0.4,ls='--',c='k')
+        # ax.set_ylabel('$\\theta_s$')
+        # ax.set_xlabel('$s$')
+        # ax.legend()    
+        # ax.set_title('Minimising 2nd derivative')
+        
+        self.surf_adjustments_th = {'surf_th_orig' : th_surf_orig,
+                                    'surf_th_adj' : th_adj,
+                                    'surf_th_lb' : th_lb,
+                                    'surf_th_ub' : th_ub}
+        
         return th_adj, i_surf, s_mids
     
     def get_cost(self,s,p,Z,th):
@@ -822,7 +811,7 @@ class PostProcessor:
         # Translate geopotential by final Kantorovich dual so that zero corresponds
         # to ground level
         n_lats = pg.shape[1]
-        p_lower_surf = np.nan*np.zeros(n_lats)
+        p_lower_eps = np.nan*np.zeros(n_lats)
         surf_mask = np.ones(pg.shape)
         
         # For each latitude level, find where smooth geopotential is either side of
@@ -842,15 +831,15 @@ class PostProcessor:
             
             Hi = (phi0-phi1)/self.g/np.log(p1/p0)
             p_surf_i = (p0 + p1)/(np.exp(-phi0/self.g/Hi) + np.exp(-phi1/self.g/Hi))
-            p_lower_surf[i] = p_surf_i
+            p_lower_eps[i] = p_surf_i
             
             # define mask to mask out grid cells where smooth geopotential is negative
             surf_mask[i0:,i] = np.nan
             
-        self.p_lower_surf = p_lower_surf
+        self.p_lower_eps = p_lower_eps
         self.surf_mask = surf_mask
         
-        return p_lower_surf, surf_mask
+        return p_lower_eps, surf_mask
 
     def get_smooth_lower_surface_vars(self,eps=5e-3):
         '''
@@ -864,13 +853,11 @@ class PostProcessor:
         ld = self.ld
     
         n_lats = sg.shape[1]
-        Phi_lower_surf = np.nan*np.zeros(n_lats)
-        th_lower_surf = np.nan*np.zeros(n_lats)
-        Z_lower_surf = np.nan*np.zeros(n_lats)
-        u_lower_surf = np.nan*np.zeros(n_lats)
-        r_lower_surf = np.nan*np.zeros(n_lats)
-        zeta_lower_surf = np.nan*np.zeros(n_lats)
-        q_lower_surf = np.nan*np.zeros(n_lats)
+        Phi_lower_eps = np.nan*np.zeros(n_lats)
+        th_lower_eps = np.nan*np.zeros(n_lats)
+        Z_lower_eps = np.nan*np.zeros(n_lats)
+        u_lower_eps = np.nan*np.zeros(n_lats)
+        r_lower_eps = np.nan*np.zeros(n_lats)
         
         s_surf = [sl[0] for sl in s_lower if len(sl[0])>0]
         nbs_surf = [sl[2] for sl in s_lower if len(sl[0])>0]
@@ -894,23 +881,52 @@ class PostProcessor:
             pi = p_lower_surf[idx0]
             Phi_eps_i, Z_eps_i, th_eps_i, r_eps_i = self.apply_smoothing_local(si,pi,isub=nbsi,eps=eps)
             
-            Phi_lower_surf[idx0] = Phi_eps_i - ld.duals[-1]
-            Z_lower_surf[idx0] = Z_eps_i
-            th_lower_surf[idx0] = th_eps_i
-            u_lower_surf[idx0] = self.get_u(Z_eps_i,si)
-            r_lower_surf[idx0] = r_eps_i
+            Phi_lower_eps[idx0] = Phi_eps_i - ld.duals[-1]
+            Z_lower_eps[idx0] = Z_eps_i
+            th_lower_eps[idx0] = th_eps_i
+            u_lower_eps[idx0] = self.get_u(Z_eps_i,si)
+            r_lower_eps[idx0] = r_eps_i
             
             idx1 = idx0
             
-        self.Phi_lower_surf = Phi_lower_surf
-        self.Z_lower_surf = Z_lower_surf
-        self.th_lower_surf = th_lower_surf
-        self.u_lower_surf = u_lower_surf
-        self.r_lower_surf = r_lower_surf
+        self.Phi_lower_eps = Phi_lower_eps
+        self.Z_lower_eps = Z_lower_eps
+        self.th_lower_eps = th_lower_eps
+        self.u_lower_eps = u_lower_eps
+        self.r_lower_eps = r_lower_eps
                         
-        return Phi_lower_surf, Z_lower_surf, th_lower_surf, u_lower_surf, r_lower_surf
+        return Phi_lower_eps, Z_lower_eps, th_lower_eps, u_lower_eps, r_lower_eps
     
-    def push_foward_to_insentropic_coords(self):
+    def interpolate_adjusted_lower_surface_vars(self):
+        '''Function interpolates adjusted lower boundary variables
+        Z, theta and u onto grid and sets as class attributes'''
+        pp = self.pp
+        sgu = np.unique(self.sg) # grid points in s
+        
+        i_surf = self.i_surf # surface Laguerre cell indices
+        Z_adj = self.Z_adj[i_surf] # surface zonal angular momentum at Lag-cell midpoints
+        th_adj = self.th_adj[i_surf] # surface theta at Lag-cell midpoints
+        smids = self.surf_s_mids
+        
+        # interpolate Z using pseudo-s coordinate (1-z/Omega/a^2)^{1/2}, which is approximately linear in s
+        s_pseudo = np.sqrt(1-Z_adj/pp.Omega/pp.a**2)
+        s_pseudo_interp = np.interp(sgu,smids,s_pseudo)
+        Z_lower_adj = pp.Omega*pp.a**2*(1-s_pseudo_interp**2)
+        
+        # interpolate theta linearly in s
+        th_lower_adj = np.interp(sgu,smids,th_adj)
+        
+        # define u from Z and s-coordinates
+        u_lower_adj = self.get_u(Z_lower_adj, sgu)
+        
+        # assign variables to class
+        self.Z_lower_adj = Z_lower_adj
+        self.th_lower_adj = th_lower_adj
+        self.u_lower_adj = u_lower_adj
+        
+        return
+        
+    def push_forward_to_insentropic_coords(self):
 
         # Get the unique (sine-of-)latitudes, pressure levels and theta levels
         su = self.sg[0,:]
@@ -939,12 +955,13 @@ class PostProcessor:
         
         for k, p_interp in enumerate(p_interps):
             # interpolate pressure onto theta levels
-            idx = thlevs>self.th_lower_surf[k]
+            idx = thlevs>self.th_lower_eps[k]
             p_isentropic_k = p_interp(thlevs[idx])
             p_isentropic[idx,k] = p_isentropic_k
             
             # get interpolation coefficients for linear interpolation in log(p) 
             i_sort = np.searchsorted(pu,np.sort(p_isentropic_k))
+            i_sort[i_sort==len(pu)] = len(pu)-1
             lmbda = (np.log(np.sort(p_isentropic_k))-np.log(pu[i_sort]))/(np.log(pu[i_sort-1])-np.log(pu[i_sort]))
             
             # linearly interpolate Z using interpolation coefficients
