@@ -722,13 +722,13 @@ class PostProcessor:
                     
                     if any(igleft):
                         i_s, i_p = np.meshgrid(igleft,j)
-                        igextra = np.ravel(i_p*200+i_s)
+                        igextra = np.ravel(i_p*res[0]+i_s)
                         ig = np.concatenate([ig,igextra])
                         si = np.concatenate([si,sg[igextra]])
                         pi = np.concatenate([pi,pg[igextra]])
                     if any(igright):
                         i_s, i_p = np.meshgrid(igright,j)
-                        igextra = np.ravel(i_p*200+i_s)
+                        igextra = np.ravel(i_p*res[0]+i_s)
                         ig = np.concatenate([ig,igextra])
                         si = np.concatenate([si,sg[igextra]])
                         pi = np.concatenate([pi,pg[igextra]])    
