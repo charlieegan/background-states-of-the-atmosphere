@@ -849,7 +849,7 @@ class PostProcessor:
         
         sg = self.sg
         s_lower = self.s_lower
-        p_lower_surf = self.p_lower_surf
+        p_lower_eps = self.p_lower_eps
         ld = self.ld
     
         n_lats = sg.shape[1]
@@ -878,7 +878,7 @@ class PostProcessor:
             not_duplicate = ~np.isin(idx0,idx1)
             idx0 = idx0[not_duplicate]
             si = su[idx0]
-            pi = p_lower_surf[idx0]
+            pi = p_lower_eps[idx0]
             Phi_eps_i, Z_eps_i, th_eps_i, r_eps_i = self.apply_smoothing_local(si,pi,isub=nbsi,eps=eps)
             
             Phi_lower_eps[idx0] = Phi_eps_i - ld.duals[-1]
