@@ -179,10 +179,10 @@ class PostProcessor:
         # ax.legend()    
         # ax.set_title('Minimising 2nd derivative')
                 
-        self.surf_adjustments_u = {'u_orig' : u_orig,
-                                   'u_adj' : u_adj,
-                                   'surf_u_lb' : u_lb,
-                                   'surf_u_ub' : u_ub}
+        self.surf_adjustments_u = {'orig' : u_orig,
+                                   'adj' : u_adj,
+                                   'lb' : u_lb,
+                                   'ub' : u_ub}
             
         return Z_adj, i_surf, s_mids
     
@@ -274,10 +274,10 @@ class PostProcessor:
         # ax.legend()    
         # ax.set_title('Minimising 2nd derivative')
         
-        self.surf_adjustments_th = {'surf_th_orig' : th_surf_orig,
-                                    'surf_th_adj' : th_adj,
-                                    'surf_th_lb' : th_lb,
-                                    'surf_th_ub' : th_ub}
+        self.surf_adjustments_th = {'orig' : th_surf_orig,
+                                    'adj' : th_adj,
+                                    'lb' : th_lb,
+                                    'ub' : th_ub}
         
         return th_adj, i_surf, s_mids
     
