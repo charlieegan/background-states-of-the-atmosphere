@@ -987,6 +987,7 @@ class PostProcessor:
         PV as a function of circulation on each isentropic level. Known data 
         points come from the 3-d data. Points of evaluation represent zonal angular 
         momentum of the MLM, which is proportional to circulation by zonal symmetry.
+        PV is (artificially) forced to be zero at equator.
         '''
         eartharea = 4*np.pi*self.pp.a**2
         zam_scale_factor = eartharea/2/np.pi
@@ -1002,8 +1003,31 @@ class PostProcessor:
             i0 = np.where(zmom_k>0)
             zmom_k = np.hstack([0,zmom_k[i0]])
             pvlevs_k = np.hstack([self.pvmaxth[k],pvlevs[i0]])
-            q_isentropic[k] = np.interp(self.Z_isentropic[k],zmom_k,pvlevs_k)
+            Zk = self.Z_isentropic[k]
             
+            idx_nan = np.isnan(Zk)
+            if any(idx_nan):
+                Zk[idx_nan] = -1
+                
+            imax = np.argmax(Zk)
+            zmom_k_max = np.max(zmom_k)
+
+            if Zk[imax]<zmom_k_max: # interpolate where q>0
+                q_isentropic[k,imax:] = np.interp(Zk[imax:],zmom_k,pvlevs_k)
+            else: # otherwise, find where Z is less than maximum value and interpolate from pole to there and extend
+                idx_inrange = imax + np.where(Zk[imax:]<zmom_k_max)[0]
+                q_isentropic[k,idx_inrange] = np.interp(Zk[idx_inrange],zmom_k,pvlevs_k)
+                imax = np.min(idx_inrange)
+                
+            if imax>0 and not any(idx_nan): # interpolate linearly past maximum Z to get to zero at equator
+                Zeq = np.linspace(zmom_k_max,Zk[imax],imax)
+                q_isentropic[k,:imax] = np.interp(Zeq,zmom_k,pvlevs_k)
+            else: # force PV to be zero at equator
+                q_isentropic[k,imax]=0
+                
+            if any(idx_nan):
+                q_isentropic[k,idx_nan] = np.nan
+                
         self.q_isentropic = q_isentropic
             
         return q_isentropic
