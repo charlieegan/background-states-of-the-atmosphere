@@ -738,12 +738,12 @@ class PostProcessor:
                     s_lower.append([np.unique(si),i,nbs[i]])
                     
                 # if no grid point is in the cell, find latitude lines that intersect the cell
-                # and use cell nbhd to define smooth field below lower boundary
+                # and use cell nbhd to define smooth field from lower boundary
                 else:
                     poly = ld.get_poly(i)
                     smin, smax = np.min(poly[:,0]), np.max(poly[:,0])
                     pmin, pmax = np.min(poly[:,1]), np.max(poly[:,1])
-                    ig = np.where((sg>smin)*(sg<smax)*pg>pmax)[0]
+                    ig = np.where((sg>smin)*(sg<smax)*pg>pmin)[0]
                     si = sg[ig]
                     pi = pg[ig]
                     
