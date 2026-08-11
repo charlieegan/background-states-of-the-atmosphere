@@ -75,7 +75,7 @@ class PostProcessor:
         self.push_forward_to_insentropic_coords()
         self.get_q_isentropic()
     
-    def make_strictly_inc(x,split_param=0.1):
+    def make_strictly_inc(self,x,split_param=0.1):
         '''Function to make a non-decreasing array strictly increasing by splitting the difference
         to the next value across any flat regions.'''
         
