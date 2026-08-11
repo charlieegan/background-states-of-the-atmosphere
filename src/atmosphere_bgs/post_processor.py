@@ -74,7 +74,36 @@ class PostProcessor:
         self.pvmaxth = pvmaxth
         self.push_forward_to_insentropic_coords()
         self.get_q_isentropic()
+    
+    def make_strictly_inc(x,split_param=0.1):
+        '''Function to make a non-decreasing array strictly increasing by splitting the difference
+        to the next value across any flat regions.'''
         
+        if any(np.diff(x)<0):
+            raise ValueError('Input array must be non-decreasing')
+        
+        # find where x is non-increasing
+        i_flat = np.where(np.diff(x) == 0)[0]+1
+        
+        if len(i_flat)>0:
+            # Split indices into blocks of consecutive numbers
+            split = np.where((i_flat - np.roll(i_flat,shift=1))>1)[0]
+            blocks = np.split(i_flat,split)
+                
+            # for each block of consecutive indices, share difference to next value across them
+            for block in blocks:
+                # only split values where they exist
+                if block[-1]<len(x)-2:
+                    val_to_split = split_param*(x[block[-1]+1]-x[block[0]])
+                    split_val = val_to_split*np.arange(1,len(block)+1)/len(block)
+                    x[block] = x[block] + split_val
+                else:
+                    # if the block is at the end of the array, use the difference to the previous value instead
+                    val_to_split = split_param*(x[block[0]-1]-x[block[0]-2])
+                    split_val = np.flip(val_to_split*np.arange(1,len(block)+1)/len(block))
+                    x[block-1] = x[block-1] - split_val
+        
+        return x
         
     def get_u(self,Z,s):
         '''Compute zonal wind for zonal angular momentum Z and sin-of-lat s'''
@@ -941,7 +970,8 @@ class PostProcessor:
         for i in np.arange(self.res[1]):
             th_eps_i = self.th_eps[:,i]
             idx = np.where(~np.isnan(th_eps_i))[0]
-            p_interp = PchipInterpolator(np.flip(th_eps_i[idx]),np.flip(self.pg[idx,i]),extrapolate=True)
+            th_nodes = self.make_strictly_inc(np.flip(th_eps_i[idx]),split_param=1e-3) # force theta to be strictly increasing with pressure (not just non-decreasing)
+            p_interp = PchipInterpolator(th_nodes,np.flip(self.pg[idx,i]),extrapolate=True)
             p_interps.append(p_interp)
         
         # Interpolate pressure onto theta levels at each latitude individually.
