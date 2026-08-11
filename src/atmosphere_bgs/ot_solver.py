@@ -193,6 +193,7 @@ class OTSolver:
         """
         
         err_goal = self.ot_tol/2
+        it_below_tol = np.zeros(self.y.shape[0]) # to record iteration at which each cell's relative error first falls below the tolerance
         
         # define functions returning mean and max error
         get_mean_err = lambda a0, a1 : np.mean(np.abs(a0-a1)/a0)
@@ -229,6 +230,9 @@ class OTSolver:
         
         ld = LD(self.y, psi, self.pp, self.sp)
         self.ld = ld
+        
+        rel_errs = np.abs(self.tmn - ld.areas)/self.tmn
+        it_below_tol[rel_errs > self.ot_tol] += 1
 
         if verbose:
             print(f'try to fix {np.sum(ld.areas < min_area)} bad areas', flush=True)
@@ -320,6 +324,10 @@ class OTSolver:
                     
                     psis.append(psi)
                     
+                    # record which cells have fallen below the tolerance for the first time
+                    rel_errs = np.abs(self.tmn - ld.areas)/self.tmn
+                    it_below_tol[rel_errs > self.ot_tol] += 1
+                    
                     # if some areas are lost and step is accepted, reset learning rate to its initial value
                     if cnt_lost_areas > 0:
                         lr *= lr_down
@@ -375,6 +383,7 @@ class OTSolver:
 
         self.timer += ld.time
         self.timer += ld.hs.time
+        self.it_below_tol = it_below_tol
             
         # assign variables to class
         ld.detach()
