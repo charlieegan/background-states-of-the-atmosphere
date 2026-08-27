@@ -6,8 +6,18 @@ from atmosphere_bgs import data_io
 
 from _atmosphere_bgs import LaguerreDiagram
 
-del ot_solver
-del prepare_data
-del plotting
-del post_processor
-del data_io
+# del ot_solver
+# del prepare_data
+# del plotting
+# del post_processor
+# del data_io
+__all__ = [
+    "OTSolver",
+    "DataLoader",
+    "plot_lag_tess",
+    "plot_pressure_surface",
+    "get_u",
+    "PostProcessor",
+    "data_io",
+    "LaguerreDiagram"
+]
