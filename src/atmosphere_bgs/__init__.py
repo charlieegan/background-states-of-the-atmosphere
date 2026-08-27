@@ -2,7 +2,7 @@ from atmosphere_bgs.ot_solver import OTSolver
 from atmosphere_bgs.prepare_data import DataLoader
 from atmosphere_bgs.plotting import plot_lag_tess, plot_pressure_surface, get_u
 from atmosphere_bgs.post_processor import PostProcessor
-from atmosphere_bgs.data_io import *
+import atmosphere_bgs.data_io as data_io
 
 from _atmosphere_bgs import LaguerreDiagram
 
