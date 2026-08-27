@@ -182,7 +182,7 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
                 ),
         "ld_ertel_potential_vorticity": (
                             ("ld_seed_index",),
-                            _get_data(data_dict.get("ld_ertel_potential_vorticity"))[:,1],
+                            _get_data(data_dict.get("ld_ertel_potential_vorticity")),
                             {"units": "PVU"}
                         ),
         "ld_slims": (
