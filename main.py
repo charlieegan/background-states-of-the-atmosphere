@@ -7,14 +7,6 @@ import xarray as xr
 import sys
 import importlib.util
 
-# load helper module for writing netCDF files for background states
-module_path = "/home/users/cq934523/ENMs/background-states-of-the-atmosphere/bgs_to_netCDF_helper.py"
-module_name = "bgs_to_netCDF_helper"
-spec = importlib.util.spec_from_file_location(module_name, module_path)
-bgs_to_netCDF_helper = importlib.util.module_from_spec(spec)
-sys.modules[module_name] = bgs_to_netCDF_helper
-spec.loader.exec_module(bgs_to_netCDF_helper)
-
 # 0. Define the simulation parameters
 ot_tol = 1e-4       # tolerance for optimal transport problem
 eps = None          # smoothing parameter, if None then set depending on data type later on
@@ -26,17 +18,17 @@ data_types = ['lc1low']
 dates = ['200101']
 dtimes = ['0000']
 
-# data_type = 'lc2low'
-# date = '200101'
-# dtime = '0000'
+data_type = 'lc2low'
+date = '200101'
+dtime = '0000'
 
-# data_type = 'ERA5'
-# date = '200911'
-# dtime = '0100'
+data_type = 'ERA5'
+date = '200911'
+dtime = '0100'
 
-# data_types = ['lc1low','lc2low','ERA5']
-# dates = ['200101','200101','200911']
-# dtimes =['0000','0000','0100'] 
+data_types = ['lc1low','lc2low','ERA5']
+dates = ['200101','200101','200911']
+dtimes =['0000','0000','0100'] 
 
 for data_type, date, dtime in zip(data_types,dates,dtimes):
 
@@ -116,4 +108,4 @@ for data_type, date, dtime in zip(data_types,dates,dtimes):
     data_dict['ld_seeds'] = input_data.y
     data_dict['ld_duals'] = solv.ld.duals
     
-    ds = bgs_to_netCDF_helper.save_bgs_to_netCDF(data_dict,file_path=save_name+'.nc')
+    ds = atmosphere_bgs.data_io.save_bgs_to_netCDF(data_dict,file_path=save_name+'.nc')
