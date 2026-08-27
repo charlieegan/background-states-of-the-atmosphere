@@ -4,6 +4,16 @@
 import numpy as np
 import atmosphere_bgs
 import xarray as xr
+import sys
+import importlib.util
+
+# load helper module for writing netCDF files for background states
+module_path = "/home/users/cq934523/ENMs/background-states-of-the-atmosphere/bgs_to_netCDF_helper.py"
+module_name = "bgs_to_netCDF_helper"
+spec = importlib.util.spec_from_file_location(module_name, module_path)
+bgs_to_netCDF_helper = importlib.util.module_from_spec(spec)
+sys.modules[module_name] = bgs_to_netCDF_helper
+spec.loader.exec_module(bgs_to_netCDF_helper)
 
 # 0. Define the simulation parameters
 ot_tol = 1e-4       # tolerance for optimal transport problem
@@ -12,9 +22,9 @@ res = [2**8,2**8]   # resolution of gridded data in latitude and log(pressure)
 
 # 1. Load the input data and define where to save data
 print('Loading input data')
-# data_type = 'lc1low'
-# date = '200101'
-# dtime = '0000'
+data_types = ['lc1low']
+dates = ['200101']
+dtimes = ['0000']
 
 # data_type = 'lc2low'
 # date = '200101'
@@ -24,9 +34,9 @@ print('Loading input data')
 # date = '200911'
 # dtime = '0100'
 
-data_types = ['lc1low','lc2low','ERA5']
-dates = ['200101','200101','200911']
-dtimes =['0000','0000','0100'] 
+# data_types = ['lc1low','lc2low','ERA5']
+# dates = ['200101','200101','200911']
+# dtimes =['0000','0000','0100'] 
 
 for data_type, date, dtime in zip(data_types,dates,dtimes):
 
@@ -69,69 +79,41 @@ for data_type, date, dtime in zip(data_types,dates,dtimes):
 
     # 4. Put gridded data into an xarray Dataset
     print('Saving gridded data in netCDF format')
-
-    surf_mask = mlm.surf_mask.T
-    lats = np.unique(mlm.lg)
-    plevs = np.unique(mlm.pg)
-    thlevs = np.sort(mlm.thlevs)
-
-    dims_lat_p = ("latitude","pressure")
-    coords_lat_p = (lats,plevs)
-
-    dims_lat_th = ("latitude","theta")
-    coords_lat_th = (lats,thlevs)
-
-    ## Interior variables in latitude/pressure coordinates
-    Phi_lat_p = xr.DataArray(surf_mask*mlm.Phi_eps.T,dims=dims_lat_p,coords=coords_lat_p)
-    Z_lat_p = xr.DataArray(surf_mask*mlm.Z_eps.T,dims=dims_lat_p,coords=coords_lat_p)
-    th_lat_p = xr.DataArray(surf_mask*mlm.th_eps.T,dims=dims_lat_p,coords=coords_lat_p)
-    u_lat_p = xr.DataArray(surf_mask*mlm.u_eps.T,dims=dims_lat_p,coords=coords_lat_p)
-
-    ## Interior variables in latitude/theta coordinates
-    p_lat_th = xr.DataArray(np.flip(mlm.p_isentropic.T,axis=1),dims=dims_lat_th,coords=coords_lat_th)
-    Z_lat_th = xr.DataArray(np.flip(mlm.Z_isentropic.T,axis=1),dims=dims_lat_th,coords=coords_lat_th)
-    u_lat_th = xr.DataArray(np.flip(mlm.u_isentropic.T,axis=1),dims=dims_lat_th,coords=coords_lat_th)
-    q_lat_th = xr.DataArray(np.flip(mlm.q_isentropic.T,axis=1),dims=dims_lat_th,coords=coords_lat_th)
-    r_lat_th = xr.DataArray(np.flip(mlm.r_isentropic.T,axis=1),dims=dims_lat_th,coords=coords_lat_th)
-
-    ## Surface variables
-    Z_lower = xr.DataArray(mlm.Z_lower_eps,dims=('latitude',),coords=(lats,))
-    p_lower = xr.DataArray(mlm.p_lower_eps,dims=('latitude',),coords=(lats,))
-    r_lower = xr.DataArray(mlm.r_lower_eps,dims=('latitude',),coords=(lats,))
-    th_lower = xr.DataArray(mlm.th_lower_eps,dims=('latitude',),coords=(lats,))
-    u_lower = xr.DataArray(mlm.u_lower_eps,dims=('latitude',),coords=(lats,))
     
+    ## Define data dictionary
+    data_dict = dict()
+    
+    ## Coordinates
+    data_dict['latitude_levels'] = np.unique(mlm.lg)
+    data_dict['pressure_levels'] = np.unique(mlm.pg)
+    data_dict['potential_temperature_levels'] = np.sort(mlm.thlevs)
+    
+    ## Interior variables in latitude/pressure coordinates
+    data_dict['zonal_angular_momentum'] = surf_mask*mlm.Z_eps.T
+    data_dict['zonal_wind'] = surf_mask*mlm.u_eps.T
+    data_dict['potential_temperature'] = surf_mask*mlm.th_eps.T
+    data_dict['geopotential'] = surf_mask*mlm.Phi_eps.T
+    
+    ## Interior variables in latitude/theta coordinates
+    data_dict['isentropic_zonal_angular_momentum'] = np.flip(mlm.Z_isentropic.T,axis=1)
+    data_dict['isentropic_zonal_wind'] = np.flip(mlm.u_isentropic.T,axis=1)
+    data_dict['isentropic_ertel_potential_vorticity'] = np.flip(mlm.q_isentropic.T,axis=1)
+    data_dict['isentropic_density'] = np.flip(mlm.r_isentropic.T,axis=1)
+    data_dict['isentropic_pressure'] = np.flip(mlm.p_isentropic.T,axis=1)
+    
+    ## Surface variables
+    data_dict['surface_zonal_angular_momentum'] = mlm.Z_lower_eps
+    data_dict['surface_zonal_wind'] = mlm.u_lower_eps
+    data_dict['surface_pressure'] = mlm.p_lower_eps
+    data_dict['surface_potential_temperature'] = mlm.th_lower_eps
+    data_dict['surface_isentropic_density'] = mlm.r_lower_eps
+
     ## Physical and simulation parameters needed for reconstructing Laguerre diagrams
-    smin = xr.DataArray(mlm.sp.smin)
-    smax = xr.DataArray(mlm.sp.smax)
-    pmin = xr.DataArray(mlm.sp.pmin)
-    p00 = xr.DataArray(mlm.pp.p00)
+    data_dict['ld_slims'] = np.array([mlm.sp.smin,mlm.sp.smax])
+    data_dict['ld_plims'] = np.array([mlm.sp.pmin,mlm.pp.p00])
     
     ## Seeds and weights for Laguerre diagram
-    ld_seeds = xr.DataArray(input_data.y,dims=('Zonal angular momentum','Potential temperature'))
-    ld_duals = xr.DataArray(solv.ld.duals,dims=('Seed index',))
+    data_dict['ld_seeds'] = input_data.y
+    data_dict['ld_duals'] = solv.ld.duals
     
-    mlm_gridded = xr.Dataset(dict(Phi_lat_p=Phi_lat_p,
-                                Z_lat_p=Z_lat_p,
-                                th_lat_p=th_lat_p,
-                                u_lat_p=u_lat_p,
-                                p_lat_th=p_lat_th,
-                                Z_lat_th=Z_lat_th,
-                                u_lat_th=u_lat_th,
-                                q_lat_th=q_lat_th,
-                                r_lat_th=r_lat_th,
-                                Z_lower=Z_lower,
-                                p_lower=p_lower,
-                                r_lower=r_lower,
-                                th_lower=th_lower,
-                                u_lower=u_lower,
-                                smin=smin,
-                                smax=smax,
-                                pmin=pmin,
-                                p00=p00,
-                                ld_seeds=ld_seeds,
-                                ld_duals=ld_duals
-                                ))
-
-    # 5. Save gridded data in netCDF format
-    mlm_gridded.to_netcdf(save_name+'.nc')
+    ds = bgs_to_netCDF_helper.save_bgs_to_netCDF(data_dict,file_path=save_name+'.nc')
