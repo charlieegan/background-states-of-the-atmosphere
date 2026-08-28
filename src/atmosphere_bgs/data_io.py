@@ -228,6 +228,45 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
 
     return ds
 
+def get_mlm_data_dict(mlm):
+    '''Function to define data dictionary from smooth MLM solution that is formatted to be saved as a netCDF file'''
+    data_dict = dict()
+    
+    ## Coordinates
+    data_dict['latitude_levels'] = np.unique(mlm.lg)
+    data_dict['pressure_levels'] = np.unique(mlm.pg)
+    data_dict['potential_temperature_levels'] = np.sort(mlm.thlevs)
+    
+    ## Interior variables in latitude/pressure coordinates
+    surf_mask = mlm.surf_mask
+    data_dict['zonal_angular_momentum'] = surf_mask*mlm.Z_eps.T
+    data_dict['zonal_wind'] = surf_mask*mlm.u_eps.T
+    data_dict['potential_temperature'] = surf_mask*mlm.th_eps.T
+    data_dict['geopotential'] = surf_mask*mlm.Phi_eps.T
+    
+    ## Interior variables in latitude/theta coordinates
+    data_dict['isentropic_zonal_angular_momentum'] = np.flip(mlm.Z_isentropic.T,axis=1)
+    data_dict['isentropic_zonal_wind'] = np.flip(mlm.u_isentropic.T,axis=1)
+    data_dict['isentropic_ertel_potential_vorticity'] = np.flip(mlm.q_isentropic.T,axis=1)
+    data_dict['isentropic_density'] = np.flip(mlm.r_isentropic.T,axis=1)
+    data_dict['isentropic_pressure'] = np.flip(mlm.p_isentropic.T,axis=1)
+    
+    ## Surface variables
+    data_dict['surface_zonal_angular_momentum'] = mlm.Z_lower_eps
+    data_dict['surface_zonal_wind'] = mlm.u_lower_eps
+    data_dict['surface_pressure'] = mlm.p_lower_eps
+    data_dict['surface_potential_temperature'] = mlm.th_lower_eps
+    data_dict['surface_isentropic_density'] = mlm.r_lower_eps
+
+    ## Physical and simulation parameters needed for reconstructing Laguerre diagrams
+    data_dict['ld_slims'] = np.array([mlm.sp.smin,mlm.sp.smax])
+    data_dict['ld_plims'] = np.array([mlm.sp.pmin,mlm.pp.p00])
+    
+    ## Seeds and weights for Laguerre diagram
+    data_dict['ld_seeds'] = mlm.ld.ys
+    data_dict['ld_duals'] = mlm.ld.duals
+    
+    return data_dict
 
 def reconstruct_laguerre_diagram(filepath):
     '''Function to reconstruct the optimal Laguerre diagram from the saved netCDF file.'''
@@ -343,3 +382,140 @@ def save_rasterized_sdot_bgs_to_netCDF(input_path,experiment_type=None,output_pa
     
     ds = save_bgs_to_netCDF(data_dict,experiment_type=experiment_type,file_path=output_path)
     return ds
+
+def parse_text_file(file_path):
+    '''Function for parsing generic text files containing headers and floats.
+    Reads the text file and splits it into headers and lists of floats between the headers (arrays).
+    '''
+    headers = []
+    arrays = []
+    current_header = None
+    current_block = []
+    
+    with open(file_path,'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            
+            try:
+                # Try parsing line as numbers
+                row = [float(val) for val in line.split()]
+                current_block += row
+                
+            except ValueError:
+                if current_header and current_block:
+                    headers.append(current_header)
+                    arrays.append(current_block)
+                
+                current_header = line
+                current_block = []
+        if current_header and current_block:
+            headers.append(current_header)
+            arrays.append(current_block)                    
+    
+    return headers, arrays
+
+def save_IGCM_zonal_mean_to_netCDF(input_path,experiment_type=None,output_path=None):
+    '''Function for saving zonal mean lifecycle solutions output by IGCM model to netCDF'''
+    # Initial parsing
+    headers, arrays = parse_text_file(input_path)
+
+    # Create dictionary of xarray DataArrays
+    nlats, nlevs = [int(n) for n in arrays[0]]    
+    
+    # Rename the headers to match the variable names in the netCDF files and extract the units from the headers
+    lat_idx = headers.index('Latitudes (degrees)')
+    headers[lat_idx] = 'latitude levels (degrees)'
+    eta_idx = headers.index('eta level values')
+    headers[eta_idx] = 'eta levels (unitless)'
+    
+    variable_names = []
+    units_all = []
+    for k, header in enumerate(headers[1:]):
+        variable_names.append(header.split('(')[0][:-1].lower().replace(' ','_'))
+        units_all.append(header.split('(')[1].split(')')[0])
+    
+    # Create dictionary of xarray DataArrays
+    arrays = arrays[1:]  # Exclude the first array containing nlats and nlevs
+    dims = (variable_names[0],variable_names[1])
+    coords = (np.array(arrays[0]),np.array(arrays[1]))
+    
+    data_dict = {variable_names[0]: np.array(arrays[0]),
+                    variable_names[1]: np.array(arrays[1]),
+                    variable_names[2]: np.array(arrays[2])}
+    
+    for k, array in enumerate(arrays[3:]):
+        array = np.reshape(np.array(array),[nlevs,nlats]).T
+        data_dict['eta_level_' + variable_names[k+3]] = array
+    
+    # Save the data to a netCDF file using the helper function
+    ds = bgs_to_netCDF_helper.save_bgs_to_netCDF(data_dict, experiment_type=experiment_type, file_path=output_path)
+    
+    return ds
+
+# Helper function to read continuous streams of formatted floats
+def read_floats(file_obj, count):
+    data = []
+    while len(data) < count:
+        line = file_obj.readline()
+        if not line:
+            break
+        data.extend(map(float, line.split()))
+    return np.array(data)
+
+# Function for reading output of ELIPVI method
+def read_pvinv_output(input_file_path):
+    with open(input_file_path, 'r') as f:
+        # Read grid dimensions
+        line = f.readline()
+        nlatinv, iz = map(int, line.split())
+        print(f"Data dimensions: {nlatinv} {iz}")
+        
+        # Read values into arrays
+        ttb = read_floats(f, 1)  # Reads the single introductory float element
+        
+        scrap = f.readline()    # Skip label/scrap line
+        thlev = read_floats(f, iz)
+        
+        scrap = f.readline()    # Skip label/scrap line
+        rlatinv = read_floats(f, nlatinv)
+        
+        scrap = f.readline()    # Skip label/scrap line
+        print(scrap.strip())
+        
+        zsinv = read_floats(f, nlatinv)
+        psinv = read_floats(f, nlatinv)
+        tsinv = read_floats(f, nlatinv)
+        usinv = read_floats(f, nlatinv)
+        
+        scrap = f.readline()    # Skip label/scrap line
+        print(scrap.strip())
+        
+        ebuinv = read_floats(f, iz)
+        
+        scrap = f.readline()    # Skip label/scrap line
+        print(scrap.strip())
+        
+        # Read 2D arrays (flattened in file, reshaped to (iz, nlatinv))
+        total_2d_elements = nlatinv * iz
+        
+        prinv = read_floats(f, total_2d_elements).reshape((iz, nlatinv)).T
+        tempinv = np.flip(read_floats(f, total_2d_elements).reshape((iz, nlatinv)),axis=1).T
+        sigmainv = np.flip(read_floats(f, total_2d_elements).reshape((iz, nlatinv)),axis=1).T
+        uthinv = read_floats(f, total_2d_elements).reshape((iz, nlatinv)).T
+        pvinv = np.flip(read_floats(f, total_2d_elements).reshape((iz, nlatinv)),axis=1).T
+        gominv = np.flip(read_floats(f, total_2d_elements).reshape((iz, nlatinv)),axis=1).T
+
+    # define data dictionary with coordiantes and variables
+    data_dict = {'latitude_levels': np.rad2deg(rlatinv),
+        'potential_temperature_levels': thlev,
+        'isentropic_ertel_potential_vorticity': pvinv,
+        'isentropic_density': sigmainv,
+        'isentropic_zonal_wind': uthinv,
+        'surface_zonal_wind': usinv,
+        'surface_zonal_wind': zsinv,
+        'surface_pressure': psinv
+    }
+    
+    return data_dict
