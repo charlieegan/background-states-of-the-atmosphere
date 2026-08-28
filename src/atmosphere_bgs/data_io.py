@@ -450,7 +450,7 @@ def save_IGCM_zonal_mean_to_netCDF(input_path,experiment_type=None,output_path=N
         data_dict['eta_level_' + variable_names[k+3]] = array
     
     # Save the data to a netCDF file using the helper function
-    ds = bgs_to_netCDF_helper.save_bgs_to_netCDF(data_dict, experiment_type=experiment_type, file_path=output_path)
+    ds = save_bgs_to_netCDF(data_dict, experiment_type=experiment_type, file_path=output_path)
     
     return ds
 
