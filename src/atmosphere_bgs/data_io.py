@@ -3,7 +3,7 @@ import xarray as xr
 import os
 import _atmosphere_bgs
 
-def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
+def save_bgs_to_netCDF(data_dict,experiment_type='unspecified',file_path=None):
     """Creates an xarray.Dataset for the background state.
 
     All numpy data arrays are passed as explicit inputs.
