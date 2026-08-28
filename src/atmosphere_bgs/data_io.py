@@ -180,11 +180,6 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
                     _get_data(data_dict.get("ld_seeds"))[:,1],
                     {"units": "K"}
                 ),
-        "ld_ertel_potential_vorticity": (
-                            ("ld_seed_index",),
-                            _get_data(data_dict.get("ld_ertel_potential_vorticity")),
-                            {"units": "PVU"}
-                        ),
         "ld_slims": (
             ("ld_lim_index",),
             _get_data(data_dict.get("ld_slims")),
@@ -196,6 +191,13 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
             {"units": "Pascals"}
         )
     }
+    
+    if data_dict.get("ld_ertel_potential_vorticity") is not None:
+        data_vars_dict["ld_ertel_potential_vorticity"] = (
+                                                            ("ld_seed_index",),
+                                                            _get_data(data_dict.get("ld_ertel_potential_vorticity")),
+                                                            {"units": "PVU"}
+                                                        )
     
     # Delete data variables that have missing dimensions (i.e., if the corresponding coordinate is None)
     data_vars_dict_filtered = dict()
