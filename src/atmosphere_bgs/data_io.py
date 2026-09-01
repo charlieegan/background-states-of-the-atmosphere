@@ -194,6 +194,11 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
             _get_data(data_dict.get("ld_plims"), shape=(2,)),
             {"units": "Pascals"}
         ),
+        "ld_pbounds": (
+                    ("ld_lim_index",),
+                    _get_data(data_dict.get("ld_pbounds"), shape=(2,)),
+                    {"units": "Pascals"}
+                ),
         "ld_p00": (
                     ("ld_p00_index",),
                     _get_data(data_dict.get("ld_p00"), shape=(1,)),
@@ -266,7 +271,8 @@ def get_mlm_data_dict(mlm):
 
     ## Physical and simulation parameters needed for reconstructing Laguerre diagrams
     data_dict['ld_slims'] = np.array([mlm.sp.smin,mlm.sp.smax])
-    data_dict['ld_plims'] = np.array([mlm.sp.pmin,mlm.pmax])
+    data_dict['ld_plims'] = np.array([mlm.sp.pmin,mlm.sp.pmax]) # limits for generating Laguerre tessellation
+    data_dict['ld_pbounds'] = np.array([mlm.pmin,mlm.pmax]) # bounds for defining grid
     data_dict['ld_p00'] = np.array([mlm.pp.p00])
     
     ## Seeds and weights for Laguerre diagram
@@ -313,6 +319,8 @@ def save_rasterized_sdot_bgs_to_netCDF(input_path,experiment_type=None,output_pa
     output_path: string; path on which to save output
     res: list; length 2 list specifying resolution of rasterized result 
     '''
+    ds = xr.open_dataset(input_path)
+    
     # reconstruct the Laguerre tessellation from the generators and paramters specified by the input path
     ld = reconstruct_laguerre_diagram(input_path)
     
@@ -329,7 +337,7 @@ def save_rasterized_sdot_bgs_to_netCDF(input_path,experiment_type=None,output_pa
     rast = ld.get_rasterizer(transform)
             
     smin = ld.sim.smin; smax = ld.sim.smax
-    pmin = ld.sim.pmin; pmax = ld.sim.pmax
+    pmin = ds['ld_pbounds'].values[0]; pmax = ds['ld_pbounds'].values[1]
     lg = np.linspace(s2lat(smin),s2lat(smax),res[0]+1)
     hg = np.linspace(p2h(pmin),p2h(pmax),res[1]+1)
     
