@@ -515,7 +515,8 @@ def read_ELIPVI_output(input_file_path):
         'isentropic_zonal_wind': uthinv,
         'surface_zonal_wind': usinv,
         'surface_zonal_wind': zsinv,
-        'surface_pressure': psinv
+        'surface_pressure': psinv,
+        'surface_potential_temperature': tsinv
     }
     
     return data_dict
