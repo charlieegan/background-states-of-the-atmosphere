@@ -32,7 +32,7 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
     n_pres = len(pressure_levels) if pressure_levels is not None else 0
     n_theta = len(potential_temperature_levels) if potential_temperature_levels is not None else 0
     n_eta = len(eta_levels) if eta_levels is not None else 0
-    n_duals = len(ld_duals) if ld_duals is not None else 0
+    n_duals = len(ld_duals) if ld_duals is not None else 1
 
     # -------------------------------------------------------------------------
     # 1. Define Coordinates Dictionary
@@ -170,27 +170,27 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
         # Variables for reconstructing Laguerre diagram
         "ld_duals": (
                     ("ld_dual_index",),
-                    _get_data(data_dict.get("ld_duals")),
+                    _get_data(data_dict.get("ld_duals"), shape=(n_duals,)),
                     {"units": "m2 s-2"}
                 ),
         "ld_zonal_angular_momentum": (
             ("ld_seed_index",),
-            _get_data(data_dict.get("ld_seeds"))[:,0],
+            _get_data(data_dict.get("ld_seeds"), shape=(n_duals-1, 2))[:,0],
             {"units": "m2 s-1"}
         ),
         "ld_potential_temperature": (
                     ("ld_seed_index",),
-                    _get_data(data_dict.get("ld_seeds"))[:,1],
+                    _get_data(data_dict.get("ld_seeds"), shape=(n_duals-1, 2))[:,1],
                     {"units": "K"}
                 ),
         "ld_slims": (
             ("ld_lim_index",),
-            _get_data(data_dict.get("ld_slims")),
+            _get_data(data_dict.get("ld_slims"), shape=(2,)),
             {"units": "dimensionless"}
         ),
         "ld_plims": (
             ("ld_lim_index",),
-            _get_data(data_dict.get("ld_plims")),
+            _get_data(data_dict.get("ld_plims"), shape=(2,)),
             {"units": "Pascals"}
         )
     }
@@ -198,7 +198,7 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
     if data_dict.get("ld_ertel_potential_vorticity") is not None:
         data_vars_dict["ld_ertel_potential_vorticity"] = (
                                                             ("ld_seed_index",),
-                                                            _get_data(data_dict.get("ld_ertel_potential_vorticity")),
+                                                            _get_data(data_dict.get("ld_ertel_potential_vorticity"), shape=(n_duals-1,)),
                                                             {"units": "PVU"}
                                                         )
     
