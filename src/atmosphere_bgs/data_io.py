@@ -50,6 +50,7 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
         coords_dict["ld_seed_index"] = np.arange(n_duals-1)
         coords_dict["ld_dual_index"] = np.arange(n_duals)
         coords_dict["ld_lim_index"] = np.arange(2)
+        coords_dict["ld_p00_index"] = np.arange(1)
 
     # -------------------------------------------------------------------------
     # 2. Define Data Variables
@@ -194,7 +195,7 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
             {"units": "Pascals"}
         ),
         "ld_p00": (
-                    ("ld_lim_index",),
+                    ("ld_p00_index",),
                     _get_data(data_dict.get("ld_p00"), shape=(1,)),
                     {"units": "Pascals"}
                 )
