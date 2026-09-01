@@ -238,7 +238,7 @@ def get_mlm_data_dict(mlm):
     data_dict['potential_temperature_levels'] = np.sort(mlm.thlevs)
     
     ## Interior variables in latitude/pressure coordinates
-    surf_mask = mlm.surf_mask
+    surf_mask = mlm.surf_mask.T
     data_dict['zonal_angular_momentum'] = surf_mask*mlm.Z_eps.T
     data_dict['zonal_wind'] = surf_mask*mlm.u_eps.T
     data_dict['potential_temperature'] = surf_mask*mlm.th_eps.T
