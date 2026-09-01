@@ -192,7 +192,12 @@ def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
             ("ld_lim_index",),
             _get_data(data_dict.get("ld_plims"), shape=(2,)),
             {"units": "Pascals"}
-        )
+        ),
+        "ld_p00": (
+                    ("ld_lim_index",),
+                    _get_data(data_dict.get("ld_p00"), shape=(1,)),
+                    {"units": "Pascals"}
+                )
     }
     
     if data_dict.get("ld_ertel_potential_vorticity") is not None:
@@ -279,8 +284,8 @@ def reconstruct_laguerre_diagram(filepath):
     
     # Overwrite domain boundary parameters
     sp.smin, sp.smax = ds['ld_slims'].values
-    sp.pmin = ds['ld_plims'].values[0]
-    pp.p00 = ds['ld_plims'].values[1]
+    sp.pmin, sp.pmax = ds['ld_plims'].values
+    pp.p00 = ds['ld_p00'].values
     
     # Create a new instance of the LaguerreDiagram class
     y = np.vstack([ds['ld_zonal_angular_momentum'],ds['ld_potential_temperature']]).T
@@ -377,7 +382,8 @@ def save_rasterized_sdot_bgs_to_netCDF(input_path,experiment_type=None,output_pa
         'ld_duals' : ld.duals,
         'ld_seeds' : ld.ys,
         'ld_slims' : np.array([ld.sim.smin,ld.sim.smax]),
-        'ld_plims' : np.array([ld.sim.pmin,ld.phys.p00])
+        'ld_plims' : np.array([ld.sim.pmin,ld.sim.pmax]),
+        'ld_p00' : np.array([ld.phys.p00])
         }
     
     ds = save_bgs_to_netCDF(data_dict,experiment_type=experiment_type,file_path=output_path)
