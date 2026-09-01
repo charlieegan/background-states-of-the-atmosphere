@@ -465,7 +465,7 @@ def read_floats(file_obj, count):
     return np.array(data)
 
 # Function for reading output of ELIPVI method
-def read_pvinv_output(input_file_path):
+def read_ELIPVI_output(input_file_path):
     with open(input_file_path, 'r') as f:
         # Read grid dimensions
         line = f.readline()
