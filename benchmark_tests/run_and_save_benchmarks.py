@@ -7,7 +7,7 @@ import atmosphere_bgs
 # onto the same grids. Solutions are represented in latitude and pressure coordinates, as well as latitude and
 # potential temperature coordinates.
 
-################ Benchmark tests for optimal transport method ##################
+################## Benchmark tests for optimal transport method ##################
 # Run all benchmark tests and save results (both smoothed solution and semi-discrete optimal transport solution)
 
 # 0. Define the simulation parameters
@@ -68,23 +68,29 @@ for data_type, date, dtime in zip(data_types,dates,dtimes):
     data_dict = atmosphere_bgs.data_io.get_mlm_data_dict(mlm)
     ds = atmosphere_bgs.data_io.save_bgs_to_netCDF(data_dict,file_path=save_name+'.nc')
 
+    # 6. rasterize the semi-discrete OT solution and save it to netCDF
+    experiment_type = data_type+'_'+date+dtime+'_sdot'
+    input_path = './output/'+data_type+'_'+date+dtime+'_OT.nc'
+    save_name = './output/'+data_type+'_'+date+dtime+'_SDOT.nc'
+    atmosphere_bgs.data_io.save_rasterized_sdot_bgs_to_netCDF(input_path,experiment_type=experiment_type,output_path=save_name,res=res)
+
 ################## Parse lifecycle zonal average solutions ##################
 
 # Define the file paths
 filepath = './input_data/'
 filenames = ['ZM_IGCM_LC1_day0.txt','ZM_IGCM_LC2_day0.txt']
+lc_date = 2001010000
 
 # Parse and format LC1 and LC2 data
 for i, filename in enumerate(filenames):
     input_path = filepath+filename
-    experiment_type = 'lc' + str(i+1) + '_zonal_average'
+    experiment_type = 'lc' + str(i+1) + '_' + str(lc_date) + '_zonal_mean'
     output_path = './output/' + experiment_type + '.nc'
     atmosphere_bgs.data_io.save_IGCM_zonal_mean_to_netCDF(input_path=input_path,experiment_type=experiment_type,output_path=output_path)
     
 ################## Parse lifecycle ELIPVI output ##################
-lc_date = 2001010000
 for i in np.arange(2)+1:
-    experiment_type = 'lc'+str(i)+'_ELIPVI_'+str(lc_date)
+    experiment_type = 'lc'+str(i)+'_'+str(lc_date)+'_ELIPVI'
     input_file_path = './input_data/GRID_LC'+str(i)+'_'+str(lc_date)
     output_file_path = './output/'+experiment_type+'.nc'
     data_dict = atmosphere_bgs.data_io.read_ELIPVI_output(input_file_path)
@@ -93,7 +99,7 @@ for i in np.arange(2)+1:
 ################## Parse ELIPVI output for ERA5 data ##################
 # Define file paths
 idatadate = dates[-1]+dtimes[-1]
-output_file_path = './output/ELIPVI_output_'+str(idatadate)+'.nc'
+output_file_path = './output/ERA5_'+str(idatadate)+'_ELIPVI.nc'
 input_file_path = './input_data/GRID_NHANMW_'+str(idatadate)
 data_dict = atmosphere_bgs.data_io.read_ELIPVI_output(input_file_path)
-ds = atmosphere_bgs.data_io.save_bgs_to_netCDF(data_dict,experiment_type='ERA5_ELIPVI_'+str(idatadate),file_path=output_file_path)
+ds = atmosphere_bgs.data_io.save_bgs_to_netCDF(data_dict,experiment_type='ERA5_'+str(idatadate)+'_ELIPVI',file_path=output_file_path)
