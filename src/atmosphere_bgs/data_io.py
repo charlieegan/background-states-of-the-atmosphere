@@ -266,7 +266,8 @@ def get_mlm_data_dict(mlm):
 
     ## Physical and simulation parameters needed for reconstructing Laguerre diagrams
     data_dict['ld_slims'] = np.array([mlm.sp.smin,mlm.sp.smax])
-    data_dict['ld_plims'] = np.array([mlm.sp.pmin,mlm.pp.p00])
+    data_dict['ld_plims'] = np.array([mlm.sp.pmin,mlm.sp.pmax])
+    data_dict['ld_duals'] = np.array([mlm.pp.p00])
     
     ## Seeds and weights for Laguerre diagram
     data_dict['ld_seeds'] = mlm.ld.ys
@@ -286,7 +287,7 @@ def reconstruct_laguerre_diagram(filepath):
     # Overwrite domain boundary parameters
     sp.smin, sp.smax = ds['ld_slims'].values
     sp.pmin, sp.pmax = ds['ld_plims'].values
-    pp.p00 = ds['ld_p00'].values
+    pp.p00 = ds['ld_p00'].values[0]
     
     # Create a new instance of the LaguerreDiagram class
     y = np.vstack([ds['ld_zonal_angular_momentum'],ds['ld_potential_temperature']]).T
