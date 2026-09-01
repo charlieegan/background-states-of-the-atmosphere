@@ -266,7 +266,7 @@ def get_mlm_data_dict(mlm):
 
     ## Physical and simulation parameters needed for reconstructing Laguerre diagrams
     data_dict['ld_slims'] = np.array([mlm.sp.smin,mlm.sp.smax])
-    data_dict['ld_plims'] = np.array([mlm.sp.pmin,mlm.sp.pmax])
+    data_dict['ld_plims'] = np.array([mlm.pmin,mlm.pmax])
     data_dict['ld_p00'] = np.array([mlm.pp.p00])
     
     ## Seeds and weights for Laguerre diagram

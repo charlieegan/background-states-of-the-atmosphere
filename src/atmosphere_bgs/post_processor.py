@@ -659,6 +659,9 @@ class PostProcessor:
         pmax_orig = ld.sim.pmax
         ld.sim.pmin = pmin
         ld.sim.pmax = pmax
+        
+        self.pmax = pmax
+        self.pmin = pmin
 
         # Define regular rectangular grid in (lat,h) and find which Laguerre cell
         # each grid point belongs to
