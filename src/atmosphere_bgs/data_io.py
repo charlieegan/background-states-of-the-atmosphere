@@ -1,3 +1,4 @@
+from matplotlib.pyplot import grid
 import numpy as np
 import xarray as xr
 import os
@@ -332,32 +333,27 @@ def save_rasterized_sdot_bgs_to_netCDF(input_path,experiment_type=None,output_pa
     p2h = lambda p : -H*np.log(p/p00)
     lat2s = lambda lat : np.sin(np.deg2rad(lat))
     h2p = lambda h : p00*np.exp(-h/H)
-
-    transform = lambda x : [s2lat(x[0]), p2h(x[1])]
-    rast = ld.get_rasterizer(transform)
-            
+        
     smin = ld.sim.smin; smax = ld.sim.smax
     pmin = ds['ld_pbounds'].values[0]; pmax = ds['ld_pbounds'].values[1]
     lg = np.linspace(s2lat(smin),s2lat(smax),res[0]+1)
     hg = np.linspace(p2h(pmin),p2h(pmax),res[1]+1)
     
     latitude_levels = lg[:-1] + np.diff(lg)/2 # midpoints
+    s_levels = np.sin(np.deg2rad(latitude_levels))
     pressure_levels = h2p(hg[:-1] + np.diff(hg)/2) # midpoints
-    
-    # get rasterised zonal angular momentum and potential temperature
-    def rasterize_centroidal_values(val):
-        rv = rast.rasterize(val, res).copy()
-        fill = rast.fill
-        rv = np.where(fill > 0.5, np.divide(rv, fill, where=(fill > 0.5)), np.nan)
-        return rv
 
-    zonal_angular_momentum = np.flip(rasterize_centroidal_values(ld.ys[:,0]),axis=1)
-    potential_temperature = np.flip(rasterize_centroidal_values(ld.ys[:,1]),axis=1)
+    # get rasterised zonal angular momentum and potential temperature
+    grid = np.meshgrid(s_levels,pressure_levels)
+    grid_pts = np.vstack([np.ravel(grid[0]),np.ravel(grid[1])]).T
+    rast = ld.get_rasterizer()
+    idx = np.reshape(rast.indices(grid_pts),res).T
+    
+    zonal_angular_momentum = np.append(ld.ys[:,0],np.nan)[idx]
+    potential_temperature = np.append(ld.ys[:,1],np.nan)[idx]
 
     # get rasterised zonal wind from zonal angular momentum
-    lg, _ = np.meshgrid(latitude_levels,np.flip(p2h(pressure_levels)))
-    sg = lat2s(lg).T
-    zonal_wind = get_u(zonal_angular_momentum,sg,ld.phys)
+    zonal_wind = get_u(zonal_angular_momentum,grid[0].T,ld.phys)
     #ertel_potential_vorticity = rast.rast(ld_epv,res)             ##### need cellwise epv saved to netCDF file along with seeds and weights
 
     # extract surface pressure and interpolate onto latitude levels
