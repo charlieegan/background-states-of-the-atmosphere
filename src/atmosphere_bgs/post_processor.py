@@ -998,14 +998,14 @@ class PostProcessor:
             lmbda = (np.log(np.sort(p_isentropic_k))-np.log(pu[i_sort]))/(np.log(pu[i_sort-1])-np.log(pu[i_sort]))
             
             # linearly interpolate Z using interpolation coefficients
-            Z_isentropic_k = lmbda*self.Z_eps[i_sort,k] + (1-lmbda)*self.Z_eps[i_sort,k]
+            Z_isentropic_k = lmbda*self.Z_eps[i_sort-1,k] + (1-lmbda)*self.Z_eps[i_sort,k]
             Z_isentropic[idx,k] = Z_isentropic_k
             
             # define zonal wind from Z and latitude
             u_isentropic[idx,k] = self.get_u(Z_isentropic_k,su[k])
             
             # linearly interpolate isentropic density using interpolation coefficients
-            r_isentropic_k = lmbda*self.r_eps[i_sort,k] + (1-lmbda)*self.r_eps[i_sort,k]
+            r_isentropic_k = lmbda*self.r_eps[i_sort-1,k] + (1-lmbda)*self.r_eps[i_sort,k]
             r_isentropic[idx,k] = r_isentropic_k
     
         self.p_isentropic = p_isentropic
