@@ -4,6 +4,16 @@ import xarray as xr
 import os
 import _atmosphere_bgs
 
+'''
+Script with helper functions for data input and output for background state code.
+Main functions are
+
+    get_mlm_data_dict - defines a dictionary of variables from the output of the post-processing step
+    save_bgs_to_netCDF - truns the dictionary output by get_mlm_data_dict into an xarray dataset and saves it in netCDF
+    reconstruct_laguerre_diagram - reconstructs Laguerre diagram from generators and domain information saved in the netCDF file
+    save_rasterized_sdot_bgs_to_netCDF - rasterizes semi-dicrete optimal transport solution and saves it to netCDF
+'''
+
 def save_bgs_to_netCDF(data_dict,experiment_type=None,file_path=None):
     """Creates an xarray.Dataset for the background state.
 
@@ -283,7 +293,16 @@ def get_mlm_data_dict(mlm):
     return data_dict
 
 def reconstruct_laguerre_diagram(filepath):
-    '''Function to reconstruct the optimal Laguerre diagram from the saved netCDF file.'''
+    '''Function to reconstruct the optimal Laguerre diagram from the saved netCDF file.
+    Requires the netCDF file on 'filepath' to have variables
+        
+        ld_slims - limits of domain in sin(latitude)
+        ld_plims - limits of domain in pressure
+        ld_p00 - reference pressure
+        ld_zonal_angular_momentum - vector of Z coordinates of all points where mass is
+        ld_potential_temperature - vector of Theta coordinates of all points where mass is
+        ld_duals - the vector of duals (Kantorovich potential) that generates the Laguerre diagram
+    '''
     # Open the netCDF file
     ds = xr.open_dataset(filepath)
     
