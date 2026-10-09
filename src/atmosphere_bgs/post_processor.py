@@ -8,7 +8,7 @@ from scipy.interpolate import PchipInterpolator
 
 class PostProcessor:
     def __init__(self,solv,bscirc,pvlevs,thlevs,pvmaxth,\
-                 res=[200,200],eps=5e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_8',n_nb_th_levs=None,\
+                 res=[180,180],eps=5e-3,nb_threshold=None,nbs=None,nb_type='Lag_cell_8',n_nb_th_levs=None,\
                  make_surface_adjustments=False,adjust_weights=False,verbose=False):
         
         self.ld = solv.ld
@@ -153,8 +153,11 @@ class PostProcessor:
         Z_lb = .5*(Z_surf + Z_l_nb)
         Z_ub = .5*(Z_surf + Z_u_nb)
         
-        u_lb = self.get_u(Z_lb,s_mids)
-        u_ub = self.get_u(Z_ub,s_mids)
+        u_lb0 = np.squeeze(self.get_u(Z_lb,s_mids))
+        u_ub0 = np.squeeze(self.get_u(Z_ub,s_mids))
+        
+        u_lb = np.min(np.stack([u_lb0,u_ub0]),axis=0)
+        u_ub = np.max(np.stack([u_lb0,u_ub0]),axis=0)
         
         bds = optimize.Bounds(lb=u_lb,ub=u_ub)
             
