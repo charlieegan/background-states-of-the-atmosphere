@@ -1,78 +1,104 @@
 import numpy as np
 import _atmosphere_bgs
 import re
+import xarray as xr
 
 class DataLoader:
     
-    def __init__(self,path,pmin=None,p00=None,load_all=True,interpolate_onto_grid=True,skip=0,split_param=None):
-        
-        # parse the input data text file and make a dictionary of data arrays
-        with open(path) as f:
-            self.s = f.read()
-        
-        self.float_pattern = r'[-+]?(\d+([.,]\d*)?|[.,]\d+)([eE][-+]?\d+)?'
-        self.path = path
-        self.data_dict = {}
-
-        try:
-            self.latitudes_cnt = int(next(re.compile(r"(\d+)\s+LATITUDES ON GAUSSIAN GRID").finditer(self.s)).group(1))
-        except StopIteration:
-            raise RuntimeError("did not find number of \"LATITUDES ON GAUSSIAN GRID\"")
-        
-        try:
-            self.tracer_mixing_ratio_contour_cnt = int(next(re.compile(r"(\d+)\s+TRACER MIXING RATIO CONTOURS").finditer(self.s)).group(1))
-        except StopIteration:
-            raise RuntimeError("did not find number of \"TRACER MIXING RATIO CONTOURS\"")
-
-        try:
-            self.isentropic_level_cnt = int(next(re.compile(r"(\d+)\s+ISENTROPIC LEVELS").finditer(self.s)).group(1))
-        except StopIteration:
-            raise RuntimeError("did not find number of \"ISENTROPIC LEVELS\"")
-
-        self.parse_block(self.latitudes_cnt, "LATITUDES ON GAUSSIAN GRID")
-        self.parse_block(self.isentropic_level_cnt, "ISENTROPIC LEVELS")
-        self.parse_block(self.tracer_mixing_ratio_contour_cnt, "TRACER MIXING RATIO CONTOURS")
-        self.parse_block(self.isentropic_level_cnt, "FACTOR TO CONVERT FROM LAIT TO ERTEL PV")
-        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "MASS INTEGRALS IN PV-THETA COORDINATES")
-        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
-        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "CIRCULATION INTEGRALS IN PV-THETA COORDINATES")
-        self.parse_block(self.latitudes_cnt, "BACKGROUND PRESSURE ON TOP BOUNDARY")
-
-        if load_all:
+    def __init__(self,path,pmin=None,p00=None,load_all=True,interpolate_onto_grid=True,skip=0,split_param=None,mode=None):
+        self.mode = mode
+        if self.mode == 'legacy':
+            # parse the input data text file and make a dictionary of data arrays
+            print('Reading legacy input data')
+            with open(path) as f:
+                self.s = f.read()
+            
+            self.float_pattern = r'[-+]?(\d+([.,]\d*)?|[.,]\d+)([eE][-+]?\d+)?'
+            self.path = path
+            self.data_dict = {}
+    
             try:
-                self.data_dict["DATA BASE TIME"] = int(next(re.compile(r"DATA BASE TIME IS\s+(\d+)").finditer(self.s)).group(1))
+                self.latitudes_cnt = int(next(re.compile(r"(\d+)\s+LATITUDES ON GAUSSIAN GRID").finditer(self.s)).group(1))
             except StopIteration:
-                print("WARNING: did not find \"DATA BASE TIME\"")
+                raise RuntimeError("did not find number of \"LATITUDES ON GAUSSIAN GRID\"")
+            
+            try:
+                self.tracer_mixing_ratio_contour_cnt = int(next(re.compile(r"(\d+)\s+TRACER MIXING RATIO CONTOURS").finditer(self.s)).group(1))
+            except StopIteration:
+                raise RuntimeError("did not find number of \"TRACER MIXING RATIO CONTOURS\"")
+    
+            try:
+                self.isentropic_level_cnt = int(next(re.compile(r"(\d+)\s+ISENTROPIC LEVELS").finditer(self.s)).group(1))
+            except StopIteration:
+                raise RuntimeError("did not find number of \"ISENTROPIC LEVELS\"")
+    
+            self.parse_block(self.latitudes_cnt, "LATITUDES ON GAUSSIAN GRID")
+            self.parse_block(self.isentropic_level_cnt, "ISENTROPIC LEVELS")
+            self.parse_block(self.tracer_mixing_ratio_contour_cnt, "TRACER MIXING RATIO CONTOURS")
+            self.parse_block(self.isentropic_level_cnt, "FACTOR TO CONVERT FROM LAIT TO ERTEL PV")
+            self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "MASS INTEGRALS IN PV-THETA COORDINATES")
+            self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
+            self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "CIRCULATION INTEGRALS IN PV-THETA COORDINATES")
+            self.parse_block(self.latitudes_cnt, "BACKGROUND PRESSURE ON TOP BOUNDARY")
+    
+            if load_all:
+                try:
+                    self.data_dict["DATA BASE TIME"] = int(next(re.compile(r"DATA BASE TIME IS\s+(\d+)").finditer(self.s)).group(1))
+                except StopIteration:
+                    print("WARNING: did not find \"DATA BASE TIME\"")
+                    
+                try:
+                    self.data_dict["TOP BOUNDARY IN ISENTROPIC COORDS"] = float(next(re.compile(r"(" + self.float_pattern + r")\s+IS TOP BOUNDARY IN ISENTROPIC COORDS").finditer(self.s)).group(1))
+                except StopIteration:
+                    print("WARNING: did not find \"TOP BOUNDARY IN ISENTROPIC COORDS\"")
                 
-            try:
-                self.data_dict["TOP BOUNDARY IN ISENTROPIC COORDS"] = float(next(re.compile(r"(" + self.float_pattern + r")\s+IS TOP BOUNDARY IN ISENTROPIC COORDS").finditer(self.s)).group(1))
-            except StopIteration:
-                print("WARNING: did not find \"TOP BOUNDARY IN ISENTROPIC COORDS\"")
+                try:
+                    match = next(re.compile(r"(" + self.float_pattern + r")\s+(" + self.float_pattern + r")\s+MAX AND MIN VALUES OF SURFACE THETA").finditer(self.s))
+                    self.data_dict["MAX VALUE OF SURFACE THETA"] = float(match.group(1))
+                    self.data_dict["MIN VALUE OF SURFACE THETA"] = float(match.group(2))
+                except StopIteration:
+                    print("WARNING: did not find \"MAX AND MIN VALUES OF SURFACE THETA\"")
+    
+                try:
+                    self.data_dict["TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile(r"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + r")").finditer(self.s)).group(1))
+                except StopIteration:
+                    print("WARNING: did not find \"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
+                
+                try:
+                    self.data_dict["TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile(r"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + r")").finditer(self.s)).group(1))
+                except StopIteration:
+                    print("WARNING: did not find \"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
             
-            try:
-                match = next(re.compile(r"(" + self.float_pattern + r")\s+(" + self.float_pattern + r")\s+MAX AND MIN VALUES OF SURFACE THETA").finditer(self.s))
-                self.data_dict["MAX VALUE OF SURFACE THETA"] = float(match.group(1))
-                self.data_dict["MIN VALUE OF SURFACE THETA"] = float(match.group(2))
-            except StopIteration:
-                print("WARNING: did not find \"MAX AND MIN VALUES OF SURFACE THETA\"")
-
-            try:
-                self.data_dict["TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile(r"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + r")").finditer(self.s)).group(1))
-            except StopIteration:
-                print("WARNING: did not find \"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
-            
-            try:
-                self.data_dict["TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile(r"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + r")").finditer(self.s)).group(1))
-            except StopIteration:
-                print("WARNING: did not find \"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
+                self.parse_block(self.isentropic_level_cnt, "MAX PV ON THETA LEVELS")
+                self.parse_block(self.isentropic_level_cnt, "MIN PV ON THETA LEVELS")
+                self.parse_block(self.isentropic_level_cnt, "AREA INTEGRAL OVER POLAR SHELLS THETA COORDINATES")
+                self.parse_block(self.isentropic_level_cnt, "MASS INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
+                self.parse_block(self.isentropic_level_cnt, "CIRCULATION INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
+                self.parse_block(self.latitudes_cnt, "BACKGROUND SURFACE GEOPOTENTIAL")
+                self.parse_block(self.isentropic_level_cnt, r"BACKGROUND u\*cos\(phi\) AT EQUATOR ON THETA LEVELS")
+                
+            self.data_dict['latitude'] = self.data_dict.pop('LATITUDES ON GAUSSIAN GRID')
+            self.data_dict['pvlev'] = self.data_dict.pop('TRACER MIXING RATIO CONTOURS')
+            self.data_dict['thlev'] = self.data_dict.pop('ISENTROPIC LEVELS')
+            self.data_dict['lait2pv'] = self.data_dict.pop('FACTOR TO CONVERT FROM LAIT TO ERTEL PV')
+            self.data_dict['bscirc'] = self.data_dict.pop('CIRCULATION INTEGRALS IN PV-THETA COORDINATES')
+            self.data_dict['bsmass'] = self.data_dict.pop('MASS INTEGRALS IN PV-THETA COORDINATES')
+            self.data_dict['pzon'] = self.data_dict.pop('BACKGROUND PRESSURE ON TOP BOUNDARY')
+            self.data_dict['pvmaxth'] = self.data_dict.pop('MAX PV ON THETA LEVELS')
         
-            self.parse_block(self.isentropic_level_cnt, "MAX PV ON THETA LEVELS")
-            self.parse_block(self.isentropic_level_cnt, "MIN PV ON THETA LEVELS")
-            self.parse_block(self.isentropic_level_cnt, "AREA INTEGRAL OVER POLAR SHELLS THETA COORDINATES")
-            self.parse_block(self.isentropic_level_cnt, "MASS INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
-            self.parse_block(self.isentropic_level_cnt, "CIRCULATION INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
-            self.parse_block(self.latitudes_cnt, "BACKGROUND SURFACE GEOPOTENTIAL")
-            self.parse_block(self.isentropic_level_cnt, r"BACKGROUND u\*cos\(phi\) AT EQUATOR ON THETA LEVELS")
+        else:
+            # load the mass and circulation integral data
+            ds_integrals = xr.load_dataset(path)
+            
+            # convert into dictionary of numpy arrays 
+            # this is to match format of legacy input, since the rest of the code is written using that format, but is also expected to be faster
+            self.data_dict = {}
+            
+            for data_var in ds_integrals.data_vars.keys():
+                self.data_dict[data_var] = np.squeeze(ds_integrals[data_var].values)
+                
+            for coord in ds_integrals.coords.keys():
+                self.data_dict[coord] = np.squeeze(ds_integrals[coord].values)
         
         # get physical parameters
         self.pp = _atmosphere_bgs.PhysicalParameters()
@@ -80,11 +106,11 @@ class DataLoader:
         # assign minimum pressure level and reference pressure to class
         if pmin is None:
             # Define minimum pressure to be the mean value of the zonal average
-            # pressure on the top isentropic level, copmuted as an integral over
+            # pressure on the top isentropic level, computed as an integral over
             # [0,1] using the trapezium rule
-            ptop = self.data_dict['BACKGROUND PRESSURE ON TOP BOUNDARY']
+            ptop = self.data_dict['pzon']
             ptop = np.flip(ptop) # flip to be ordered accending with latitude
-            sgrid = np.sin(np.deg2rad(self.data_dict['LATITUDES ON GAUSSIAN GRID']))
+            sgrid = np.sin(np.deg2rad(self.data_dict['latitude']))
             sgrid = np.flip(sgrid) # order to be acsending
             
             area_top = np.diff(sgrid)*(ptop[:-1]+ptop[1:])/2
@@ -99,33 +125,6 @@ class DataLoader:
         
         # record whether or not interpolation has been used
         self.interpolate_onto_grid = interpolate_onto_grid
-        
-    def _multifloat_pattern(self, mincnt, maxcnt=None):
-        if maxcnt is None:
-            maxcnt = mincnt
-        return "(" + self.float_pattern + r"\s+){" + str(mincnt-1) + "," + str(maxcnt-1) + "}" + self.float_pattern
-    
-    def parse_block(self, cnt, title):
-        """
-        find block of `cnt` floats starting with title `title`
-        """
-        
-        try:
-            r = re.compile(title)
-            match = next(r.finditer(self.s))
-            
-            try:
-                r = re.compile(self._multifloat_pattern(1, cnt))
-                vals = [float(x) for x in next(r.finditer(self.s, pos=match.end())).group(0).split()]
-                self.data_dict[title] = np.array(vals)
-            except StopIteration:
-                print(f"WARNING: could not find values for block {title}")
-                
-            if self.data_dict[title].shape[0] != cnt:
-                print(f"WARNING: could not find all {cnt} values for block {title}, only found {self.data_dict[title].shape[0]}")
-
-        except StopIteration:
-            print(f"WARNING: could not find block {title}")
             
     def get_target_measure(self,interpolate_onto_grid=True,skip=0,split_param=None):
         
@@ -191,12 +190,12 @@ class DataLoader:
         '''
         
         # extract input data from the dictionary
-        latitudes = self.data_dict['LATITUDES ON GAUSSIAN GRID']
-        pvlev = self.data_dict['TRACER MIXING RATIO CONTOURS']
-        thlev = self.data_dict['ISENTROPIC LEVELS']
-        lait2pv = self.data_dict['FACTOR TO CONVERT FROM LAIT TO ERTEL PV']
-        bscirc = self.data_dict['CIRCULATION INTEGRALS IN PV-THETA COORDINATES']
-        bsmass = self.data_dict['MASS INTEGRALS IN PV-THETA COORDINATES']
+        latitudes = self.data_dict['latitude']  # previously 'LATITUDES ON GAUSSIAN GRID'
+        pvlev = self.data_dict['pvlev']         # previously 'TRACER MIXING RATIO CONTOURS'
+        thlev = self.data_dict['thlev']         # previously 'ISENTROPIC LEVELS'
+        lait2pv = self.data_dict['lait2pv']     # previously 'FACTOR TO CONVERT FROM LAIT TO ERTEL PV'
+        bscirc = self.data_dict['bscirc']       # previously 'CIRCULATION INTEGRALS IN PV-THETA COORDINATES'
+        bsmass = self.data_dict['bsmass']       # previously 'MASS INTEGRALS IN PV-THETA COORDINATES'
         
         # get physical and simulation parameters
         pp = self.pp
@@ -207,9 +206,19 @@ class DataLoader:
         # reshape data to have rows as pvlevels and columns as theta levels
         npvlev = pvlev.shape[0]
         nthlev = thlev.shape[0]
-        bscirc = np.reshape(bscirc,(nthlev, npvlev)).T
-        bsmass = np.reshape(bsmass,(nthlev,npvlev)).T
+        if self.mode == 'legacy':
+            bscirc = np.reshape(bscirc,(nthlev, npvlev)).T
+            bsmass = np.reshape(bsmass,(nthlev,npvlev)).T
         
+        if bsmass.shape[0] != len(pvlev) or bsmass.shape[1] != len(thlev):
+            raise ValueError('Input mass matrix bsmass should have shape (number of PV levels, number of isentropic levels.)')
+        
+        if np.any(bsmass<0):
+            raise ValueError('Some input mass in the matrix bsmass is negative. All masses must be positive.')
+        
+        if bscirc.shape[0] != len(pvlev) or bscirc.shape[1] != len(thlev):
+            raise ValueError('Input circulation matrix bscirc should have shape (number of PV levels, number of isentropic levels.)')
+            
         # keep only theta levels that have some mass and circulation
         idx = (bsmass[0] > 0)*(bscirc[0] > 0)
         bscirc = bscirc[:,idx]
@@ -367,9 +376,9 @@ class DataLoader:
                 # interpolation nodes as for the top theta level
                 if thlev[k] == np.max(thlev):
                     # estimate masses and zonal angular momentum using zonal average pressure from 3-d data
-                    ptop = self.data_dict['BACKGROUND PRESSURE ON TOP BOUNDARY']
+                    ptop = self.data_dict['pzon']   # previously 'BACKGROUND PRESSURE ON TOP BOUNDARY'
                     ptop = np.flip(ptop) # flip to be ordered accending with latitude
-                    sgrid = np.sin(np.deg2rad(self.data_dict['LATITUDES ON GAUSSIAN GRID']))
+                    sgrid = np.sin(np.deg2rad(self.data_dict['latitude']))  # previously 'LATITUDES ON GAUSSIAN GRID'
                     sgrid = np.flip(sgrid) # order to be acsending
                     
                     # interpolate zonal average pressure onto interpolation nodes
@@ -437,4 +446,139 @@ class DataLoader:
         self.y = y
         self.tmn = tmn
         
+        if np.any(tmn<0):
+            raise ValueError('Some mass is negative after interpoltion and normalisation.')
+        
+        if y.shape[1]!=2:
+            raise ValueError('Seed vector y should have shape (num_seeds,2) but has shape '+str(y.shape))
+        
+        if y.shape[0]!=len(tmn):
+            raise ValueError('Seed vector and mass vector have different lengths '+str(y.shape[0])+' and '+str(len(tmn)))
+        
         return y, tmn
+    
+    ###################################################################################################################
+    # Legacy code for parsing output of IDL mass an circulation integral computations
+    
+    def legacy__init__(self,path,pmin=None,p00=None,load_all=True,interpolate_onto_grid=True,skip=0,split_param=None):
+            
+        # parse the input data text file and make a dictionary of data arrays
+        with open(path) as f:
+            self.s = f.read()
+        
+        self.float_pattern = r'[-+]?(\d+([.,]\d*)?|[.,]\d+)([eE][-+]?\d+)?'
+        self.path = path
+        self.data_dict = {}
+
+        try:
+            self.latitudes_cnt = int(next(re.compile(r"(\d+)\s+LATITUDES ON GAUSSIAN GRID").finditer(self.s)).group(1))
+        except StopIteration:
+            raise RuntimeError("did not find number of \"LATITUDES ON GAUSSIAN GRID\"")
+        
+        try:
+            self.tracer_mixing_ratio_contour_cnt = int(next(re.compile(r"(\d+)\s+TRACER MIXING RATIO CONTOURS").finditer(self.s)).group(1))
+        except StopIteration:
+            raise RuntimeError("did not find number of \"TRACER MIXING RATIO CONTOURS\"")
+
+        try:
+            self.isentropic_level_cnt = int(next(re.compile(r"(\d+)\s+ISENTROPIC LEVELS").finditer(self.s)).group(1))
+        except StopIteration:
+            raise RuntimeError("did not find number of \"ISENTROPIC LEVELS\"")
+
+        self.parse_block(self.latitudes_cnt, "LATITUDES ON GAUSSIAN GRID")
+        self.parse_block(self.isentropic_level_cnt, "ISENTROPIC LEVELS")
+        self.parse_block(self.tracer_mixing_ratio_contour_cnt, "TRACER MIXING RATIO CONTOURS")
+        self.parse_block(self.isentropic_level_cnt, "FACTOR TO CONVERT FROM LAIT TO ERTEL PV")
+        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "MASS INTEGRALS IN PV-THETA COORDINATES")
+        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "AREA INTEGRALS IN PV-THETA COORDINATES")
+        self.parse_block(self.isentropic_level_cnt * self.tracer_mixing_ratio_contour_cnt, "CIRCULATION INTEGRALS IN PV-THETA COORDINATES")
+        self.parse_block(self.latitudes_cnt, "BACKGROUND PRESSURE ON TOP BOUNDARY")
+
+        if load_all:
+            try:
+                self.data_dict["DATA BASE TIME"] = int(next(re.compile(r"DATA BASE TIME IS\s+(\d+)").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"DATA BASE TIME\"")
+                
+            try:
+                self.data_dict["TOP BOUNDARY IN ISENTROPIC COORDS"] = float(next(re.compile(r"(" + self.float_pattern + r")\s+IS TOP BOUNDARY IN ISENTROPIC COORDS").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"TOP BOUNDARY IN ISENTROPIC COORDS\"")
+            
+            try:
+                match = next(re.compile(r"(" + self.float_pattern + r")\s+(" + self.float_pattern + r")\s+MAX AND MIN VALUES OF SURFACE THETA").finditer(self.s))
+                self.data_dict["MAX VALUE OF SURFACE THETA"] = float(match.group(1))
+                self.data_dict["MIN VALUE OF SURFACE THETA"] = float(match.group(2))
+            except StopIteration:
+                print("WARNING: did not find \"MAX AND MIN VALUES OF SURFACE THETA\"")
+
+            try:
+                self.data_dict["TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile(r"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + r")").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"TOTAL PVS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
+            
+            try:
+                self.data_dict["TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR"] = float(next(re.compile(r"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\s+(" + self.float_pattern + r")").finditer(self.s)).group(1))
+            except StopIteration:
+                print("WARNING: did not find \"TOTAL ATM MASS ENCLOSED BY LOWEST VALUE TRACER CONTOUR\"")
+        
+            self.parse_block(self.isentropic_level_cnt, "MAX PV ON THETA LEVELS")
+            self.parse_block(self.isentropic_level_cnt, "MIN PV ON THETA LEVELS")
+            self.parse_block(self.isentropic_level_cnt, "AREA INTEGRAL OVER POLAR SHELLS THETA COORDINATES")
+            self.parse_block(self.isentropic_level_cnt, "MASS INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
+            self.parse_block(self.isentropic_level_cnt, "CIRCULATION INTEGRALS OVER POLAR SHELLS IN THETA COORDINATES")
+            self.parse_block(self.latitudes_cnt, "BACKGROUND SURFACE GEOPOTENTIAL")
+            self.parse_block(self.isentropic_level_cnt, r"BACKGROUND u\*cos\(phi\) AT EQUATOR ON THETA LEVELS")
+        
+        # get physical parameters
+        self.pp = _atmosphere_bgs.PhysicalParameters()
+
+        # assign minimum pressure level and reference pressure to class
+        if pmin is None:
+            # Define minimum pressure to be the mean value of the zonal average
+            # pressure on the top isentropic level, copmuted as an integral over
+            # [0,1] using the trapezium rule
+            ptop = self.data_dict['BACKGROUND PRESSURE ON TOP BOUNDARY']
+            ptop = np.flip(ptop) # flip to be ordered accending with latitude
+            sgrid = np.sin(np.deg2rad(self.data_dict['LATITUDES ON GAUSSIAN GRID']))
+            sgrid = np.flip(sgrid) # order to be acsending
+            
+            area_top = np.diff(sgrid)*(ptop[:-1]+ptop[1:])/2
+            pmin = np.sum(area_top)
+        self.pmin = pmin
+        
+        if p00 is not None:
+            self.pp.p00 = p00
+        
+        # get target measure
+        self.get_target_measure(interpolate_onto_grid=interpolate_onto_grid,skip=skip,split_param=split_param)
+        
+        # record whether or not interpolation has been used
+        self.interpolate_onto_grid = interpolate_onto_grid
+        
+    def _multifloat_pattern(self, mincnt, maxcnt=None):
+        if maxcnt is None:
+            maxcnt = mincnt
+        return "(" + self.float_pattern + r"\s+){" + str(mincnt-1) + "," + str(maxcnt-1) + "}" + self.float_pattern
+    
+    def parse_block(self, cnt, title):
+        """
+        find block of `cnt` floats starting with title `title`
+        """
+        
+        try:
+            r = re.compile(title)
+            match = next(r.finditer(self.s))
+            
+            try:
+                r = re.compile(self._multifloat_pattern(1, cnt))
+                vals = [float(x) for x in next(r.finditer(self.s, pos=match.end())).group(0).split()]
+                self.data_dict[title] = np.array(vals)
+            except StopIteration:
+                print(f"WARNING: could not find values for block {title}")
+                
+            if self.data_dict[title].shape[0] != cnt:
+                print(f"WARNING: could not find all {cnt} values for block {title}, only found {self.data_dict[title].shape[0]}")
+
+        except StopIteration:
+            print(f"WARNING: could not find block {title}")
