@@ -30,7 +30,7 @@ If you modified any files in the repository (e.g. by executing the notebook), th
 
 ## Usage
 
-We will add proper documentation later, for now there is a jupyter notebook [example](examples/example.ipynb).
+We will add proper documentation later, for now there are jupyter notebooks in the examples folder.
 
 Incomplete, auto-generated documentation of the C++ and Python code can be found [here](https://charlieegan.github.io/background-states-of-the-atmosphere/). Python bindings of C++ objects are currently not part of the documentation but generally the same names are used (though they may be read-only from python).
 
