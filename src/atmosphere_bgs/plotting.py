@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from scipy.ndimage import gaussian_filter
 
-def plot_lag_tess(ld, cmap=None, val = None, res=[1000,1000], contour_levels = 0, transform = None, invert_yaxis=False, plot_lines = True, line_clr = 'k', title = None, background = False):
+def plot_lag_tess(ld, cmap=None, val = None, res=[1000,1000], contour_levels = 0, transform = None,
+                  invert_yaxis=False, figsize=(6,4), dpi=200, plot_lines = True, line_clr = 'k', title = None, background = False):
     '''
     ld - Laguerre diagram class
     val - value to assign to each cell
@@ -26,8 +27,8 @@ def plot_lag_tess(ld, cmap=None, val = None, res=[1000,1000], contour_levels = 0
         rv = rast.rasterize(val, res).copy()
         fill = rast.fill
         rv = np.where(fill > 0.5, np.divide(rv, fill, where=(fill > 0.5)), np.nan)
-
-    fig, ax = plt.subplots(1, 1, figsize=(10,5), dpi=500, tight_layout = True)
+        
+    fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi, tight_layout = True)
 
     if val is not None:
         im = plt.imshow(rv.T, origin="lower", aspect="auto",
@@ -71,23 +72,26 @@ def plot_lag_tess(ld, cmap=None, val = None, res=[1000,1000], contour_levels = 0
     else:
         return ax
 
-def plot_pressure_surface(ld,title='Pressure surface'):
+def plot_pressure_surface(ld,title='Pressure surface',figsize=(6,4),dpi=100):
     # Get points that are on the pressure surface and delete duplicates
     # By convention, points on the pressure surface have index pj greater than or equal to N+6 because
     # the first six 'edges' are the sides of a 3d cube in the lifted space
     N = ld.ys.shape[0]
     top_edges = [e for e in ld.edglist if e.pj >= N+6]
-    edge_pts = np.unique(np.array([p.x for te in top_edges for p in te.ls.points]),axis=0)
+    edge_pts = np.unique(np.array([p for te in top_edges for p in te.ls.x]),axis=0)
     
     # Sort points by s-coordinate 
     idx = np.argsort(edge_pts[:,0])
     pressure_surface = edge_pts[idx]
     
-    fig, ax = plt.subplots(1, 1, figsize=(10,5), dpi=500)
+    fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
     ax.plot(pressure_surface[:,0],pressure_surface[:,1])
     ax.set_xlim([ld.sim.spmin[0],ld.sim.spmax[0]])
     ax.set_ylim([ld.sim.spmin[1],ld.sim.spmax[1]])
     ax.set_title(title)
+    ax.set_xlabel('$s$')
+    ax.set_ylabel('$p\, [\mathrm{Pa}]$')
+    return ax
 
 def centroid(p):
     """
